@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boekhoudapp Kern 8 — De MET</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div id="topbar-title">
+    <span id="app-naam">Boekhoudapp Kern 8</span>
+  </div>
+  <div id="topbar-leerling">
+    <label for="leerling-naam-input">Naam:</label>
+    <input type="text" id="leerling-naam-input" placeholder="bv. Julie D.">
+    <span id="opslaan-status"></span>
+    <button id="btn-export" type="button" title="Bewaar je werk als bestand">Exporteren</button>
+    <button id="btn-import" type="button" title="Laad een eerder bewaard bestand">Importeren</button>
+    <input type="file" id="import-file" accept="application/json" style="display:none">
+  </div>
+  <button id="btn-nav-toggle" type="button" aria-label="Menu">☰</button>
+  <button id="btn-tpanel-toggle" type="button" aria-label="T-rekeningen">T</button>
+</header>
+
+<div id="layout">
+  <nav id="sidebar">
+    <div id="nav-links"></div>
+  </nav>
+
+  <main id="main-content">
+    <div id="pagina-inhoud"></div>
+  </main>
+
+  <aside id="tpanel">
+    <div id="tpanel-header">
+      <strong>T-rekeningen</strong>
+      <button id="tpanel-collapse" type="button" title="Inklappen">«</button>
+    </div>
+    <div id="tpanel-controls">
+      <input type="text" id="tpanel-zoek" placeholder="zoek rekening…">
+      <label class="tpanel-detail-toggle">
+        <input type="checkbox" id="tpanel-detail-check">
+        detail
+      </label>
+    </div>
+    <div id="tpanel-lijst"></div>
+  </aside>
+</div>
+
+<script src="js/mar.js"></script>
+<script src="js/data-opdrachten.js"></script>
+<script src="js/data-relaties.js"></script>
+<script src="js/data-controles.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
