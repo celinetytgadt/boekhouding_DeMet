@@ -290,15 +290,21 @@ td.kol-verwijder { text-align: center; }
 .btn-mar-zoeken:hover { background: var(--kleur-achtergrond); }
 
 /* MAR-zoekpopup */
+/* Belangrijk: "display" staat hier bewust NIET rechtstreeks op de klasse
+   — een class-regel wint anders altijd van de standaard [hidden]-regel van
+   de browser, waardoor de popup nooit meer verdwijnt na het sluiten. */
 .mar-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(20, 30, 33, 0.45);
-  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
   padding: 20px;
+  display: none;
+}
+.mar-modal-overlay:not([hidden]) {
+  display: flex;
 }
 .mar-modal {
   background: var(--kleur-paneel);
