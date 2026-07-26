@@ -598,10 +598,10 @@
     html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">Reken dit zelf uit op basis van je eigen boekingen. De app controleert dit niet.</p>';
     var stappen = [
       ["opbrengsten", "1. Hoeveel opbrengsten maakte het bedrijf? (klasse 7)"],
-      ["kosten", "2. Hoeveel kosten? (klasse 6)"],
-      ["winst", "3. Winst"],
-      ["belasting", "4. Vennootschapsbelasting (20 %)"],
-      ["restwinst", "5. Winst die overblijft"],
+      ["kosten", "2. Hoeveel kosten maakte het bedrijf? (klasse 6)"],
+      ["winst", "3. Bereken de winst"],
+      ["belasting", "4. Bereken de vennootschapsbelasting (20 %)"],
+      ["restwinst", "5. Hoeveel winst blijft er over?"],
     ];
     stappen.forEach(function (s) {
       html += '<div class="stap-rij"><label for="stap-' + s[0] + '">' + s[1] + '</label>' +
