@@ -53,11 +53,10 @@ en surf naar `http://localhost:8000`.
   `documenten/README.md`) — die zijn in deze versie nog niet meegebouwd.
 - **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
   opdrachtenbundel van dit jaar vastligt.
-- **Huisstijl**: de kleuren/typografie van De MET waren bij het bouwen
-  nog niet ingevuld in de huisstijl-referentie. `css/style.css` gebruikt
-  nu een neutrale kleurstelling via CSS-variabelen bovenaan het bestand
-  — zodra de echte huisstijl bekend is, volstaat het die variabelen aan
-  te passen.
+- **Huisstijl**: toegepast. `css/style.css` gebruikt de kleuren van
+  De MET (MET Blauw als basiskleur, MET Rood voor fouten, MET Groen voor
+  "geboekt/oké") en Open Sans als lettertype (Google Fonts, ingeladen in
+  `index.html`).
 - **Nakijken door de leerkracht via Google Sheets (§10 van de
   specificatie)** — bewust nog niet gebouwd. Deze versie werkt volledig
   op zichzelf (autosave in de browser + export/import als JSON-bestand),
