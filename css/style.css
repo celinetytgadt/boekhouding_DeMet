@@ -1,24 +1,24 @@
 /* ==========================================================================
    Boekhoudapp Kern 8 — stijl
-   Kleuren en typografie staan hieronder als CSS-variabelen. De huisstijl
-   van De MET was op het moment van bouwen nog niet volledig ingevuld
-   (zie de huisstijl-skill). Verander gewoon de variabelen hieronder zodra
-   de juiste kleuren/typografie bekend zijn — de rest van dit bestand
-   hoeft niet aangepast te worden.
+   Kleuren en typografie staan hieronder als CSS-variabelen, opgemaakt
+   volgens de huisstijl van De MET (zie context/huisstijl_De_MET.md):
+   MET Blauw als basiskleur voor tekst en chrome, MET Rood voor fouten,
+   MET Groen voor "geboekt/oké". Open Sans als lettertype (Google Fonts,
+   ingeladen in index.html).
    ========================================================================== */
 
 :root {
-  --kleur-primair: #1f4e5f;
-  --kleur-primair-donker: #16313c;
-  --kleur-accent: #d98e39;
-  --kleur-goed: #2e7d4f;
-  --kleur-fout: #b23a3a;
-  --kleur-achtergrond: #f4f6f7;
+  --kleur-primair: #000791;        /* MET Blauw */
+  --kleur-primair-donker: #000568; /* MET Blauw, donkerder voor titels */
+  --kleur-accent: #000791;         /* MET Blauw (geen vierde kleur toevoegen) */
+  --kleur-goed: #00d183;           /* MET Groen */
+  --kleur-fout: #ff4435;           /* MET Rood */
+  --kleur-achtergrond: #f4f5fa;
   --kleur-paneel: #ffffff;
-  --kleur-rand: #d7dde0;
-  --kleur-tekst: #1c2b30;
-  --kleur-tekst-zacht: #5a6b70;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --kleur-rand: #d9dbee;
+  --kleur-tekst: #000791;          /* MET Blauw is de basiskleur voor tekst */
+  --kleur-tekst-zacht: #5c63a0;
+  --font: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --sidebar-breedte: 220px;
   --tpanel-breedte: 280px;
   --topbar-hoogte: 56px;
@@ -421,9 +421,9 @@ td.kol-verwijder { text-align: center; }
 
 .status-geboekt {
   display: inline-block;
-  background: #e5f3ea;
+  background: #e3faf1;
   color: var(--kleur-goed);
-  border: 1px solid #bfe3cc;
+  border: 1px solid #a8ecd2;
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 12px;
@@ -562,8 +562,8 @@ table.saldibalans tr.subtotaal-klasse td {
   white-space: nowrap;
   height: fit-content;
 }
-.controle-status-auto.ok { background: #e5f3ea; color: var(--kleur-goed); }
-.controle-status-auto.fout { background: #fbe9e9; color: var(--kleur-fout); }
+.controle-status-auto.ok { background: #e3faf1; color: var(--kleur-goed); }
+.controle-status-auto.fout { background: #ffece9; color: var(--kleur-fout); }
 .controle-lijst-fouten {
   font-size: 12px;
   color: var(--kleur-fout);
