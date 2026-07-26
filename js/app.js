@@ -587,9 +587,8 @@
 
     if (!ok) {
       html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
-        "<strong>Rond eerst alle controles af.</strong> Ga naar het tabblad <em>Controles</em>: zolang daar iets ontbreekt of nog niet aangevinkt is, kan je hier nog niet aan verder." +
+        "Oops, ben je zeker dat je hier al verder kunt? Ga naar het tabblad Controles en check alles na. Zolang daar iets ontbreekt of nog niet aangevinkt is, kan je hier nog niet aan verder." +
         "</div>";
-      return html;
     }
 
     html += htmlBannerNaamOntbreekt();
