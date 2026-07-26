@@ -112,6 +112,7 @@
         stap: { opbrengsten: "", kosten: "", winst: "", belasting: "", restwinst: "" },
         slotcontroleResultaat: false,
         slotcontroleBalans: false,
+        slotcontroleMelding: null,
       },
     };
   }
@@ -614,8 +615,20 @@
 
     var getallen = berekenSlotcontroleGetallen();
     html += '<div class="paneel"><h2>Slotcontrole</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
-    html += '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleResultaat" ' + (state.resultaat.slotcontroleResultaat ? "checked" : "") + "> Is de resultatenrekening in evenwicht (D = C)? Voor klasse 6+7: D = " + formatBedrag(getallen.resD) + " en C: " + formatBedrag(getallen.resC) + "</label></div>";
-    html += '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleBalans" ' + (state.resultaat.slotcontroleBalans ? "checked" : "") + "> Is de balans in evenwicht (A = P)? Totaal activa: " + formatBedrag(getallen.actD) + ", Totaal passiva: " + formatBedrag(getallen.pasC) + "</label></div>";
+    html += '<div class="slotcontrole-blok">' +
+      '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleResultaat" ' + (state.resultaat.slotcontroleResultaat ? "checked" : "") + "> Is de resultatenrekening in evenwicht?</label></div>" +
+      '<div class="slotcontrole-detail">Totaal klasse 6: ' + formatBedrag(getallen.resD) + "</div>" +
+      '<div class="slotcontrole-detail">Totaal klasse 7: ' + formatBedrag(getallen.resC) + "</div>" +
+      "</div>";
+    html += '<div class="slotcontrole-blok">' +
+      '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleBalans" ' + (state.resultaat.slotcontroleBalans ? "checked" : "") + "> Is de balans in evenwicht?</label></div>" +
+      '<div class="slotcontrole-detail">Totaal activa: ' + formatBedrag(getallen.actD) + "</div>" +
+      '<div class="slotcontrole-detail">Totaal passiva: ' + formatBedrag(getallen.pasC) + "</div>" +
+      "</div>";
+    if (state.resultaat.slotcontroleMelding) {
+      var melding = state.resultaat.slotcontroleMelding;
+      html += '<div class="slotcontrole-melding ' + (melding.type === "goed" ? "goed" : "fout") + '">' + melding.tekst + "</div>";
+    }
     html += "</div>";
 
     return html;
@@ -894,6 +907,19 @@
         renderAlles();
       } else if (t.dataset && t.dataset.role === "slot-check") {
         state.resultaat[t.dataset.veld] = t.checked;
+        if (state.resultaat.slotcontroleResultaat && state.resultaat.slotcontroleBalans) {
+          var getallen = berekenSlotcontroleGetallen();
+          var klopt = getallen.resD === getallen.resC && getallen.actD === getallen.pasC;
+          if (klopt) {
+            state.resultaat.slotcontroleMelding = { type: "goed", tekst: "Hoera, je bent er geraakt! Laat de vakexpert dit nog even nakijken, want deze app kan maar beperkte controles doorvoeren. Ondertussen mag jij alvast trots zijn op jezelf!" };
+          } else {
+            state.resultaat.slotcontroleMelding = { type: "fout", tekst: "Helaas, dat klopt niet. Check je cijfers nog eens." };
+            state.resultaat.slotcontroleResultaat = false;
+            state.resultaat.slotcontroleBalans = false;
+          }
+        } else {
+          state.resultaat.slotcontroleMelding = null;
+        }
         saveState();
         renderAlles();
       }
