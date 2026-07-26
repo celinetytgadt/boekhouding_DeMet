@@ -276,26 +276,100 @@ td.kol-verwijder { text-align: center; }
   border: none; background: transparent; color: var(--kleur-fout);
   font-size: 15px; padding: 2px 6px;
 }
-.rekening-wrap { position: relative; }
-.rekening-suggesties {
-  position: absolute;
-  z-index: 30;
-  background: white;
+.rekening-wrap { position: relative; display: flex; align-items: center; gap: 4px; }
+.rekening-wrap input { flex: 1; min-width: 0; }
+.btn-mar-zoeken {
   border: 1px solid var(--kleur-rand);
+  background: var(--kleur-paneel);
   border-radius: 4px;
-  max-height: 220px;
-  overflow-y: auto;
-  width: 260px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  padding: 4px 7px;
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
 }
-.rekening-suggestie {
-  padding: 5px 8px;
+.btn-mar-zoeken:hover { background: var(--kleur-achtergrond); }
+
+/* MAR-zoekpopup */
+.mar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 30, 33, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.mar-modal {
+  background: var(--kleur-paneel);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+.mar-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--kleur-rand);
+  font-size: 14px;
+}
+.mar-modal-header button {
+  border: none; background: transparent; font-size: 16px; color: var(--kleur-tekst-zacht);
+}
+.mar-modal-filters {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--kleur-rand);
+}
+.mar-modal-filters input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.mar-modal-apko-knoppen { display: flex; gap: 6px; }
+.mar-modal-apko-knoppen button {
+  border: 1px solid var(--kleur-rand);
+  background: var(--kleur-paneel);
+  border-radius: 20px;
+  padding: 5px 12px;
   font-size: 12.5px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
 }
-.rekening-suggestie:hover { background: var(--kleur-achtergrond); }
-.rekening-suggestie small { color: var(--kleur-tekst-zacht); display:block; }
+.mar-modal-apko-knoppen button.actief {
+  background: var(--kleur-primair);
+  color: white;
+  border-color: var(--kleur-primair);
+}
+.mar-modal-lijst {
+  overflow-y: auto;
+  flex: 1;
+}
+.mar-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f2f3;
+}
+.mar-modal-item:hover { background: var(--kleur-achtergrond); }
+.mar-modal-item-nr { font-weight: 600; width: 60px; flex-shrink: 0; }
+.mar-modal-item-naam { flex: 1; }
+.mar-modal-item-apko {
+  font-size: 11px;
+  color: var(--kleur-tekst-zacht);
+  border: 1px solid var(--kleur-rand);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
 
 .relatie-input { margin-top: 4px; width: 100%; font-size: 11.5px; padding: 3px 4px; border: 1px solid var(--kleur-rand); border-radius: 4px; font-family: inherit; }
 
@@ -456,6 +530,12 @@ table.saldibalans th:nth-child(2), table.saldibalans td:nth-child(2) {
   text-align: left;
 }
 table.saldibalans tfoot td { font-weight: 700; border-top: 2px solid var(--kleur-tekst); }
+table.saldibalans tr.subtotaal-klasse td {
+  font-weight: 700;
+  background: var(--kleur-achtergrond);
+  border-top: 1px solid var(--kleur-rand);
+  border-bottom: 1px solid var(--kleur-rand);
+}
 
 /* ---------- Controles ---------- */
 
