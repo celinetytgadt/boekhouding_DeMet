@@ -614,8 +614,8 @@
 
     var getallen = berekenSlotcontroleGetallen();
     html += '<div class="paneel"><h2>Slotcontrole</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
-    html += '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleResultaat" ' + (state.resultaat.slotcontroleResultaat ? "checked" : "") + "> Resultatenrekening in evenwicht (D = C)? — totaal debet klasse 6+7: " + formatBedrag(getallen.resD) + ", totaal credit klasse 6+7: " + formatBedrag(getallen.resC) + "</label></div>";
-    html += '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleBalans" ' + (state.resultaat.slotcontroleBalans ? "checked" : "") + "> Balans in evenwicht (A = P)? — totaal activa: " + formatBedrag(getallen.actD) + ", totaal passiva: " + formatBedrag(getallen.pasC) + "</label></div>";
+    html += '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleResultaat" ' + (state.resultaat.slotcontroleResultaat ? "checked" : "") + "> Is de resultatenrekening in evenwicht (D = C)? Voor klasse 6+7: D = " + formatBedrag(getallen.resD) + " en C: " + formatBedrag(getallen.resC) + "</label></div>";
+    html += '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleBalans" ' + (state.resultaat.slotcontroleBalans ? "checked" : "") + "> Is de balans in evenwicht (A = P)? Totaal activa: " + formatBedrag(getallen.actD) + ", Totaal passiva: " + formatBedrag(getallen.pasC) + "</label></div>";
     html += "</div>";
 
     return html;
