@@ -43,7 +43,7 @@ const OPDRACHTEN = [
 
   {
     ref: "DIV02", categorie: "BTW-verwerking", titel: "BTW-verwerking DIV02", geenDocument: true,
-    instructie: "Kijk in de T-rekeningen rechts naar het saldo van de btw-rekeningen die niet op 000 eindigen. Na het invullen van de btw-aangifte van het kwartaal, moet de btw van de tijdelijke btw-rekeningen gecentraliseerd worden op 411000 Terug te vorderen btw-saldo of 451000 Te betalen btw-saldo.",
+    instructie: "Kijk in de T-rekeningen rechts naar het saldo van de tussentijdse btw-rekeningen (dat zijn de 411 en 451 rekeningen die niet op 000 eindigen). Na het invullen van de btw-aangifte van het kwartaal, moet de btw van deze tijdelijke btw-rekeningen gecentraliseerd worden op 411000 Terug te vorderen btw-saldo of 451000 Te betalen btw-saldo.",
   },
 
   { ref: "DIV03", categorie: "Eindejaarsverrichtingen", titel: "Afschrijvingen DIV03", doc: "DIV03" },
