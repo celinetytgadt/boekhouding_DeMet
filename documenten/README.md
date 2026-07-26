@@ -6,7 +6,7 @@ worden.
 
 **Naamgeving = referentie**, `.png` of `.jpg`:
 
-- `beginbalans.png` (of .jpg)
+- `Beginbalans.png` (of .jpg)
 - `AK01.png` t/m `AK09.png`
 - `VK01.png` t/m `VK05.png`
 - `ONTV01.png`
