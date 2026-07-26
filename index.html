@@ -42,11 +42,34 @@
       <input type="text" id="tpanel-zoek" placeholder="zoek rekening…">
       <label class="tpanel-detail-toggle">
         <input type="checkbox" id="tpanel-detail-check">
-        detail
+        enkel saldi
       </label>
     </div>
     <div id="tpanel-lijst"></div>
   </aside>
+</div>
+
+<datalist id="datalist-klanten"></datalist>
+<datalist id="datalist-leveranciers"></datalist>
+
+<div id="mar-modal-overlay" class="mar-modal-overlay" hidden>
+  <div class="mar-modal">
+    <div class="mar-modal-header">
+      <strong>Rekening zoeken</strong>
+      <button type="button" id="mar-modal-sluiten" title="Sluiten">✕</button>
+    </div>
+    <div class="mar-modal-filters">
+      <input type="text" id="mar-modal-zoek" placeholder="zoek op nummer of naam…">
+      <div id="mar-modal-apko-knoppen" class="mar-modal-apko-knoppen">
+        <button type="button" data-apko="">alle</button>
+        <button type="button" data-apko="A">A</button>
+        <button type="button" data-apko="P">P</button>
+        <button type="button" data-apko="K">K</button>
+        <button type="button" data-apko="O">O</button>
+      </div>
+    </div>
+    <div id="mar-modal-lijst" class="mar-modal-lijst"></div>
+  </div>
 </div>
 
 <script src="js/mar.js"></script>
