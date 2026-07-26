@@ -26,18 +26,6 @@ in principe enkel aanpassingen in de `data-*.js`-bestanden en de map
 De app kent zelf **geen enkel bedrag**. Alles komt uit wat de leerling
 zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 
-## Lokaal uitproberen
-
-Dubbelklikken op `index.html` werkt niet helemaal betrouwbaar in elke
-browser (sommige browsers blokkeren lokale bestandstoegang). Start
-liever een klein lokaal servertje in deze map, bijvoorbeeld:
-
-```
-python3 -m http.server 8000
-```
-
-en surf naar `http://localhost:8000`.
-
 ## Publiceren op GitHub Pages
 
 1. Zet de inhoud van deze map (`index.html`, `css/`, `js/`, `documenten/`)
@@ -49,14 +37,6 @@ en surf naar `http://localhost:8000`.
 
 ## Wat nog moet gebeuren
 
-- **Documentafbeeldingen** toevoegen in `documenten/` (zie
-  `documenten/README.md`) — die zijn in deze versie nog niet meegebouwd.
-- **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
-  opdrachtenbundel van dit jaar vastligt.
-- **Huisstijl**: toegepast. `css/style.css` gebruikt de kleuren van
-  De MET (MET Blauw als basiskleur, MET Rood voor fouten, MET Groen voor
-  "geboekt/oké") en Open Sans als lettertype (Google Fonts, ingeladen in
-  `index.html`).
 - **Nakijken door de leerkracht via Google Sheets (§10 van de
   specificatie)** — bewust nog niet gebouwd. Deze versie werkt volledig
   op zichzelf (autosave in de browser + export/import als JSON-bestand),
