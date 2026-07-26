@@ -11,8 +11,8 @@ worden.
 - `VK01.png` t/m `VK05.png`
 - `ONTV01.png`
 - `DIV01.png` (loonsynthese)
-- `ING01.png` t/m `ING05.png`
-- `KAS01.png`, `KAS02.png`
+- `BANK01.png` t/m `BANK05.png`
+- `KAS01.png`
 - `DIV02.png` (btw-verwerking)
 - `DIV03.png` (afschrijvingstabel)
 - `DIV04.png` (aflossingstabel)
