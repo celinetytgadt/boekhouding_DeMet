@@ -494,6 +494,9 @@
     if (!def.geenDocument) {
       html += '<div class="paneel"><h2>Verantwoordingsstuk</h2>' + htmlDocumentAfbeelding(def.doc, false) + "</div>";
     }
+    if (def.instructie) {
+      html += '<div class="paneel" style="border-color:var(--kleur-primair);background:#eef4f6;"><h2>Uitleg</h2><p>' + escapeAttr(def.instructie) + "</p></div>";
+    }
     html += '<div class="paneel"><h2>Redeneerschema</h2>' + htmlRedeneerschema(ref) + "</div>";
     return html;
   }

@@ -32,15 +32,17 @@ const OPDRACHTEN = [
 
   { ref: "DIV01", categorie: "Loonverwerking", titel: "Loonsynthese DIV01", doc: "DIV01" },
 
-  { ref: "ING01", categorie: "Financiële verrichtingen", titel: "Bankafschrift ING01", doc: "ING01" },
-  { ref: "ING02", categorie: "Financiële verrichtingen", titel: "Bankafschrift ING02", doc: "ING02" },
-  { ref: "ING03", categorie: "Financiële verrichtingen", titel: "Bankafschrift ING03", doc: "ING03" },
-  { ref: "ING04", categorie: "Financiële verrichtingen", titel: "Bankafschrift ING04", doc: "ING04" },
-  { ref: "ING05", categorie: "Financiële verrichtingen", titel: "Bankafschrift ING05", doc: "ING05" },
+  { ref: "BANK01", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK01", doc: "BANK01" },
+  { ref: "BANK02", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK02", doc: "BANK02" },
+  { ref: "BANK03", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK03", doc: "BANK03" },
+  { ref: "BANK04", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK04", doc: "BANK04" },
+  { ref: "BANK05", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK05", doc: "BANK05" },
   { ref: "KAS01", categorie: "Financiële verrichtingen", titel: "Kasblad KAS01", doc: "KAS01" },
-  { ref: "KAS02", categorie: "Financiële verrichtingen", titel: "Kasblad KAS02", doc: "KAS02" },
 
-  { ref: "DIV02", categorie: "BTW-verwerking", titel: "BTW-verwerking DIV02", doc: "DIV02" },
+  {
+    ref: "DIV02", categorie: "BTW-verwerking", titel: "BTW-verwerking DIV02", geenDocument: true,
+    instructie: "Kijk in de T-rekeningen rechts naar het saldo van de btw-rekeningen die niet op 000 eindigen. Na het invullen van de btw-aangifte van het kwartaal, moet de btw van de tijdelijke btw-rekeningen gecentraliseerd worden op 411000 Terug te vorderen btw-saldo of 451000 Te betalen btw-saldo.",
+  },
 
   { ref: "DIV03", categorie: "Eindejaarsverrichtingen", titel: "Afschrijvingen DIV03", doc: "DIV03" },
   { ref: "DIV04", categorie: "Eindejaarsverrichtingen", titel: "Lening DIV04", doc: "DIV04" },
