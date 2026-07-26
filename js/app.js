@@ -420,7 +420,7 @@
 
   function htmlBannerNaamOntbreekt() {
     if (state.student) return "";
-    return '<div class="paneel" style="border-color:var(--kleur-accent);background:#fdf3e7;">' +
+    return '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
       "Vul bovenaan je naam in (voornaam, eventueel met eerste letter achternaam) — anders wordt je werk niet bewaard." +
       "</div>";
   }
@@ -479,7 +479,7 @@
       html += '<div class="paneel"><h2>Verantwoordingsstuk</h2>' + htmlDocumentAfbeelding(def.doc, false) + "</div>";
     }
     if (def.instructie) {
-      html += '<div class="paneel" style="border-color:var(--kleur-primair);background:#eef4f6;"><h2>Uitleg</h2><p>' + escapeAttr(def.instructie) + "</p></div>";
+      html += '<div class="paneel" style="border-color:var(--kleur-primair);background:#e9eaf7;"><h2>Uitleg</h2><p>' + escapeAttr(def.instructie) + "</p></div>";
     }
     html += '<div class="paneel"><h2>Redeneerschema</h2>' + htmlRedeneerschema(ref) + "</div>";
     return html;
@@ -585,7 +585,7 @@
     html += '<p class="pagina-subtitel">Vennootschapsbelasting en toewijzing aan overgedragen winst.</p>';
 
     if (!ok) {
-      html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#fdefef;">' +
+      html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
         "<strong>Rond eerst alle controles af.</strong> Ga naar het tabblad <em>Controles</em>: zolang daar iets ontbreekt of nog niet aangevinkt is, kan je hier nog niet aan verder." +
         "</div>";
       return html;
