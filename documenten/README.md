@@ -6,14 +6,15 @@ worden.
 
 **Naamgeving = referentie**, `.png` of `.jpg`:
 
-- `Beginbalans.png` (of .jpg)
-- `AK01.png` t/m `AK09.png`
-- `VK01.png` t/m `VK05.png`
+- `beginbalans.png` (of .jpg)
+- `AK01.png` t/m `AK14.png`
+- `VK01.png` t/m `VK10.png`
 - `ONTV01.png`
 - `DIV01.png` (loonsynthese)
-- `BANK01.png` t/m `BANK05.png`
+- `BANK01.png` t/m `BANK24.png`
 - `KAS01.png`
-- `DIV02.png` (btw-verwerking)
+- `DIV02` heeft geen document — die pagina toont enkel uitleg (zie
+  `js/data-opdrachten.js`, veld `instructie`)
 - `DIV03.png` (afschrijvingstabel)
 - `DIV04.png` (aflossingstabel)
 - `DIV05.png` (voorraadbedrag/telling)
