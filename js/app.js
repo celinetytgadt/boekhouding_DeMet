@@ -172,14 +172,15 @@
 
   var uiState = {
     huidigePagina: { type: "start" },
-    openRekeningSuggesties: null, // focus-id van het rekeningveld dat open staat
     tpanelZoek: "",
-    tpanelDetail: false,
+    tpanelDetail: true,
     sidebarOpen: false,
     tpanelOpen: false,
   };
-  var blurTimer = null;
   var docImgTeller = 0;
+
+  // MAR-zoekpopup (losstaand van de rest, zie §"Redeneerschema-component")
+  var marModal = { open: false, scope: null, row: null, zoek: "", apko: "" };
 
   /* ========================================================================
      3. Grootboek opbouwen uit alle geboekte boekingen
@@ -264,6 +265,9 @@
     Object.keys(gb).forEach(function (nr) {
       var mar = marBij(nr);
       if (!mar) return;
+      // 580000 (interne overboekingen) moet zelf op 0 uitkomen — dat wordt
+      // apart gecontroleerd bij "zelf nakijken" en hoort hier niet bij.
+      if (nr === "580000") return;
       var s = saldoVoorEntry(gb[nr]);
       if (!s.kant) return;
       var verwacht = verwachteKant(mar);
@@ -328,26 +332,6 @@
     var omschrijving = mar ? mar.naam : (row.rekening ? "— onbekend rekeningnummer —" : "");
     var relatieSoort = relatieVeldVoorRekening(row.rekening);
     var rekeningFocusId = focusId(ref, idx, "rekening");
-    var suggestiesOpen = uiState.openRekeningSuggesties === rekeningFocusId && !geboekt;
-
-    var suggestiesHtml = "";
-    if (suggestiesOpen) {
-      var resultaten = zoekMar(row.rekening);
-      if (resultaten.length) {
-        suggestiesHtml =
-          '<div class="rekening-suggesties">' +
-          resultaten
-            .map(function (a) {
-              return (
-                '<div class="rekening-suggestie" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-nr="' + a.nr + '">' +
-                a.nr + " — " + escapeAttr(a.naam) + "<small>" + a.apko + " · klasse " + a.klasse + "</small>" +
-                "</div>"
-              );
-            })
-            .join("") +
-          "</div>";
-      }
-    }
 
     var relatieHtml = "";
     if (relatieSoort) {
@@ -377,10 +361,10 @@
       ["", "Stijgt", "Daalt"].map(function (v) { return '<option value="' + v + '"' + (row.stijgtDaalt === v ? " selected" : "") + ">" + (v || "—") + "</option>"; }).join("") +
       "</select></td>" +
 
-      '<td class="kol-rekening"><div class="rekening-wrap"><input type="text" placeholder="nr of naam…" autocomplete="off" ' +
-      'data-focus-id="' + rekeningFocusId + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="rekening" data-role="rekening-input" ' +
+      '<td class="kol-rekening"><div class="rekening-wrap"><input type="text" placeholder="nr…" autocomplete="off" ' +
+      'data-focus-id="' + rekeningFocusId + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="rekening" ' +
       'value="' + escapeAttr(row.rekening) + '" ' + (geboekt ? "disabled" : "") + ">" +
-      suggestiesHtml +
+      (geboekt ? "" : '<button type="button" class="btn-mar-zoeken" data-role="mar-zoeken" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" title="Rekening zoeken">🔍</button>') +
       "</div>" + relatieHtml + "</td>" +
 
       '<td class="kol-omschrijving"><input type="text" value="' + escapeAttr(omschrijving) + '" disabled></td>' +
@@ -567,12 +551,30 @@
     var nrs = Object.keys(gb).sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10); });
     if (!nrs.length) return "<p>Nog geen boekingen.</p>";
     var html = '<table class="saldibalans"><thead><tr><th>Rekening</th><th>Naam</th><th>Saldo</th><th>D/C</th></tr></thead><tbody>';
+    var huidigeKlasse = null;
+    var subD = 0, subC = 0;
+
+    function schrijfSubtotaal() {
+      if (huidigeKlasse === null) return;
+      var netto = round2(subD - subC);
+      var kant = Math.abs(netto) < 0.005 ? "—" : (netto > 0 ? "D" : "C");
+      html += '<tr class="subtotaal-klasse"><td colspan="2">Subtotaal klasse ' + huidigeKlasse + "</td><td>" + formatBedrag(Math.abs(netto)) + "</td><td>" + kant + "</td></tr>";
+    }
+
     nrs.forEach(function (nr) {
       var mar = marBij(nr);
       var s = saldoVoorEntry(gb[nr]);
       if (!s.kant) return;
+      var klasse = mar ? mar.klasse : "?";
+      if (klasse !== huidigeKlasse) {
+        schrijfSubtotaal();
+        huidigeKlasse = klasse;
+        subD = 0; subC = 0;
+      }
+      if (s.kant === "D") subD = round2(subD + s.saldo); else subC = round2(subC + s.saldo);
       html += "<tr><td>" + nr + "</td><td>" + escapeAttr(mar ? mar.naam : "") + "</td><td>" + formatBedrag(s.saldo) + "</td><td>" + s.kant + "</td></tr>";
     });
+    schrijfSubtotaal();
     html += "</tbody></table>";
     return html;
   }
@@ -591,6 +593,8 @@
 
     html += htmlBannerNaamOntbreekt();
 
+    html += '<div class="paneel"><h2>Compact saldi-overzicht</h2>' + htmlCompactSaldi() + "</div>";
+
     html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">Reken dit zelf uit op basis van je eigen boekingen. De app controleert dit niet.</p>';
     var stappen = [
       ["opbrengsten", "1. Hoeveel opbrengsten maakte het bedrijf? (klasse 7)"],
@@ -604,8 +608,6 @@
         '<input type="text" id="stap-' + s[0] + '" inputmode="decimal" placeholder="0,00" data-focus-id="stap-' + s[0] + '" data-role="stap-veld" data-veld="' + s[0] + '" value="' + escapeAttr(state.resultaat.stap[s[0]]) + '"></div>';
     });
     html += "</div>";
-
-    html += '<div class="paneel"><h2>Compact saldi-overzicht</h2>' + htmlCompactSaldi() + "</div>";
 
     html += '<div class="paneel"><h2>DIV06 — Vennootschapsbelasting</h2>' + htmlRedeneerschema("DIV06") + "</div>";
     html += '<div class="paneel"><h2>DIV07 — Toewijzing overgedragen winst</h2>' + htmlRedeneerschema("DIV07") + "</div>";
@@ -684,6 +686,61 @@
       if (!el) return;
       el.innerHTML = verzamelRelatieNamen(soort).map(function (n) { return '<option value="' + escapeAttr(n) + '">'; }).join("");
     });
+  }
+
+  /* ========================================================================
+     6b. MAR-zoekpopup — zoeken op nummer/naam + filteren op A/P/K/O
+     ======================================================================== */
+
+  function openMarModal(scope, row) {
+    marModal.open = true;
+    marModal.scope = scope;
+    marModal.row = row;
+    marModal.zoek = "";
+    marModal.apko = "";
+    document.getElementById("mar-modal-overlay").hidden = false;
+    document.getElementById("mar-modal-zoek").value = "";
+    renderMarModalKnoppen();
+    renderMarModalLijst();
+    setTimeout(function () { document.getElementById("mar-modal-zoek").focus(); }, 0);
+  }
+
+  function closeMarModal() {
+    marModal.open = false;
+    document.getElementById("mar-modal-overlay").hidden = true;
+  }
+
+  function renderMarModalKnoppen() {
+    var knoppen = document.querySelectorAll("#mar-modal-apko-knoppen [data-apko]");
+    knoppen.forEach(function (b) {
+      b.classList.toggle("actief", b.dataset.apko === marModal.apko);
+    });
+  }
+
+  function renderMarModalLijst() {
+    var el = document.getElementById("mar-modal-lijst");
+    if (!el) return;
+    var query = (marModal.zoek || "").trim().toLowerCase();
+    var resultaten = MAR.filter(function (a) {
+      if (marModal.apko && a.apko !== marModal.apko) return false;
+      if (!query) return true;
+      return String(a.nr).indexOf(query) !== -1 || a.naam.toLowerCase().indexOf(query) !== -1;
+    });
+    if (!resultaten.length) {
+      el.innerHTML = '<p style="padding:10px;color:var(--kleur-tekst-zacht);font-size:13px;">Geen rekening gevonden.</p>';
+      return;
+    }
+    el.innerHTML = resultaten
+      .map(function (a) {
+        return (
+          '<div class="mar-modal-item" data-nr="' + a.nr + '">' +
+          '<span class="mar-modal-item-nr">' + a.nr + "</span>" +
+          '<span class="mar-modal-item-naam">' + escapeAttr(a.naam) + "</span>" +
+          '<span class="mar-modal-item-apko">' + a.apko + "</span>" +
+          "</div>"
+        );
+      })
+      .join("");
   }
 
   function renderTpanel() {
@@ -842,37 +899,6 @@
       }
     });
 
-    paginaEl.addEventListener("focus", function (e) {
-      var t = e.target;
-      if (t.dataset && t.dataset.role === "rekening-input") {
-        uiState.openRekeningSuggesties = t.dataset.focusId;
-        renderAlles();
-      }
-    }, true);
-
-    paginaEl.addEventListener("blur", function (e) {
-      var t = e.target;
-      if (t.dataset && t.dataset.role === "rekening-input") {
-        clearTimeout(blurTimer);
-        blurTimer = setTimeout(function () {
-          uiState.openRekeningSuggesties = null;
-          renderAlles();
-        }, 200);
-      }
-    }, true);
-
-    paginaEl.addEventListener("mousedown", function (e) {
-      var sug = e.target.closest ? e.target.closest(".rekening-suggestie") : null;
-      if (sug) {
-        clearTimeout(blurTimer);
-        var scope = sug.dataset.scope, row = parseInt(sug.dataset.row, 10), nr = sug.dataset.nr;
-        opState(scope, row, "rekening", nr);
-        uiState.openRekeningSuggesties = null;
-        saveState();
-        renderAlles();
-      }
-    });
-
     paginaEl.addEventListener("click", function (e) {
       var t = e.target;
       var role = t.dataset ? t.dataset.role : null;
@@ -890,7 +916,38 @@
       } else if (role === "heropenen") {
         boekingVoor(t.dataset.scope).geboekt = false;
         saveState(); renderAlles();
+      } else if (role === "mar-zoeken") {
+        openMarModal(t.dataset.scope, parseInt(t.dataset.row, 10));
       }
+    });
+
+    // MAR-zoekpopup: eigen, vaste DOM-elementen buiten #pagina-inhoud, dus
+    // die worden niet telkens herbouwd en verliezen geen focus/scrollpositie.
+    document.getElementById("mar-modal-zoek").addEventListener("input", function (e) {
+      marModal.zoek = e.target.value;
+      renderMarModalLijst();
+    });
+    document.getElementById("mar-modal-apko-knoppen").addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-apko]") : null;
+      if (!b) return;
+      marModal.apko = b.dataset.apko;
+      renderMarModalKnoppen();
+      renderMarModalLijst();
+    });
+    document.getElementById("mar-modal-lijst").addEventListener("click", function (e) {
+      var item = e.target.closest ? e.target.closest(".mar-modal-item") : null;
+      if (!item) return;
+      opState(marModal.scope, marModal.row, "rekening", item.dataset.nr);
+      closeMarModal();
+      saveState();
+      renderAlles();
+    });
+    document.getElementById("mar-modal-sluiten").addEventListener("click", closeMarModal);
+    document.getElementById("mar-modal-overlay").addEventListener("click", function (e) {
+      if (e.target.id === "mar-modal-overlay") closeMarModal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && marModal.open) closeMarModal();
     });
 
     document.getElementById("nav-links").addEventListener("click", function (e) {
@@ -910,7 +967,7 @@
       renderTpanel();
     });
     document.getElementById("tpanel-detail-check").addEventListener("change", function (e) {
-      uiState.tpanelDetail = e.target.checked;
+      uiState.tpanelDetail = !e.target.checked; // aangevinkt = enkel saldi
       renderTpanel();
     });
     document.getElementById("tpanel-collapse").addEventListener("click", function () {

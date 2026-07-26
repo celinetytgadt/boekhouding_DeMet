@@ -10,7 +10,9 @@
 // (bv. DIV06/DIV07, die volgen uit eigen berekeningen).
 
 const OPDRACHTEN = [
-  { ref: "beginbalans", categorie: "Beginbalans", titel: "Beginbalans", doc: "beginbalans" },
+  // "doc" moet de bestandsnaam op GitHub exact matchen — GitHub Pages is
+  // hoofdlettergevoelig (Windows niet, dus dat valt thuis niet op).
+  { ref: "beginbalans", categorie: "Beginbalans", titel: "Beginbalans", doc: "Beginbalans" },
 
   { ref: "AK01", categorie: "Aankopen", titel: "Aankoop AK01", doc: "AK01" },
   { ref: "AK02", categorie: "Aankopen", titel: "Aankoop AK02", doc: "AK02" },
