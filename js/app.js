@@ -908,8 +908,12 @@
         state.resultaat[t.dataset.veld] = t.checked;
         if (state.resultaat.slotcontroleResultaat && state.resultaat.slotcontroleBalans) {
           var getallen = berekenSlotcontroleGetallen();
-          var klopt = getallen.resD === getallen.resC && getallen.actD === getallen.pasC;
-          if (klopt) {
+          var cijfersKloppen = getallen.resD === getallen.resC && getallen.actD === getallen.pasC;
+          if (!alleControlesOk()) {
+            state.resultaat.slotcontroleMelding = { type: "fout", tekst: "Er staan nog fouten of openstaande punten in het tabblad Controles. Los die eerst op vóór je de slotcontrole kan afronden." };
+            state.resultaat.slotcontroleResultaat = false;
+            state.resultaat.slotcontroleBalans = false;
+          } else if (cijfersKloppen) {
             state.resultaat.slotcontroleMelding = { type: "goed", tekst: "Hoera, je bent er geraakt! Laat de vakexpert dit nog even nakijken, want deze app kan maar beperkte controles doorvoeren. Ondertussen mag jij alvast trots zijn op jezelf!" };
           } else {
             state.resultaat.slotcontroleMelding = { type: "fout", tekst: "Helaas, dat klopt niet. Check je cijfers nog eens." };
