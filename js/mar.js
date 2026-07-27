@@ -804,16 +804,7 @@ const MAR = [
   "rubriek": "60",
   "rubriek_oms": "Handelsgoederen, grond- en hulpstoffen"
  },
- {
-  "nr": 608000,
-  "naam": "Ontvangen kortingen, ristorno’s en rabatten (-)",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "60",
-  "rubriek_oms": "Handelsgoederen, grond- en hulpstoffen"
- },
- {
+  {
   "nr": 609000,
   "naam": "Voorraadwijziging grondstoffen",
   "apko": "K",
@@ -849,25 +840,7 @@ const MAR = [
   "rubriek": "61",
   "rubriek_oms": "Diensten en diverse goederen"
  },
- {
-  "nr": 611600,
-  "naam": "Onderhoud en herstellingen gebouwen",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
-  "nr": 611700,
-  "naam": "Onderhoud informatica",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
+  {
   "nr": 611800,
   "naam": "Onderhoud en herstellingen rollend materieel",
   "apko": "K",
@@ -976,15 +949,6 @@ const MAR = [
   "rubriek_oms": "Diensten en diverse goederen"
  },
  {
-  "nr": 614000,
-  "naam": "Brandverzekering",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
   "nr": 614400,
   "naam": "Verzekering rollend materieel",
   "apko": "K",
@@ -1002,16 +966,7 @@ const MAR = [
   "rubriek": "61",
   "rubriek_oms": "Diensten en diverse goederen"
  },
- {
-  "nr": 616000,
-  "naam": "Postzegels, portkosten",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
+  {
   "nr": 616200,
   "naam": "Telefoon, gsm",
   "apko": "K",
@@ -1399,15 +1354,6 @@ const MAR = [
   "rubriek_oms": "Resultaatverwerking"
  },
  {
-  "nr": 700000,
-  "naam": "Verkopen en diensten",
-  "apko": "O",
-  "klasse": "7",
-  "klasse_oms": "Opbrengsten",
-  "rubriek": "70",
-  "rubriek_oms": "Omzet"
- },
- {
   "nr": 704000,
   "naam": "Verkopen handelsgoederen",
   "apko": "O",
@@ -1416,43 +1362,7 @@ const MAR = [
   "rubriek": "70",
   "rubriek_oms": "Omzet"
  },
- {
-  "nr": 704001,
-  "naam": "Verkopen handelsgoederen aan 6 % btw",
-  "apko": "O",
-  "klasse": "7",
-  "klasse_oms": "Opbrengsten",
-  "rubriek": "70",
-  "rubriek_oms": "Omzet"
- },
- {
-  "nr": 704002,
-  "naam": "Verkopen handelsgoederen aan 21 % btw",
-  "apko": "O",
-  "klasse": "7",
-  "klasse_oms": "Opbrengsten",
-  "rubriek": "70",
-  "rubriek_oms": "Omzet"
- },
- {
-  "nr": 704003,
-  "naam": "Verkopen handelsgoederen IC",
-  "apko": "O",
-  "klasse": "7",
-  "klasse_oms": "Opbrengsten",
-  "rubriek": "70",
-  "rubriek_oms": "Omzet"
- },
- {
-  "nr": 704004,
-  "naam": "Verkopen handelsgoederen uitvoer",
-  "apko": "O",
-  "klasse": "7",
-  "klasse_oms": "Opbrengsten",
-  "rubriek": "70",
-  "rubriek_oms": "Omzet"
- },
- {
+  {
   "nr": 704010,
   "naam": "Retours op verkopen (-)",
   "apko": "O",
