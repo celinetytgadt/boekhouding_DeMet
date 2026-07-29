@@ -56,12 +56,11 @@ const OPDRACHTEN = [
   { ref: "BANK06", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK06", doc: "BANK06", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
   { ref: "BANK07", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK07", doc: "BANK07" },
   { ref: "BANK08", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK08", doc: "BANK08" },
-  { ref: "BANK09", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK09", doc: "BANK09", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
-  { ref: "BANK10", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK10", doc: "BANK10" },
+  { ref: "BANK09", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK09", doc: "BANK09" },
+  { ref: "BANK10", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK10", doc: "BANK10", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
   { ref: "BANK11", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK11", doc: "BANK11" },
   { ref: "BANK12", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK12", doc: "BANK12" },
-  { ref: "BANK13", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK13", doc: "BANK13" },
-  { ref: "BANK14", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK14", doc: "BANK14", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
+  { ref: "BANK13", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK13", doc: "BANK13", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
   { ref: "KAS01", categorie: "Financiële verrichtingen", titel: "Kasblad KAS01", doc: "KAS01" },
 
   {
