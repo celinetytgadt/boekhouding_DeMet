@@ -1,5 +1,4 @@
-// MAR — Minimum Algemeen Rekeningenstelsel (176 rekeningen)
-// Overgenomen uit het tabblad 'MAR' van 'Boekhouden consolidatie.xlsx'.
+// MAR — Minimum Algemeen Rekeningenstelsel
 // Wijzigt normaal niet van jaar tot jaar.
 
 const MAR = [
@@ -131,48 +130,12 @@ const MAR = [
  },
  {
   "nr": 200009,
-  "naam": "Afschrijving op kosten oprichting en",
+  "naam": "Afschrijving op kosten oprichting en kapitaalverhoging",
   "apko": "A",
   "klasse": "2",
   "klasse_oms": "Vaste activa",
   "rubriek": "20",
   "rubriek_oms": "Oprichtingskosten"
- },
- {
-  "nr": 211000,
-  "naam": "concessies, octrooien, licenties, knowhow, merken",
-  "apko": "A",
-  "klasse": "2",
-  "klasse_oms": "Vaste activa",
-  "rubriek": "21",
-  "rubriek_oms": "Immateriële vaste activa"
- },
- {
-  "nr": 211009,
-  "naam": "Afschrijvingen op concessies, octrooien, licenties, knowhow, merken (-)",
-  "apko": "A",
-  "klasse": "2",
-  "klasse_oms": "Vaste activa",
-  "rubriek": "21",
-  "rubriek_oms": "Immateriële vaste activa"
- },
- {
-  "nr": 215000,
-  "naam": "Software",
-  "apko": "A",
-  "klasse": "2",
-  "klasse_oms": "Vaste activa",
-  "rubriek": "21",
-  "rubriek_oms": "Immateriële vaste activa"
- },
- {
-  "nr": 215009,
-  "naam": "Afschrijvingen op software (-)",
-  "apko": "A",
-  "klasse": "2",
-  "klasse_oms": "Vaste activa",
-  "rubriek": "21",
-  "rubriek_oms": "Immateriële vaste activa"
  },
  {
   "nr": 220000,
@@ -273,25 +236,7 @@ const MAR = [
   "rubriek": "24",
   "rubriek_oms": "Meubilair & rollend materieel"
  },
- {
-  "nr": 240100,
-  "naam": "Kantoormachines",
-  "apko": "A",
-  "klasse": "2",
-  "klasse_oms": "Vaste activa",
-  "rubriek": "24",
-  "rubriek_oms": "Meubilair & rollend materieel"
- },
- {
-  "nr": 240109,
-  "naam": "Afschrijvingen op kantoormachines (-)",
-  "apko": "A",
-  "klasse": "2",
-  "klasse_oms": "Vaste activa",
-  "rubriek": "24",
-  "rubriek_oms": "Meubilair & rollend materieel"
- },
- {
+  {
   "nr": 240200,
   "naam": "Computers",
   "apko": "A",
@@ -327,16 +272,7 @@ const MAR = [
   "rubriek": "24",
   "rubriek_oms": "Meubilair & rollend materieel"
  },
- {
-  "nr": 300000,
-  "naam": "Voorraad",
-  "apko": "A",
-  "klasse": "3",
-  "klasse_oms": "Voorraden",
-  "rubriek": "30",
-  "rubriek_oms": "Voorraden"
- },
- {
+{
   "nr": 340000,
   "naam": "Voorraad handelsgoederen",
   "apko": "A",
@@ -355,15 +291,6 @@ const MAR = [
   "rubriek_oms": "Handelsvorderingen"
  },
  {
-  "nr": 401000,
-  "naam": "Te innen wissels",
-  "apko": "A",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "40",
-  "rubriek_oms": "Handelsvorderingen"
- },
- {
   "nr": 404000,
   "naam": "Te innen opbrengsten",
   "apko": "A",
@@ -372,16 +299,7 @@ const MAR = [
   "rubriek": "40",
   "rubriek_oms": "Handelsvorderingen"
  },
- {
-  "nr": 406000,
-  "naam": "Vooruitbetalingen",
-  "apko": "A",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "40",
-  "rubriek_oms": "Handelsvorderingen"
- },
- {
+{
   "nr": 407000,
   "naam": "Dubieuze debiteuren",
   "apko": "A",
@@ -444,25 +362,7 @@ const MAR = [
   "rubriek": "41",
   "rubriek_oms": "Overige vorderingen"
  },
- {
-  "nr": 416000,
-  "naam": "Vorderingen op de eigenaar",
-  "apko": "A",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "41",
-  "rubriek_oms": "Overige vorderingen"
- },
- {
-  "nr": 416100,
-  "naam": "Voorschotten op bezoldigingen",
-  "apko": "A",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "41",
-  "rubriek_oms": "Overige vorderingen"
- },
- {
+{
   "nr": 418000,
   "naam": "Terug te vorderen verpakking",
   "apko": "A",
@@ -498,25 +398,7 @@ const MAR = [
   "rubriek": "42",
   "rubriek_oms": "Schulden op maar dan 1 jaar die binnen het jaar vervallen"
  },
- {
-  "nr": 433000,
-  "naam": "Kredietinstellingen – schulden in rekening courant",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "43",
-  "rubriek_oms": "Financiële schulden"
- },
- {
-  "nr": 439000,
-  "naam": "Diverse financiële schulden",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "43",
-  "rubriek_oms": "Financiële schulden"
- },
- {
+{
   "nr": 440000,
   "naam": "Leveranciers",
   "apko": "P",
@@ -525,16 +407,7 @@ const MAR = [
   "rubriek": "44",
   "rubriek_oms": "Handelsschulden"
  },
- {
-  "nr": 441000,
-  "naam": "Te betalen wissels",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "44",
-  "rubriek_oms": "Handelsschulden"
- },
- {
+{
   "nr": 444000,
   "naam": "Te ontvangen facturen",
   "apko": "P",
@@ -606,16 +479,7 @@ const MAR = [
   "rubriek": "45",
   "rubriek_oms": "Schulden mbt belastingen, ..."
  },
- {
-  "nr": 451600,
-  "naam": "Regularisatie btw verkopen",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "45",
-  "rubriek_oms": "Schulden mbt belastingen, ..."
- },
- {
+{
   "nr": 452000,
   "naam": "Te betalen Belgische winstbelastingen",
   "apko": "P",
@@ -644,7 +508,7 @@ const MAR = [
  },
  {
   "nr": 455200,
-  "naam": "Verschuldigde lonen",
+  "naam": "Verschuldigde lonen bedienden",
   "apko": "P",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
@@ -653,7 +517,7 @@ const MAR = [
  },
  {
   "nr": 455300,
-  "naam": "Verschuldigde salarissen",
+  "naam": "Verschuldigde lonen arbeiders",
   "apko": "P",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
@@ -678,16 +542,7 @@ const MAR = [
   "rubriek": "47",
   "rubriek_oms": "Schulden uit bestemming resultaat"
  },
- {
-  "nr": 472000,
-  "naam": "Tantièmes over het boekjaar",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "47",
-  "rubriek_oms": "Schulden uit bestemming resultaat"
- },
- {
+{
   "nr": 488000,
   "naam": "Terug te betalen verpakking",
   "apko": "P",
@@ -696,16 +551,7 @@ const MAR = [
   "rubriek": "48",
   "rubriek_oms": "Diverse schulden"
  },
- {
-  "nr": 489000,
-  "naam": "Schulden aan de eigenaar",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "48",
-  "rubriek_oms": "Diverse schulden"
- },
- {
+{
   "nr": 490000,
   "naam": "Over te dragen kosten",
   "apko": "P",
@@ -804,15 +650,6 @@ const MAR = [
   "rubriek": "60",
   "rubriek_oms": "Handelsgoederen, grond- en hulpstoffen"
  },
-  {
-  "nr": 609000,
-  "naam": "Voorraadwijziging grondstoffen",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "60",
-  "rubriek_oms": "Handelsgoederen, grond- en hulpstoffen"
- },
  {
   "nr": 609400,
   "naam": "Voorraadwijzigingen handelsgoederen",
@@ -876,16 +713,7 @@ const MAR = [
   "rubriek": "61",
   "rubriek_oms": "Diensten en diverse goederen"
  },
- {
-  "nr": 612220,
-  "naam": "Beroepskledij",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
+{
   "nr": 612500,
   "naam": "Verbruik water",
   "apko": "K",
@@ -906,15 +734,6 @@ const MAR = [
  {
   "nr": 612700,
   "naam": "Verbruik elektriciteit",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
-  "nr": 612800,
-  "naam": "Handelsverpakkingen",
   "apko": "K",
   "klasse": "6",
   "klasse_oms": "Kosten",
@@ -951,15 +770,6 @@ const MAR = [
  {
   "nr": 614400,
   "naam": "Verzekering rollend materieel",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "61",
-  "rubriek_oms": "Diensten en diverse goederen"
- },
- {
-  "nr": 615000,
-  "naam": "Vervoerskosten op verkoop",
   "apko": "K",
   "klasse": "6",
   "klasse_oms": "Kosten",
@@ -1257,15 +1067,6 @@ const MAR = [
  {
   "nr": 670000,
   "naam": "Verschuldigde of gestorte belastingen en voorheffingen",
-  "apko": "K",
-  "klasse": "6",
-  "klasse_oms": "Kosten",
-  "rubriek": "67",
-  "rubriek_oms": "Belastingen op het resultaat"
- },
- {
-  "nr": 670100,
-  "naam": "Geactiveerde overschotten van betaalde belastingen en voorheffingen (-)",
   "apko": "K",
   "klasse": "6",
   "klasse_oms": "Kosten",
