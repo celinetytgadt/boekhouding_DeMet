@@ -42,6 +42,26 @@ leerling nodig heeft om te kunnen boeken maar die niet bij één bepaald
 stuk horen — nu enkel de aflossingstabel `LENING1` bij de drie
 bankuittreksels met een aflossing.
 
+## Resolutie en export
+
+De afbeeldingen zijn **2142 × 1677 px** (3× de Canva-paginamaat van 714 × 559).
+Op 1× zijn ze wazig zodra de browser ze opblaast — en dat doet hij op elk
+scherm met schaling en op de beamer.
+
+De optie "hoge kwaliteit" bij een PNG-download in Canva verandert alleen de
+compressie, niet het aantal pixels. Exporteer daarom zo:
+
+1. In Canva: **Delen → Downloaden → PDF Print**, alle pagina's, *niet* afvlakken.
+2. De PDF omzetten naar losse PNG's op 288 dpi:
+   `pdftoppm -r 288 -png "bundel.pdf" p`
+3. De 43 pagina's hernoemen volgens de volgorde van de bundel: p1–8 `VK01`–`VK08`,
+   p9–10 `LENING1`/`LENING2`, p11–24 `BANK01`–`BANK14`, p25–36 `AK01`–`AK12`,
+   p37 `LOON`, p38 `BEGINSALDI`, p39 `BEGINBALANS`, p40 `ONTV01`, p41 `KAS01`,
+   p42 `AFSCHR1`, p43 `VR`.
+
+Wie een 2×- of 3×-schuifknop ziet bij de PNG-download in Canva, kan ook
+rechtstreeks zo exporteren — dan zijn het wel 43 losse downloads.
+
 ## Overige
 
 Eén document per afbeelding — geen pagina's met meerdere afschriften erop.

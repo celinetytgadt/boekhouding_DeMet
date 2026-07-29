@@ -302,6 +302,39 @@
     }
   };
 
+  /* Klikken op een document opent het schermvullend. Sluiten met een klik of Esc.
+     De overlay wordt pas aangemaakt bij de eerste klik en daarna hergebruikt. */
+  var docOverlay = null;
+
+  function maakDocOverlay() {
+    var overlay = document.createElement("div");
+    overlay.className = "document-overlay";
+    overlay.innerHTML =
+      '<img class="document-overlay-beeld" alt="">' +
+      '<button type="button" class="document-overlay-sluiten" ' +
+      'aria-label="Sluiten">&times;</button>';
+    overlay.addEventListener("click", sluitDocOverlay);
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function sluitDocOverlay() {
+    if (docOverlay) docOverlay.classList.remove("open");
+  }
+
+  window.vergrootDoc = function (img) {
+    if (img.style.display === "none") return;
+    if (!docOverlay) docOverlay = maakDocOverlay();
+    var groot = docOverlay.querySelector(".document-overlay-beeld");
+    groot.src = img.src;
+    groot.alt = img.alt;
+    docOverlay.classList.add("open");
+  };
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") sluitDocOverlay();
+  });
+
   function htmlDocumentAfbeelding(doc, klein) {
     docImgTeller++;
     var missingId = "missing-" + slug(doc) + "-" + docImgTeller;
@@ -309,7 +342,9 @@
     return (
       '<img class="' + klasse + '" src="documenten/' + escapeAttr(doc) + '.png" ' +
       'data-doc="' + escapeAttr(doc) + '" data-stap="0" data-missing-id="' + missingId + '" ' +
-      'onerror="handleDocFout(this)" alt="Verantwoordingsstuk ' + escapeAttr(doc) + '">' +
+      'onerror="handleDocFout(this)" onclick="vergrootDoc(this)" ' +
+      'title="Klik om het document schermvullend te openen" ' +
+      'alt="Verantwoordingsstuk ' + escapeAttr(doc) + '">' +
       '<div class="document-ontbreekt" id="' + missingId + '" style="display:none">' +
       "Document niet gevonden: documenten/" + escapeAttr(doc) + ".png (of .jpg)</div>"
     );
