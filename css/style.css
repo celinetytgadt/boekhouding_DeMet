@@ -209,6 +209,35 @@ h1.pagina-titel {
   color: var(--kleur-primair-donker);
 }
 
+/* hulpdocument: tweede, inklapbaar document bij een opdracht
+   (bv. de aflossingstabel bij een bankafschrift) */
+details.paneel > summary.hulpdoc-titel {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--kleur-primair-donker);
+  list-style: none;
+  margin-bottom: 4px;
+}
+
+details.paneel > summary.hulpdoc-titel::-webkit-details-marker {
+  display: none;
+}
+
+details.paneel > summary.hulpdoc-titel::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s;
+}
+
+details.paneel[open] > summary.hulpdoc-titel::before {
+  content: "▾ ";
+}
+
+details.paneel > summary.hulpdoc-titel:hover {
+  text-decoration: underline;
+}
+
 /* documentafbeelding */
 .document-afbeelding {
   max-width: 100%;
