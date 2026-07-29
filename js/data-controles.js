@@ -6,9 +6,9 @@
 // kasblad", voor de controle van 550000 (bank) en 570000 (kas)?
 // Vul de referentie in zoals ze in data-opdrachten.js staat.
 const CONTROLE_CONFIG = {
-  laatsteBankRef: "BANK24",
+  laatsteBankRef: "BANK14",
   laatsteKasRef: "KAS01",
-  voorraadRef: "DIV05",
+  voorraadRef: "VR",
 };
 
 // Handmatige controles: de leerling vinkt zelf "in orde" aan, met het

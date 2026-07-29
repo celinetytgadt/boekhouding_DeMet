@@ -254,7 +254,7 @@
   function controleReferenties() {
     var gb = state.boekingen;
     var ontbrekend = OPDRACHTEN
-      .filter(function (o) { return o.ref !== "DIV06" && o.ref !== "DIV07"; })
+      .filter(function (o) { return o.ref !== "BELASTING" && o.ref !== "RESULTAAT"; })
       .filter(function (o) { return !(gb[o.ref] && gb[o.ref].geboekt); })
       .map(function (o) { return o.ref; });
     return { ok: ontbrekend.length === 0, ontbrekend: ontbrekend };
@@ -316,7 +316,7 @@
   }
 
   /* ========================================================================
-     6. Redeneerschema-component (herbruikt voor elke opdracht + DIV06/DIV07)
+     6. Redeneerschema-component (herbruikt voor elke opdracht + BELASTING/RESULTAAT)
      ======================================================================== */
 
   function focusId(ref, rowIdx, veld) { return ref + "__r" + rowIdx + "__" + veld; }
@@ -479,6 +479,11 @@
     if (!def.geenDocument) {
       html += '<div class="paneel"><h2>Verantwoordingsstuk</h2>' + htmlDocumentAfbeelding(def.doc, false) + "</div>";
     }
+    if (def.hulpdoc) {
+      html += '<details class="paneel" open><summary class="hulpdoc-titel">' +
+        escapeAttr(def.hulpdocTitel || "Hulpdocument") +
+        "</summary>" + htmlDocumentAfbeelding(def.hulpdoc, false) + "</details>";
+    }
     if (def.instructie) {
       html += '<div class="paneel" style="border-color:var(--kleur-primair);background:#e9eaf7;"><h2>Uitleg</h2><p>' + escapeAttr(def.instructie) + "</p></div>";
     }
@@ -492,7 +497,7 @@
     var gb = berekenGrootboek();
 
     var html = '<h1 class="pagina-titel">Controles</h1>';
-    html += '<p class="pagina-subtitel">Rond dit tabblad volledig af vóór je aan de resultaatverwerking (DIV06/DIV07) begint.</p>';
+    html += '<p class="pagina-subtitel">Rond dit tabblad volledig af vóór je aan de resultaatverwerking (BELASTING/RESULTAAT) begint.</p>';
 
     html += '<div class="paneel"><h2>Automatisch nagekeken</h2>';
     html += '<div class="controle-rij"><div class="controle-vraag">Is elke referentie geboekt?' +
@@ -582,7 +587,7 @@
 
   function renderResultaat() {
     var ok = alleControlesOk();
-    var html = '<h1 class="pagina-titel">Resultaatverwerking — DIV06 + DIV07</h1>';
+    var html = '<h1 class="pagina-titel">Resultaatverwerking — BELASTING + RESULTAAT</h1>';
     html += '<p class="pagina-subtitel">Vennootschapsbelasting en toewijzing aan overgedragen winst.</p>';
 
     if (!ok) {
@@ -609,8 +614,8 @@
     });
     html += "</div>";
 
-    html += '<div class="paneel"><h2>DIV06 — Vennootschapsbelasting</h2>' + htmlRedeneerschema("DIV06") + "</div>";
-    html += '<div class="paneel"><h2>DIV07 — Toewijzing overgedragen winst</h2>' + htmlRedeneerschema("DIV07") + "</div>";
+    html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting</h2>' + htmlRedeneerschema("BELASTING") + "</div>";
+    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing overgedragen winst</h2>' + htmlRedeneerschema("RESULTAAT") + "</div>";
 
     var getallen = berekenSlotcontroleGetallen();
     html += '<div class="paneel"><h2>Slotcontrole</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
