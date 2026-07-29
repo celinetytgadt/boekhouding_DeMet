@@ -26,9 +26,10 @@ in principe enkel aanpassingen in de `data-*.js`-bestanden en de map
 De app kent zelf **geen enkel bedrag**. Alles komt uit wat de leerling
 zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 
+
 ## Publiceren op GitHub Pages
 
-1. Zet de inhoud van deze map (`index.html`, `css/`, `js/`, `documenten/`)
+1. Zet de inhoud van deze map (`index.html`, `readme.md`, `css/`, `js/`, `documenten/`)
    in de root van de repo `celinetytgadt/boekhouding_DeMet` (of in een
    `docs/`-map, wat je verkiest).
 2. Ga naar **Settings → Pages** en kies de branch/map die je gebruikt.
@@ -37,6 +38,10 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 
 ## Wat nog moet gebeuren
 
+- **Documentafbeeldingen** toevoegen in `documenten/` (zie
+  `documenten/README.md`) — die zijn in deze versie nog niet meegebouwd.
+- **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
+  opdrachtenbundel van dit jaar vastligt.
 - **Nakijken door de leerkracht via Google Sheets (§10 van de
   specificatie)** — bewust nog niet gebouwd. Deze versie werkt volledig
   op zichzelf (autosave in de browser + export/import als JSON-bestand),
@@ -45,9 +50,8 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   die koppeling er niet is, kunnen leerlingen sowieso niet bij elkaars
   werk of bij een gedeeld Google Sheet — elke leerling werkt in zijn/haar
   eigen browser en eigen export-bestand.
-- **Openstaande facturen (400000/440000)**: optie 1 uit de specificatie
-  is gebouwd — een leverancier/klant-veld per boeking op die rekeningen,
-  met een overzichtje per relatie op het tabblad Controles.
+- **Openstaande facturen (400000/440000)**: een leverancier/klant-veld per boeking op die rekeningen,
+  met een overzichtje per relatie op het tabblad Controles. De leerling voert dit manueel in, dus kans op typfouten. Geen impact op de werking van de app, wel iets waar de leerling bewust van moet worden.
 - De regel voor "juist soort saldo" (automatische controle) is een
   vereenvoudiging op basis van A/P/K/O en rekeningen die op **009**
   eindigen. Uitzonderingen zoals contra-rekeningen (retours, kortingen)
