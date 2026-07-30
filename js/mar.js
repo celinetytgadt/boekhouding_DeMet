@@ -453,33 +453,6 @@ const MAR = [
   "rubriek_oms": "Schulden mbt belastingen, ..."
  },
  {
-  "nr": 451300,
-  "naam": "Verschuldigde btw op IC-verwervingen",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "45",
-  "rubriek_oms": "Schulden mbt belastingen, ..."
- },
- {
-  "nr": 451400,
-  "naam": "Btw op invoer met verlegging van heffing",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "45",
-  "rubriek_oms": "Schulden mbt belastingen, ..."
- },
- {
-  "nr": 451500,
-  "naam": "Verschuldigde btw werken in onroerende staat",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "45",
-  "rubriek_oms": "Schulden mbt belastingen, ..."
- },
-{
   "nr": 452000,
   "naam": "Te betalen Belgische winstbelastingen",
   "apko": "P",
@@ -518,15 +491,6 @@ const MAR = [
  {
   "nr": 455300,
   "naam": "Verschuldigde lonen arbeiders",
-  "apko": "P",
-  "klasse": "4",
-  "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
-  "rubriek": "45",
-  "rubriek_oms": "Schulden mbt belastingen, ..."
- },
- {
-  "nr": 456000,
-  "naam": "Vakantiegeld",
   "apko": "P",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",

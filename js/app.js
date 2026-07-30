@@ -627,11 +627,10 @@
   function renderStart() {
     var html = htmlBannerNaamOntbreekt();
     html += '<h1 class="pagina-titel">Boekhoudapp Kern 8</h1>';
-    html += '<p class="pagina-subtitel">Bedrijfsorganisatie — De MET</p>';
     html += '<div class="paneel">' +
       "<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in — je bedrag, je redenering, of het een actief/passief/kost/opbrengst is, of het stijgt of daalt, het rekeningnummer, en zelf of het debet of credit is. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
       "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
-      "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt je leerkracht na. Ze controleert wel of debet en credit kloppen.</p>" +
+      "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt de vakexpert na. Ze controleert wel of debet en credit kloppen.</p>" +
       "<p>Overal waar je een <span class=\"btn-info btn-info-voorbeeld\">i</span> ziet staan, vind je uitleg over hoe dat onderdeel werkt.</p>" +
       "<p>Je werk wordt automatisch bewaard in je browser. Gebruik <em>Exporteren</em> af en toe om een bestandje te bewaren als back-up, zeker als je van toestel wisselt — met <em>Importeren</em> laad je het weer in.</p>" +
       "</div>";
