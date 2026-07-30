@@ -1137,6 +1137,13 @@ table.relatie-overzicht tr.relatie-gekozen { background: #e9eaf7; }
   display: flex;
   justify-content: flex-end;
 }
+.melding-punten {
+  margin: 4px 0 0 0;
+  padding-left: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.melding-punten li { margin-bottom: 5px; }
 .melding-slot {
   margin-top: 12px;
   padding-top: 10px;

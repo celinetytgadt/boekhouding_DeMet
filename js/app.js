@@ -297,22 +297,18 @@
   // boeking juist is, terwijl de app enkel de innerlijke logica nakijkt.
   // En bewust geen antwoorden: enkel de reden waarom er nog iets scheelt.
   function logicaProblemen(rows) {
-    var soortFout = false, dcFout = false;
-    rows.forEach(function (row) {
-      var mar = marBij(row.rekening);
-      if (mar && row.apko && mar.apko !== row.apko) soortFout = true;
-      var verwacht = verwachteDCUitRedenering(row.apko, row.stijgtDaalt);
-      if (verwacht && row.dc && verwacht !== row.dc) dcFout = true;
-    });
     var punten = [];
-    if (soortFout) {
-      punten.push("Bij minstens één lijn past het rekeningnummer dat je koos niet bij de soort (A/P/K/O) die je zelf invulde. " +
-        "Kijk na of je wel de juiste rekening genomen hebt — of dat je soort niet klopt.");
-    }
-    if (dcFout) {
-      punten.push("Bij minstens één lijn past debet of credit niet bij wat je invulde als soort en als stijgt/daalt. " +
-        "Denk nog eens na over wat er precies met die rekening gebeurt.");
-    }
+    rows.forEach(function (row, idx) {
+      var rij = "Rij " + (idx + 1) + ": ";
+      var mar = marBij(row.rekening);
+      if (mar && row.apko && mar.apko !== row.apko) {
+        punten.push(rij + row.rekening + " is geen " + row.apko + "-rekening.");
+      }
+      var verwacht = verwachteDCUitRedenering(row.apko, row.stijgtDaalt);
+      if (verwacht && row.dc && verwacht !== row.dc) {
+        punten.push(rij + row.apko + " " + row.stijgtDaalt.toLowerCase() + " is geen " + row.dc + ".");
+      }
+    });
     return punten;
   }
 
@@ -527,7 +523,9 @@
   // Klein meldingsvenster, gebruikt als een boeking innerlijk niet klopt.
   function openMeldingModal(titel, punten, slot) {
     document.getElementById("melding-modal-titel").textContent = titel;
-    var html = punten.map(function (p) { return "<p>" + escapeAttr(p) + "</p>"; }).join("");
+    var html = '<ul class="melding-punten">' +
+      punten.map(function (p) { return "<li>" + escapeAttr(p) + "</li>"; }).join("") +
+      "</ul>";
     if (slot) html += '<p class="melding-slot">' + escapeAttr(slot) + "</p>";
     document.getElementById("melding-modal-inhoud").innerHTML = html;
     document.getElementById("melding-modal-overlay").hidden = false;
