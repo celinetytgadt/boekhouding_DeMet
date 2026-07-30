@@ -686,7 +686,15 @@
     var html = htmlBannerNaamOntbreekt();
     html += '<h1 class="pagina-titel">Boekhoudapp Kern 8</h1>';
     html += '<div class="paneel">' +
-      "<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in — je bedrag, je redenering, of het een actief/passief/kost/opbrengst is, of het stijgt of daalt, het rekeningnummer, en zelf of het debet of credit is. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
+      "<p>Hey collega's, fijn dat jullie deze app willen testen! </p>"
++      
+      "<p>De app spreekt vrij goed voor zichzelf, een handleiding heb ik nog niet. Je loopt er best tab voor tab door, je krijgt telkens een verantwoordingsstuk en een redeneerschema. Op dit redeneerschema zitten wat controles, ik weet nog niet of ik die laat staan. </p>" 
++ 
+      "<p>Vooral aan het einde zitten nog wat lossen eindjes (zoals klanten/leveranciers om een zicht te hebben op de open facturen en de resultaatverwerking (te veel op 1 pagina, wat onduidelijk). Buiten dat, ben ik best wel al tevreden. Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
++
+      "<p>_______________________________________________________ </p>" +       
++           
+"<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in — je bedrag, je redenering, of het een actief/passief/kost/opbrengst is, of het stijgt of daalt, het rekeningnummer, en zelf of het debet of credit is. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
       "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
       "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt de vakexpert na. Ze controleert wel of debet en credit kloppen.</p>" +
       "<p>Overal waar je een <span class=\"btn-info btn-info-voorbeeld\">i</span> ziet staan, vind je uitleg over hoe dat onderdeel werkt.</p>" +
