@@ -11,6 +11,9 @@
 // bankafschrift). Zo hoeven ze niet van pagina te wisselen (§2).
 // Veld "geenDocument": true als er geen verantwoordingsstuk bij hoort
 // (bv. BTW, BELASTING en RESULTAAT, die volgen uit eigen berekeningen).
+// Veld "navLabel": de tekst in het menu links, als die anders moet zijn dan
+// de referentie zelf. De referentie ("ref") is wat in de T-rekeningen bij
+// elke boeking komt te staan en blijft dus best kort.
 //
 // BUNDEL: MetWear bv — 1e kwartaal 2026 (januari t/m maart).
 
@@ -18,7 +21,11 @@ const OPDRACHTEN = [
   // "doc" moet de bestandsnaam op GitHub exact matchen — GitHub Pages is
   // hoofdlettergevoelig (Windows niet, dus dat valt thuis niet op).
   // Alle documentnamen staan sinds Q1 2026 volledig in HOOFDLETTERS.
-  { ref: "BEGINBALANS", categorie: "Beginbalans", titel: "Beginbalans 1 januari 2026", doc: "BEGINBALANS", hulpdoc: "AFSCHR1", hulpdocTitel: "Afschrijvingstabel (incl. nieuwe aankoop in 2026)" },
+  //
+  // De referentie is "BB" en niet "BEGINBALANS": in de T-rekeningen staat ze
+  // bij elke beginboeking, en die kolommen zijn smal. Het menu toont wel de
+  // volledige naam, zodat de link duidelijk blijft.
+  { ref: "BB", navLabel: "BEGINBALANS (BB)", categorie: "Beginbalans", titel: "Beginbalans 1 januari 2026 (BB)", doc: "BEGINBALANS", hulpdoc: "AFSCHR1", hulpdocTitel: "Afschrijvingstabel (incl. nieuwe aankoop in 2026)" },
 
   { ref: "AK01", categorie: "Aankopen", titel: "Aankoop AK01", doc: "AK01" },
   { ref: "AK02", categorie: "Aankopen", titel: "Aankoop AK02", doc: "AK02" },

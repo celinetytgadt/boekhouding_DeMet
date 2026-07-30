@@ -1,7 +1,8 @@
 // app.js — Boekhoudapp Kern 8
 // Alle logica van de app. Inhoud die per jaar/bundel wijzigt staat NIET
 // hier, maar in js/data-opdrachten.js, js/data-relaties.js,
-// js/data-controles.js en js/mar.js (zie §9 van de specificatie).
+// js/data-controles.js, js/data-balans.js, js/data-info.js,
+// js/data-mar-indeling.js en js/mar.js (zie §9 van de specificatie).
 //
 // De app kent zelf geen enkel bedrag: alles wat een leerling ziet komt uit
 // wat de leerling zelf intikt of uit de documentafbeeldingen.
@@ -46,12 +47,21 @@
     return isNaN(num) ? null : num;
   }
 
+  // Bedragen zonder overbodige ",00": in deze bundel wordt met hele euro's
+  // gewerkt, en "1.250,00" leest trager dan "1.250". Komt er toch een bedrag
+  // met centen voor, dan worden de twee decimalen wél getoond — anders zou
+  // er informatie verloren gaan.
   function formatBedrag(num) {
     if (num === null || num === undefined || isNaN(num)) return "";
+    var heelGetal = Math.abs(num - Math.round(num)) < 0.005;
+    var decimalen = heelGetal ? 0 : 2;
     try {
-      return new Intl.NumberFormat("nl-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+      return new Intl.NumberFormat("nl-BE", {
+        minimumFractionDigits: decimalen,
+        maximumFractionDigits: decimalen,
+      }).format(heelGetal ? Math.round(num) : num);
     } catch (e) {
-      return num.toFixed(2).replace(".", ",");
+      return heelGetal ? String(Math.round(num)) : num.toFixed(2).replace(".", ",");
     }
   }
 
@@ -82,14 +92,12 @@
     return gevonden;
   }
 
-  function zoekMar(query) {
-    query = (query || "").trim().toLowerCase();
-    var lijst = query
-      ? MAR.filter(function (a) {
-          return String(a.nr).indexOf(query) !== -1 || a.naam.toLowerCase().indexOf(query) !== -1;
-        })
-      : MAR.slice(0, 10);
-    return lijst.slice(0, 10);
+  // Patroon uit data-controles.js: "340000" (exact), "411*" (begint met),
+  // "2*" (hele klasse).
+  function rekeningPast(nr, patroon) {
+    if (patroon.indexOf("*") === -1) return String(nr) === String(patroon);
+    var begin = patroon.replace("*", "");
+    return String(nr).indexOf(begin) === 0;
   }
 
   /* ========================================================================
@@ -114,11 +122,44 @@
         slotcontroleBalans: false,
         slotcontroleMelding: null,
       },
+      eindbalans: {},
     };
   }
 
   var state = maakLegeState("");
   var laatstBewaardOm = null;
+
+  // Vult ontbrekende onderdelen aan en zet oud werk om naar de huidige
+  // structuur. Zo blijft een export van vorige week gewoon werken.
+  function normaliseerState(s, naam) {
+    if (!s || typeof s !== "object") s = maakLegeState(naam);
+    s.student = naam !== undefined ? naam : (s.student || "");
+    if (!s.boekingen) s.boekingen = {};
+    if (!s.controles) s.controles = {};
+    if (!s.eindbalans) s.eindbalans = {};
+    if (!s.resultaat) s.resultaat = maakLegeState("").resultaat;
+    if (!s.resultaat.stap) s.resultaat.stap = maakLegeState("").resultaat.stap;
+
+    // De referentie van de beginbalans heette vroeger BEGINBALANS en is nu
+    // BB (te breed in de T-rekeningen). Werk van vóór die wijziging mag
+    // daardoor niet verloren gaan.
+    if (s.boekingen.BEGINBALANS && !s.boekingen.BB) {
+      s.boekingen.BB = s.boekingen.BEGINBALANS;
+    }
+    delete s.boekingen.BEGINBALANS;
+
+    // Een relatie (klant/leverancier) hoort enkel bij 400000 en 440000.
+    // Stond er ooit een naam bij een rij die intussen een ander
+    // rekeningnummer kreeg, dan blijft die anders onzichtbaar meeslepen.
+    Object.keys(s.boekingen).forEach(function (ref) {
+      var b = s.boekingen[ref];
+      if (!b || !b.rows) return;
+      b.rows.forEach(function (row) {
+        if (row.relatie && !relatieVeldVoorRekening(row.rekening)) row.relatie = "";
+      });
+    });
+    return s;
+  }
 
   function boekingVoor(ref) {
     if (!state.boekingen[ref]) {
@@ -146,11 +187,7 @@
       var ruw = localStorage.getItem(key);
       if (ruw) opgeslagen = JSON.parse(ruw);
     } catch (e) { console.error(e); }
-    state = opgeslagen || maakLegeState(naam);
-    state.student = naam;
-    if (!state.resultaat) state.resultaat = maakLegeState("").resultaat;
-    if (!state.controles) state.controles = {};
-    if (!state.boekingen) state.boekingen = {};
+    state = normaliseerState(opgeslagen || maakLegeState(naam), naam);
   }
 
   function updateOpslaanStatus() {
@@ -175,13 +212,18 @@
     huidigePagina: { type: "start" },
     tpanelZoek: "",
     tpanelDetail: true,
-    sidebarOpen: false,
-    tpanelOpen: false,
+    tpanelToonLeeg: false,     // standaard: enkel rekeningen met boekingen
+    tpanelApko: "",
+    tpanelKlasse: "",
+    tpanelRubriek: "",
+    relatieKeuze: { klanten: "", leveranciers: "" },
+    gekozenKaart: null,        // eindbalans: aangetikte rekening
+    balansHint: null,          // eindbalans: vak waarvan de tip openstaat
   };
   var docImgTeller = 0;
 
   // MAR-zoekpopup (losstaand van de rest, zie §"Redeneerschema-component")
-  var marModal = { open: false, scope: null, row: null, zoek: "", apko: "" };
+  var marModal = { open: false, scope: null, row: null, zoek: "", apko: "", klasse: "", rubriek: "" };
 
   /* ========================================================================
      3. Grootboek opbouwen uit alle geboekte boekingen
@@ -199,7 +241,7 @@
         if (!mar) return;
         var nr = String(mar.nr);
         if (!gb[nr]) gb[nr] = { D: [], C: [] };
-        gb[nr][row.dc].push({ bedrag: bedrag, ref: o.ref, relatie: row.relatie || "" });
+        gb[nr][row.dc].push({ bedrag: bedrag, ref: o.ref, relatie: row.relatie || "", redenering: row.redenering || "" });
       });
     });
     return gb;
@@ -214,9 +256,26 @@
     return { totalD: totalD, totalC: totalC, saldo: Math.abs(saldo), kant: kant };
   }
 
-  function rijGeldig(row) {
+  // Wat ontbreekt er nog aan deze rij? Vroeger bleef de knop Boeken gewoon
+  // grijs met een algemene boodschap, waardoor een half ingevulde rij (of een
+  // rekeningnummer dat niet in het MAR bestaat) moeilijk terug te vinden was.
+  function ontbreektInRij(row) {
+    var mist = [];
     var bedrag = parseBedrag(row.bedrag);
-    return bedrag !== null && bedrag > 0 && !!row.rekening && !!marBij(row.rekening) && (row.dc === "D" || row.dc === "C");
+    if (bedrag === null) mist.push("bedrag");
+    else if (bedrag <= 0) mist.push("bedrag groter dan 0");
+    if (!row.rekening) mist.push("rekeningnummer");
+    else if (!marBij(row.rekening)) mist.push("bestaand rekeningnummer (" + row.rekening + " staat niet in het MAR)");
+    if (row.dc !== "D" && row.dc !== "C") mist.push("debet of credit");
+    return mist;
+  }
+
+  function rijLeeg(row) {
+    return !row.bedrag && !row.redenering && !row.rekening && !row.dc && !row.apko && !row.stijgtDaalt;
+  }
+
+  function rijGeldig(row) {
+    return ontbreektInRij(row).length === 0;
   }
 
   function berekenTotalen(rows) {
@@ -241,13 +300,47 @@
      4. Controles (§7)
      ======================================================================== */
 
+  // Aan welke kant hoort het saldo van deze rekening te staan?
+  // Uitzonderingen (contrarekeningen zoals retours en handelskortingen) staan
+  // in data-controles.js, zodat dit per bundel bij te sturen is.
   function verwachteKant(mar) {
     if (!mar) return null;
-    var contraAfschrijving = /009$/.test(String(mar.nr));
+    var nr = String(mar.nr);
+    if (typeof SALDO_GEEN_CONTROLE !== "undefined" && SALDO_GEEN_CONTROLE.indexOf(nr) !== -1) return null;
+    if (typeof SALDO_UITZONDERINGEN !== "undefined" && SALDO_UITZONDERINGEN[nr]) return SALDO_UITZONDERINGEN[nr];
+    var contraAfschrijving = /9$/.test(nr);
     if (mar.apko === "A") return contraAfschrijving ? "C" : "D";
     if (mar.apko === "P") return "C";
     if (mar.apko === "K") return "D";
     if (mar.apko === "O") return "C";
+    return null;
+  }
+
+  // Welk document hoort bij een controle? Staat er niets vast in
+  // CONTROLE_CONFIG, dan nemen we het laatste document van die soort uit
+  // data-opdrachten.js — zo staat er nooit een verouderd afschrift.
+  function laatsteDocumentMet(prefix) {
+    var kandidaten = OPDRACHTEN.filter(function (o) {
+      return o.doc && String(o.ref).indexOf(prefix) === 0;
+    }).map(function (o) { return o.doc; });
+    if (!kandidaten.length) return null;
+    kandidaten.sort();
+    return kandidaten[kandidaten.length - 1];
+  }
+
+  function documentVoorControle(c) {
+    if (c.doc) return c.doc;
+    if (!c.docConfig) return null;
+    var vast = CONTROLE_CONFIG[c.docConfig];
+    if (vast) {
+      var opdracht = null;
+      for (var i = 0; i < OPDRACHTEN.length; i++) {
+        if (OPDRACHTEN[i].ref === vast) { opdracht = OPDRACHTEN[i]; break; }
+      }
+      return opdracht && opdracht.doc ? opdracht.doc : vast;
+    }
+    if (c.docConfig === "laatsteBankRef") return laatsteDocumentMet("BANK");
+    if (c.docConfig === "laatsteKasRef") return laatsteDocumentMet("KAS");
     return null;
   }
 
@@ -266,9 +359,6 @@
     Object.keys(gb).forEach(function (nr) {
       var mar = marBij(nr);
       if (!mar) return;
-      // 580000 (interne overboekingen) moet zelf op 0 uitkomen — dat wordt
-      // apart gecontroleerd bij "zelf nakijken" en hoort hier niet bij.
-      if (nr === "580000") return;
       var s = saldoVoorEntry(gb[nr]);
       if (!s.kant) return;
       var verwacht = verwachteKant(mar);
@@ -336,6 +426,7 @@
   });
 
   function htmlDocumentAfbeelding(doc, klein) {
+    if (!doc) return '<div class="document-ontbreekt">Geen document ingesteld voor deze controle.</div>';
     docImgTeller++;
     var missingId = "missing-" + slug(doc) + "-" + docImgTeller;
     var klasse = klein ? "document-klein" : "document-afbeelding";
@@ -351,23 +442,70 @@
   }
 
   /* ========================================================================
+     5b. Uitlegballonnetjes (i-icoontje)
+     ======================================================================== */
+
+  function htmlInfoKnop(sleutel, titelTekst) {
+    if (typeof INFO_TEKSTEN === "undefined" || !INFO_TEKSTEN[sleutel]) return "";
+    return '<button type="button" class="btn-info" data-role="info" data-info="' + escapeAttr(sleutel) + '" ' +
+      'title="' + escapeAttr(titelTekst || "Uitleg") + '" aria-label="Uitleg">i</button>';
+  }
+
+  function openInfoModal(sleutel) {
+    var info = (typeof INFO_TEKSTEN !== "undefined") ? INFO_TEKSTEN[sleutel] : null;
+    if (!info) return;
+    document.getElementById("info-modal-titel").textContent = info.titel;
+    var html = "";
+    var inLijst = false;
+    info.regels.forEach(function (r) {
+      if (typeof r === "string") {
+        if (inLijst) { html += "</ol>"; inLijst = false; }
+        html += "<p>" + escapeAttr(r) + "</p>";
+      } else if (r.kop) {
+        if (inLijst) { html += "</ol>"; inLijst = false; }
+        html += "<h3>" + escapeAttr(r.kop) + "</h3>";
+      } else if (r.stap) {
+        if (!inLijst) { html += "<ol>"; inLijst = true; }
+        html += "<li>" + escapeAttr(r.stap) + "</li>";
+      }
+    });
+    if (inLijst) html += "</ol>";
+    document.getElementById("info-modal-inhoud").innerHTML = html;
+    document.getElementById("info-modal-overlay").hidden = false;
+  }
+
+  function sluitInfoModal() {
+    document.getElementById("info-modal-overlay").hidden = true;
+  }
+
+  /* ========================================================================
      6. Redeneerschema-component (herbruikt voor elke opdracht + BELASTING/RESULTAAT)
      ======================================================================== */
 
   function focusId(ref, rowIdx, veld) { return ref + "__r" + rowIdx + "__" + veld; }
 
   function relatieVeldVoorRekening(rekening) {
-    var nr = marBij(rekening) ? String(marBij(rekening).nr) : "";
+    var mar = marBij(rekening);
+    if (!mar) return null;
+    var nr = String(mar.nr);
     if (nr === "400000") return "klanten";
     if (nr === "440000") return "leveranciers";
     return null;
   }
 
+  var ICOON_PRULLENBAK =
+    '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">' +
+    '<path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4a1 1 0 1 1 0 2h-1v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7H4a1 1 0 0 1 0-2h4V4a1 1 0 0 1 1-1zm1 2h4V5h-4zM7 7v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7zm3 3a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1z"/>' +
+    "</svg>";
+
   function htmlRedeneerschemaRij(ref, row, idx, geboekt) {
     var mar = marBij(row.rekening);
-    var omschrijving = mar ? mar.naam : (row.rekening ? "— onbekend rekeningnummer —" : "");
+    var omschrijving = mar ? mar.naam : (row.rekening ? "— dit nummer staat niet in het MAR —" : "");
     var relatieSoort = relatieVeldVoorRekening(row.rekening);
     var rekeningFocusId = focusId(ref, idx, "rekening");
+    var mist = geboekt ? [] : ontbreektInRij(row);
+    var leeg = rijLeeg(row);
+    var rijKlasse = (!geboekt && mist.length && !leeg) ? ' class="rij-onvolledig"' : "";
 
     var relatieHtml = "";
     if (relatieSoort) {
@@ -375,13 +513,14 @@
       relatieHtml =
         '<input type="text" class="relatie-input" list="' + datalistId + '" ' +
         'placeholder="' + (relatieSoort === "klanten" ? "naam klant…" : "naam leverancier…") + '" ' +
+        'title="Optioneel: bij wie hoort dit? Zo kan je later zien welke facturen nog openstaan." ' +
         'data-focus-id="' + focusId(ref, idx, "relatie") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="relatie" ' +
         'value="' + escapeAttr(row.relatie) + '" ' + (geboekt ? "disabled" : "") + ">";
     }
 
     return (
-      "<tr>" +
-      '<td class="kol-bedrag"><input type="text" inputmode="decimal" placeholder="0,00" ' +
+      "<tr" + rijKlasse + ">" +
+      '<td class="kol-bedrag"><input type="text" inputmode="decimal" placeholder="0" ' +
       'data-focus-id="' + focusId(ref, idx, "bedrag") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="bedrag" ' +
       'value="' + escapeAttr(row.bedrag) + '" ' + (geboekt ? "disabled" : "") + "></td>" +
 
@@ -403,13 +542,14 @@
       (geboekt ? "" : '<button type="button" class="btn-mar-zoeken" data-role="mar-zoeken" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" title="Rekening zoeken">🔍</button>') +
       "</div>" + relatieHtml + "</td>" +
 
-      '<td class="kol-omschrijving"><input type="text" value="' + escapeAttr(omschrijving) + '" disabled></td>' +
+      '<td class="kol-omschrijving"><div class="omschrijving-veld' + (mar ? "" : (row.rekening ? " omschrijving-onbekend" : " omschrijving-leeg")) + '">' +
+      (omschrijving ? escapeAttr(omschrijving) : "&nbsp;") + "</div></td>" +
 
       '<td class="kol-dc"><select data-focus-id="' + focusId(ref, idx, "dc") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="dc" ' + (geboekt ? "disabled" : "") + ">" +
       ["", "D", "C"].map(function (v) { return '<option value="' + v + '"' + (row.dc === v ? " selected" : "") + ">" + (v || "—") + "</option>"; }).join("") +
       "</select></td>" +
 
-      '<td class="kol-verwijder">' + (geboekt ? "" : '<button type="button" class="btn-verwijder-rij" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-role="verwijder-rij" title="Rij verwijderen">✕</button>') + "</td>" +
+      '<td class="kol-verwijder">' + (geboekt ? "" : '<button type="button" class="btn-verwijder-rij" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-role="verwijder-rij" title="Deze lijn verwijderen" aria-label="Deze lijn verwijderen">' + ICOON_PRULLENBAK + "</button>") + "</td>" +
       "</tr>"
     );
   }
@@ -421,7 +561,12 @@
     var gelijk = Math.abs(totalen.totaalDebet - totalen.totaalCredit) < 0.005 && totalen.totaalDebet > 0;
     var klaar = boekingKlaarOmTeBoeken(boeking.rows);
 
-    var html = '<table class="redeneerschema"><thead><tr>' +
+    var html = '<table class="redeneerschema">' +
+      "<colgroup>" +
+      '<col class="c-bedrag"><col class="c-redenering"><col class="c-apko"><col class="c-stijgtdaalt">' +
+      '<col class="c-rekening"><col class="c-omschrijving"><col class="c-dc"><col class="c-verwijder">' +
+      "</colgroup>" +
+      "<thead><tr>" +
       "<th>Bedrag</th><th>Redenering</th><th>A/P/K/O</th><th>Stijgt/daalt</th>" +
       "<th>Rekeningnr.</th><th>Omschrijving</th><th>D/C</th><th></th>" +
       "</tr></thead><tbody>";
@@ -429,7 +574,7 @@
     html += "</tbody></table>";
 
     html += '<div class="redeneerschema-acties">';
-    html += '<div>' + (geboekt ? "" : '<button type="button" class="btn-rij-toevoegen" data-scope="' + escapeAttr(ref) + '" data-role="rij-toevoegen">+ rij toevoegen</button>') + "</div>";
+    html += "<div>" + (geboekt ? "" : '<button type="button" class="btn-rij-toevoegen" data-scope="' + escapeAttr(ref) + '" data-role="rij-toevoegen">+ rij toevoegen</button>') + "</div>";
     html += '<div class="totalen">' +
       "<span>Totaal debet: <strong>" + formatBedrag(totalen.totaalDebet) + "</strong></span>" +
       "<span>Totaal credit: <strong>" + formatBedrag(totalen.totaalCredit) + "</strong></span>" +
@@ -437,13 +582,31 @@
       "</div>";
     html += "</div>";
 
-    html += '<div style="margin-top:12px;">';
+    html += '<div class="boeken-blok">';
     if (geboekt) {
       html += '<span class="status-geboekt">Geboekt ✓</span> ';
       html += '<button type="button" class="btn-heropenen" data-scope="' + escapeAttr(ref) + '" data-role="heropenen">Heropenen om te wijzigen</button>';
     } else {
       html += '<button type="button" class="btn-boeken" data-scope="' + escapeAttr(ref) + '" data-role="boeken" ' + (klaar ? "" : "disabled") + ">Boeken</button>";
-      if (!klaar) html += ' <span style="font-size:12px;color:var(--kleur-tekst-zacht);">kan pas als elke rij volledig is ingevuld en D = C</span>';
+      if (!klaar) {
+        // Concreet zeggen wát er nog ontbreekt, per lijn. Anders blijft de
+        // knop grijs zonder dat de leerling weet waarom.
+        var punten = [];
+        boeking.rows.forEach(function (row, idx) {
+          if (rijLeeg(row)) {
+            punten.push("Lijn " + (idx + 1) + " is nog helemaal leeg — vul ze in of verwijder ze met het prullenbakje.");
+            return;
+          }
+          var mist = ontbreektInRij(row);
+          if (mist.length) punten.push("Lijn " + (idx + 1) + ": nog geen " + mist.join(", ") + ".");
+        });
+        if (!gelijk && punten.length === 0) {
+          punten.push("Totaal debet en totaal credit zijn niet gelijk.");
+        } else if (!gelijk) {
+          punten.push("En daarna: totaal debet en totaal credit moeten gelijk zijn.");
+        }
+        html += '<ul class="boeken-waarom">' + punten.map(function (p) { return "<li>" + escapeAttr(p) + "</li>"; }).join("") + "</ul>";
+      }
     }
     html += "</div>";
 
@@ -469,6 +632,7 @@
       "<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in — je bedrag, je redenering, of het een actief/passief/kost/opbrengst is, of het stijgt of daalt, het rekeningnummer, en zelf of het debet of credit is. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
       "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
       "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt je leerkracht na. Ze controleert wel of debet en credit kloppen.</p>" +
+      "<p>Overal waar je een <span class=\"btn-info btn-info-voorbeeld\">i</span> ziet staan, vind je uitleg over hoe dat onderdeel werkt.</p>" +
       "<p>Je werk wordt automatisch bewaard in je browser. Gebruik <em>Exporteren</em> af en toe om een bestandje te bewaren als back-up, zeker als je van toestel wisselt — met <em>Importeren</em> laad je het weer in.</p>" +
       "</div>";
     return html;
@@ -509,8 +673,8 @@
     for (var i = 0; i < OPDRACHTEN.length; i++) { if (OPDRACHTEN[i].ref === ref) { def = OPDRACHTEN[i]; break; } }
     if (!def) return "<p>Opdracht niet gevonden.</p>";
     var html = htmlBannerNaamOntbreekt();
-    html += '<h1 class="pagina-titel">' + escapeAttr(def.titel) + '</h1>';
-    html += '<p class="pagina-subtitel">' + escapeAttr(def.categorie) + '</p>';
+    html += '<h1 class="pagina-titel">' + escapeAttr(def.titel) + "</h1>";
+    html += '<p class="pagina-subtitel">' + escapeAttr(def.categorie) + "</p>";
     if (!def.geenDocument) {
       html += '<div class="paneel"><h2>Verantwoordingsstuk</h2>' + htmlDocumentAfbeelding(def.doc, false) + "</div>";
     }
@@ -522,7 +686,49 @@
     if (def.instructie) {
       html += '<div class="paneel" style="border-color:var(--kleur-primair);background:#e9eaf7;"><h2>Uitleg</h2><p>' + escapeAttr(def.instructie) + "</p></div>";
     }
-    html += '<div class="paneel"><h2>Redeneerschema</h2>' + htmlRedeneerschema(ref) + "</div>";
+    html += '<div class="paneel"><h2>Redeneerschema ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema(ref) + "</div>";
+    return html;
+  }
+
+  /* ---------- Controles ---------- */
+
+  // Alle rekeningen die bij een controle horen, met hun saldo. Zo moet de
+  // leerling niet zelf gaan zoeken in het T-paneel wat er precies bedoeld
+  // wordt met een vraag.
+  function rekeningenVoorControle(c, gb) {
+    if (!c.rekeningen || !c.rekeningen.length) return [];
+    var resultaat = [];
+    MAR.forEach(function (a) {
+      var nr = String(a.nr);
+      var past = c.rekeningen.some(function (p) { return rekeningPast(nr, p); });
+      if (!past) return;
+      var entry = gb[nr];
+      if (!entry) return;                       // nooit op geboekt: niet tonen
+      var s = saldoVoorEntry(entry);
+      resultaat.push({ nr: nr, mar: a, saldo: s });
+    });
+    return resultaat;
+  }
+
+  function htmlControleRekeningen(c, gb) {
+    var rijen = rekeningenVoorControle(c, gb);
+    if (!c.rekeningen || !c.rekeningen.length) return "";
+    if (!rijen.length) {
+      return '<div class="controle-rekeningen controle-rekeningen-leeg">Op deze rekeningen is nog niets geboekt.</div>';
+    }
+    var html = '<div class="controle-rekeningen"><table class="mini-saldi"><tbody>';
+    rijen.forEach(function (r) {
+      var kant = r.saldo.kant || verwachteKant(r.mar) || "D";
+      var nul = !r.saldo.kant;
+      html += "<tr>" +
+        '<td class="mini-nr"><button type="button" class="link-rekening" data-role="toon-rekening" data-nr="' + r.nr + '" title="Toon deze rekening in het T-paneel">' + r.nr + "</button></td>" +
+        '<td class="mini-naam">' + escapeAttr(r.mar.naam) + "</td>" +
+        '<td class="mini-saldo' + (nul ? " mini-saldo-nul" : "") + '">' + kant + "-saldo " + formatBedrag(nul ? 0 : r.saldo.saldo) + "</td>" +
+        "</tr>";
+    });
+    html += "</tbody></table>";
+    if (c.filterTip) html += '<p class="controle-filtertip">' + escapeAttr(c.filterTip) + "</p>";
+    html += "</div>";
     return html;
   }
 
@@ -531,7 +737,7 @@
     var saldoC = controleSaldoSoort();
     var gb = berekenGrootboek();
 
-    var html = '<h1 class="pagina-titel">Controles</h1>';
+    var html = '<h1 class="pagina-titel">Controles ' + htmlInfoKnop("controles", "Wat wordt hier gevraagd?") + "</h1>";
     html += '<p class="pagina-subtitel">Rond dit tabblad volledig af vóór je aan de resultaatverwerking (BELASTING/RESULTAAT) begint.</p>';
 
     html += '<div class="paneel"><h2>Automatisch nagekeken</h2>';
@@ -539,91 +745,288 @@
       (refC.ontbrekend.length ? "<ul class='controle-lijst-fouten'>" + refC.ontbrekend.map(function (r) { return "<li>" + r + " nog niet geboekt</li>"; }).join("") + "</ul>" : "") +
       "</div><div class='controle-status-auto " + (refC.ok ? "ok" : "fout") + "'>" + (refC.ok ? "in orde" : "nog niet") + "</div></div>";
 
-    html += '<div class="controle-rij"><div class="controle-vraag">Heeft elke rekening het juiste soort saldo? (afschrijvingsrekeningen op …009 credit, aanschafwaarderekeningen debet, enzovoort)' +
+    html += '<div class="controle-rij"><div class="controle-vraag">Heeft elke rekening het juiste soort saldo? (afschrijvingen op …009 credit, aanschafwaarden debet, retours en kortingen aan de omgekeerde kant van hun klasse)' +
       (saldoC.fouten.length ? "<ul class='controle-lijst-fouten'>" + saldoC.fouten.map(function (f) { return "<li>" + f.nr + " " + escapeAttr(f.naam) + " — verwacht " + f.verwacht + "-saldo, staat nu " + f.actueel + "</li>"; }).join("") + "</ul>" : "") +
       "</div><div class='controle-status-auto " + (saldoC.ok ? "ok" : "fout") + "'>" + (saldoC.ok ? "in orde" : "nog niet") + "</div></div>";
     html += "</div>";
 
     html += '<div class="paneel"><h2>Zelf nakijken en aanvinken</h2>';
     HANDMATIGE_CONTROLES.forEach(function (c) {
-      html += '<div class="controle-rij"><div class="controle-vraag"><label><input type="checkbox" data-role="controle-check" data-controle-id="' + escapeAttr(c.id) + '" ' + (state.controles[c.id] ? "checked" : "") + "> " + escapeAttr(c.vraag) + "</label></div>";
-      if (c.type === "check-met-document") {
-        html += '<div>' + htmlDocumentAfbeelding(c.doc, true) + "</div>";
-      }
+      var doc = c.type === "check-met-document" ? documentVoorControle(c) : null;
+      html += '<div class="controle-rij' + (state.controles[c.id] ? " controle-af" : "") + '">';
+      html += '<div class="controle-vraag">';
+      html += '<label><input type="checkbox" data-role="controle-check" data-controle-id="' + escapeAttr(c.id) + '" ' + (state.controles[c.id] ? "checked" : "") + "> <span>" + escapeAttr(c.vraag) + "</span></label>";
+      if (c.uitleg) html += " " + htmlInfoKnop(c.uitleg, "Meer uitleg");
+      if (c.toelichting) html += '<p class="controle-toelichting">' + escapeAttr(c.toelichting) + "</p>";
+      html += htmlControleRekeningen(c, gb);
+      html += "</div>";
+      if (doc) html += "<div>" + htmlDocumentAfbeelding(doc, true) + "</div>";
       html += "</div>";
     });
     html += "</div>";
 
-    ["400000", "440000"].forEach(function (nr) {
-      var mar = marBij(nr);
-      var entry = gb[nr];
-      html += '<div class="paneel"><h2>Openstaande facturen — ' + nr + " " + escapeAttr(mar ? mar.naam : "") + "</h2>";
-      if (!entry || (!entry.D.length && !entry.C.length)) {
-        html += "<p>Nog geen boekingen op deze rekening.</p>";
-      } else {
-        var perRelatie = {};
-        entry.D.forEach(function (e) {
-          var k = e.relatie || "— niet gekoppeld —";
-          perRelatie[k] = perRelatie[k] || { D: 0, C: 0 };
-          perRelatie[k].D = round2(perRelatie[k].D + e.bedrag);
-        });
-        entry.C.forEach(function (e) {
-          var k = e.relatie || "— niet gekoppeld —";
-          perRelatie[k] = perRelatie[k] || { D: 0, C: 0 };
-          perRelatie[k].C = round2(perRelatie[k].C + e.bedrag);
-        });
-        html += '<table class="openstaand-tabel"><thead><tr><th>Relatie</th><th>Totaal debet</th><th>Totaal credit</th><th>Saldo</th><th>D/C</th></tr></thead><tbody>';
-        Object.keys(perRelatie).sort().forEach(function (naam) {
-          var r = perRelatie[naam];
-          var saldo = round2(r.D - r.C);
-          html += "<tr><td>" + escapeAttr(naam) + "</td><td>" + formatBedrag(r.D) + "</td><td>" + formatBedrag(r.C) + "</td>" +
-            "<td>" + formatBedrag(Math.abs(saldo)) + "</td><td>" + (Math.abs(saldo) < 0.005 ? "—" : (saldo > 0 ? "D" : "C")) + "</td></tr>";
-        });
-        html += "</tbody></table>";
-      }
-      html += "</div>";
-    });
+    html += '<div class="paneel"><h2>Openstaande facturen</h2>' +
+      "<p>Het volledige overzicht per klant en per leverancier staat op het tabblad " +
+      '<button type="button" class="link-knop" data-role="ga-naar" data-page-type="relaties">Klanten &amp; leveranciers</button>.</p></div>';
 
     return html;
   }
 
-  function htmlCompactSaldi() {
-    var gb = berekenGrootboek();
-    var nrs = Object.keys(gb).sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10); });
-    if (!nrs.length) return "<p>Nog geen boekingen.</p>";
-    var html = '<table class="saldibalans"><thead><tr><th>Rekening</th><th>Naam</th><th>Saldo</th><th>D/C</th></tr></thead><tbody>';
-    var huidigeKlasse = null;
-    var subD = 0, subC = 0;
+  /* ---------- Klanten & leveranciers ---------- */
 
-    function schrijfSubtotaal() {
-      if (huidigeKlasse === null) return;
-      var netto = round2(subD - subC);
-      var kant = Math.abs(netto) < 0.005 ? "—" : (netto > 0 ? "D" : "C");
-      html += '<tr class="subtotaal-klasse"><td colspan="2">Subtotaal klasse ' + huidigeKlasse + "</td><td>" + formatBedrag(Math.abs(netto)) + "</td><td>" + kant + "</td></tr>";
+  // Alle boekingen op 400000 / 440000, per relatie, in de volgorde waarin de
+  // opdrachten in data-opdrachten.js staan. Zo kan een leerling factuur en
+  // betaling naast elkaar leggen.
+  function boekingenPerRelatie(soort) {
+    var nrDoel = soort === "klanten" ? "400000" : "440000";
+    var perRelatie = {};
+    OPDRACHTEN.forEach(function (o) {
+      var b = state.boekingen[o.ref];
+      if (!b || !b.geboekt) return;
+      b.rows.forEach(function (row) {
+        var mar = marBij(row.rekening);
+        if (!mar || String(mar.nr) !== nrDoel) return;
+        var bedrag = parseBedrag(row.bedrag);
+        if (bedrag === null || !row.dc) return;
+        var naam = (row.relatie || "").trim() || "— geen naam ingevuld —";
+        if (!perRelatie[naam]) perRelatie[naam] = [];
+        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag, redenering: row.redenering || "" });
+      });
+    });
+    return perRelatie;
+  }
+
+  function htmlRelatieBlok(soort) {
+    var isKlant = soort === "klanten";
+    var nrDoel = isKlant ? "400000" : "440000";
+    var titel = isKlant ? "Klanten — 400000 Handelsdebiteuren" : "Leveranciers — 440000 Leveranciers";
+    var perRelatie = boekingenPerRelatie(soort);
+    var namen = Object.keys(perRelatie).sort();
+    var gekozen = uiState.relatieKeuze[soort];
+    if (gekozen && namen.indexOf(gekozen) === -1) gekozen = "";
+
+    var html = '<div class="paneel"><h2>' + escapeAttr(titel) + "</h2>";
+
+    if (!namen.length) {
+      html += "<p>Nog geen geboekte verrichtingen op " + nrDoel + ". Boek je een factuur of een betaling op deze rekening, vul dan in het redeneerschema ook de naam van de " +
+        (isKlant ? "klant" : "leverancier") + " in — dan verschijnt hier het overzicht.</p></div>";
+      return html;
     }
 
-    nrs.forEach(function (nr) {
-      var mar = marBij(nr);
-      var s = saldoVoorEntry(gb[nr]);
-      if (!s.kant) return;
-      var klasse = mar ? mar.klasse : "?";
-      if (klasse !== huidigeKlasse) {
-        schrijfSubtotaal();
-        huidigeKlasse = klasse;
-        subD = 0; subC = 0;
-      }
-      if (s.kant === "D") subD = round2(subD + s.saldo); else subC = round2(subC + s.saldo);
-      html += "<tr><td>" + nr + "</td><td>" + escapeAttr(mar ? mar.naam : "") + "</td><td>" + formatBedrag(s.saldo) + "</td><td>" + s.kant + "</td></tr>";
+    // Overzichtstabel van alle relaties, met openstaand saldo
+    html += '<table class="relatie-overzicht"><thead><tr><th>Naam</th><th>Facturen</th><th>Betalingen</th><th>Openstaand</th><th>Status</th></tr></thead><tbody>';
+    namen.forEach(function (naam) {
+      var regels = perRelatie[naam];
+      var d = som(regels.filter(function (r) { return r.dc === "D"; }).map(function (r) { return r.bedrag; }));
+      var c = som(regels.filter(function (r) { return r.dc === "C"; }).map(function (r) { return r.bedrag; }));
+      var facturen = isKlant ? d : c;
+      var betalingen = isKlant ? c : d;
+      var open = round2(facturen - betalingen);
+      var status = Math.abs(open) < 0.005
+        ? '<span class="relatie-status betaald">alles betaald</span>'
+        : (open > 0
+          ? '<span class="relatie-status openstaand">nog ' + formatBedrag(open) + " open</span>"
+          : '<span class="relatie-status teveel">' + formatBedrag(Math.abs(open)) + " te veel " + (isKlant ? "ontvangen" : "betaald") + "</span>");
+      html += '<tr class="' + (naam === gekozen ? "relatie-gekozen" : "") + '">' +
+        '<td><button type="button" class="link-knop" data-role="kies-relatie" data-soort="' + soort + '" data-naam="' + escapeAttr(naam) + '">' + escapeAttr(naam) + "</button></td>" +
+        "<td>" + formatBedrag(facturen) + "</td>" +
+        "<td>" + formatBedrag(betalingen) + "</td>" +
+        "<td>" + formatBedrag(Math.abs(open)) + "</td>" +
+        "<td>" + status + "</td></tr>";
     });
-    schrijfSubtotaal();
     html += "</tbody></table>";
+
+    // Keuzelijst + detail van één relatie
+    html += '<div class="relatie-kiezer"><label for="relatie-select-' + soort + '">Toon in detail:</label>' +
+      '<select id="relatie-select-' + soort + '" data-role="relatie-select" data-soort="' + soort + '">' +
+      '<option value="">— kies een ' + (isKlant ? "klant" : "leverancier") + " —</option>" +
+      namen.map(function (n) { return '<option value="' + escapeAttr(n) + '"' + (n === gekozen ? " selected" : "") + ">" + escapeAttr(n) + "</option>"; }).join("") +
+      "</select></div>";
+
+    if (gekozen) {
+      var regels = perRelatie[gekozen];
+      var loopSaldo = 0;
+      html += '<table class="relatie-detail"><thead><tr><th>Ref.</th><th>Wat</th><th>Debet</th><th>Credit</th><th>Saldo</th></tr></thead><tbody>';
+      regels.forEach(function (r) {
+        loopSaldo = round2(loopSaldo + (r.dc === "D" ? r.bedrag : -r.bedrag));
+        var kant = Math.abs(loopSaldo) < 0.005 ? "" : (loopSaldo > 0 ? " D" : " C");
+        html += "<tr><td>" + escapeAttr(r.ref) + "</td>" +
+          '<td class="relatie-redenering">' + escapeAttr(r.redenering) + "</td>" +
+          "<td>" + (r.dc === "D" ? formatBedrag(r.bedrag) : "") + "</td>" +
+          "<td>" + (r.dc === "C" ? formatBedrag(r.bedrag) : "") + "</td>" +
+          '<td class="relatie-loopsaldo">' + formatBedrag(Math.abs(loopSaldo)) + kant + "</td></tr>";
+      });
+      html += "</tbody></table>";
+      if (Math.abs(loopSaldo) < 0.005) {
+        html += '<p class="relatie-conclusie betaald">Het saldo staat op nul: alle facturen van ' + escapeAttr(gekozen) + " zijn vereffend.</p>";
+      } else {
+        var openKant = loopSaldo > 0 ? "D" : "C";
+        var normaal = isKlant ? "D" : "C";
+        html += '<p class="relatie-conclusie ' + (openKant === normaal ? "openstaand" : "verkeerd") + '">' +
+          (openKant === normaal
+            ? "Er staat nog " + formatBedrag(Math.abs(loopSaldo)) + " open " + (isKlant ? "bij deze klant." : "bij deze leverancier.")
+            : "Let op: het saldo staat aan de verkeerde kant (" + openKant + "). Kijk na of er een bedrag dubbel of aan de verkeerde kant geboekt is, of dat er een betalingskorting ontbreekt.") +
+          "</p>";
+      }
+    }
+
+    html += "</div>";
+    return html;
+  }
+
+  function renderRelaties() {
+    var html = '<h1 class="pagina-titel">Klanten &amp; leveranciers ' + htmlInfoKnop("klantenLeveranciers", "Hoe lees je dit?") + "</h1>";
+    html += '<p class="pagina-subtitel">Wie moet er nog betalen, en wat staat er bij jou nog open?</p>';
+    html += '<div class="paneel paneel-tip"><p>Dit overzicht is opgebouwd uit de namen die je zelf bij je boekingen op 400000 en 440000 invulde. Ontbreekt er een naam, ga dan terug naar die boeking en vul ze aan.</p>' +
+      "<p><strong>Betalingskorting</strong> boek je pas bij de betaling, niet al bij de factuur — pas dan weet je of je op tijd betaalt. De btw op de factuur bereken je wél al na aftrek van die korting.</p></div>";
+    html += htmlRelatieBlok("klanten");
+    html += htmlRelatieBlok("leveranciers");
+    return html;
+  }
+
+  /* ---------- Eindbalans (sleepoefening) ---------- */
+
+  function alleBalansVakken() {
+    var vakken = [];
+    ["balans", "resultatenrekening"].forEach(function (deel) {
+      BALANS_STRUCTUUR[deel].kolommen.forEach(function (kol) {
+        kol.groepen.forEach(function (groep) {
+          groep.vakken.forEach(function (vak) {
+            vakken.push({ vak: vak, kolom: kol, deel: deel });
+          });
+        });
+      });
+    });
+    return vakken;
+  }
+
+  // De kaartjes: elke rekening waarop geboekt is en die een saldo overhoudt.
+  function balansKaarten() {
+    var gb = berekenGrootboek();
+    return Object.keys(gb)
+      .map(function (nr) {
+        var mar = marBij(nr);
+        if (!mar) return null;
+        var s = saldoVoorEntry(gb[nr]);
+        if (!s.kant) return null;   // saldo nul hoort niet meer op de balans
+        return { nr: nr, mar: mar, saldo: s.saldo, kant: s.kant };
+      })
+      .filter(Boolean)
+      .sort(function (a, b) { return parseInt(a.nr, 10) - parseInt(b.nr, 10); });
+  }
+
+  function htmlKaart(kaart, geplaatst) {
+    var gekozen = uiState.gekozenKaart === kaart.nr;
+    return '<div class="balans-kaart' + (gekozen ? " gekozen" : "") + '" draggable="true" ' +
+      'data-role="balans-kaart" data-nr="' + kaart.nr + '" ' +
+      'title="' + escapeAttr(kaart.nr + " " + kaart.mar.naam) + '">' +
+      '<span class="kaart-nr">' + kaart.nr + "</span>" +
+      '<span class="kaart-naam">' + escapeAttr(kaart.mar.naam) + "</span>" +
+      '<span class="kaart-saldo">' + kaart.kant + " " + formatBedrag(kaart.saldo) + "</span>" +
+      (geplaatst ? '<button type="button" class="kaart-terug" data-role="kaart-terug" data-nr="' + kaart.nr + '" title="Terug naar de lijst" aria-label="Terug naar de lijst">↩</button>' : "") +
+      "</div>";
+  }
+
+  function htmlBalansDeel(deelNaam) {
+    var deel = BALANS_STRUCTUUR[deelNaam];
+    var kaarten = balansKaarten();
+    var perVak = {};
+    kaarten.forEach(function (k) {
+      var vakId = state.eindbalans[k.nr];
+      if (!vakId) return;
+      if (!perVak[vakId]) perVak[vakId] = [];
+      perVak[vakId].push(k);
+    });
+
+    var html = '<div class="balans-deel"><h2>' + escapeAttr(deel.titel) + "</h2>";
+    html += '<div class="balans-kolommen">';
+    deel.kolommen.forEach(function (kol) {
+      var kolomTotaal = 0;
+      var kolomHtml = "";
+      kol.groepen.forEach(function (groep) {
+        kolomHtml += '<div class="balans-groep"><div class="balans-groep-titel">' + escapeAttr(groep.titel) + "</div>";
+        groep.vakken.forEach(function (vak) {
+          var inhoud = perVak[vak.id] || [];
+          var vakTotaal = 0;
+          inhoud.forEach(function (k) {
+            vakTotaal = round2(vakTotaal + (k.kant === kol.kant ? k.saldo : -k.saldo));
+          });
+          kolomTotaal = round2(kolomTotaal + vakTotaal);
+          kolomHtml += '<div class="balans-vak' + (inhoud.length ? " gevuld" : "") + '" data-role="balans-vak" data-vak="' + escapeAttr(vak.id) + '">' +
+            '<div class="balans-vak-kop">' +
+            '<span class="balans-vak-naam">' + escapeAttr(vak.naam) +
+            (vak.hint ? ' <button type="button" class="btn-hint" data-role="balans-hint" data-vak="' + escapeAttr(vak.id) + '" title="Welke rubrieken horen hier?" aria-label="Tip">?</button>' : "") +
+            "</span>" +
+            '<span class="balans-vak-totaal">' + (inhoud.length ? formatBedrag(vakTotaal) : "") + "</span>" +
+            "</div>";
+          if (uiState.balansHint === vak.id && vak.hint) {
+            kolomHtml += '<div class="balans-vak-hint">' + escapeAttr(vak.hint) + "</div>";
+          }
+          kolomHtml += '<div class="balans-vak-inhoud">' +
+            (inhoud.length ? inhoud.map(function (k) { return htmlKaart(k, true); }).join("") : '<span class="balans-vak-leeg">sleep hier een rekening naartoe</span>') +
+            "</div></div>";
+        });
+        kolomHtml += "</div>";
+      });
+      html += '<div class="balans-kolom"><div class="balans-kolom-titel">' + escapeAttr(kol.titel) + "</div>" +
+        kolomHtml +
+        '<div class="balans-kolom-totaal">Totaal ' + escapeAttr(kol.titel.toLowerCase()) + ": <strong>" + formatBedrag(kolomTotaal) + "</strong></div></div>";
+    });
+    html += "</div>";
+
+    // Evenwicht van dit deel
+    var totalen = deel.kolommen.map(function (kol) {
+      var t = 0;
+      kaarten.forEach(function (k) {
+        var vakId = state.eindbalans[k.nr];
+        if (!vakId) return;
+        var hoortHier = kol.groepen.some(function (g) { return g.vakken.some(function (v) { return v.id === vakId; }); });
+        if (!hoortHier) return;
+        t = round2(t + (k.kant === kol.kant ? k.saldo : -k.saldo));
+      });
+      return t;
+    });
+    var inEvenwicht = Math.abs(totalen[0] - totalen[1]) < 0.005 && totalen[0] !== 0;
+    html += '<div class="balans-evenwicht ' + (inEvenwicht ? "ok" : "nog-niet") + '">' +
+      (inEvenwicht
+        ? "In evenwicht: " + escapeAttr(deel.kolommen[0].titel.toLowerCase()) + " = " + escapeAttr(deel.kolommen[1].titel.toLowerCase()) + " = " + formatBedrag(totalen[0])
+        : "Verschil: " + formatBedrag(Math.abs(round2(totalen[0] - totalen[1])))) +
+      "</div>";
+    html += "</div>";
+    return html;
+  }
+
+  function renderEindbalans() {
+    var kaarten = balansKaarten();
+    var teplaatsen = kaarten.filter(function (k) { return !state.eindbalans[k.nr]; });
+
+    var html = '<div class="paneel"><h2>Eindbalans en resultatenrekening ' + htmlInfoKnop("eindbalans", "Hoe werkt dit?") + "</h2>";
+    if (!kaarten.length) {
+      html += "<p>Zodra je boekingen hebt, verschijnen hier alle rekeningen met een saldo.</p></div>";
+      return html;
+    }
+    html += '<p class="pagina-subtitel">Sleep elke rekening naar het vak waar ze thuishoort. Werkt slepen niet? Tik dan eerst op een rekening en daarna op het vak.</p>';
+
+    html += '<div class="balans-voorraad" data-role="balans-vak" data-vak="">' +
+      '<div class="balans-voorraad-titel">Nog te plaatsen (' + teplaatsen.length + " van " + kaarten.length + ")</div>" +
+      '<div class="balans-voorraad-inhoud">' +
+      (teplaatsen.length
+        ? teplaatsen.map(function (k) { return htmlKaart(k, false); }).join("")
+        : '<span class="balans-vak-leeg">Alle rekeningen hebben een plaats. Kijk hieronder na of het klopt.</span>') +
+      "</div></div>";
+
+    html += htmlBalansDeel("balans");
+    html += htmlBalansDeel("resultatenrekening");
+
+    html += '<div class="balans-acties"><button type="button" class="btn-secundair" data-role="balans-leegmaken">Alle kaartjes terug naar de lijst</button></div>';
+    html += "</div>";
     return html;
   }
 
   function renderResultaat() {
     var ok = alleControlesOk();
     var html = '<h1 class="pagina-titel">Resultaatverwerking — BELASTING + RESULTAAT</h1>';
-    html += '<p class="pagina-subtitel">Vennootschapsbelasting en toewijzing aan overgedragen winst.</p>';
+    html += '<p class="pagina-subtitel">Vennootschapsbelasting, toewijzing aan overgedragen winst en de eindbalans.</p>';
 
     if (!ok) {
       html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
@@ -633,9 +1036,7 @@
 
     html += htmlBannerNaamOntbreekt();
 
-    html += '<div class="paneel"><h2>Compact saldi-overzicht</h2>' + htmlCompactSaldi() + "</div>";
-
-    html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">Reken dit zelf uit op basis van je eigen boekingen. De app controleert dit niet.</p>';
+    html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p class="paneel-hint">Reken dit zelf uit op basis van je eigen boekingen. De app controleert dit niet.</p>';
     var stappen = [
       ["opbrengsten", "1. Hoeveel opbrengsten maakte het bedrijf? (klasse 7)"],
       ["kosten", "2. Hoeveel kosten maakte het bedrijf? (klasse 6)"],
@@ -644,16 +1045,18 @@
       ["restwinst", "5. Hoeveel winst blijft er over?"],
     ];
     stappen.forEach(function (s) {
-      html += '<div class="stap-rij"><label for="stap-' + s[0] + '">' + s[1] + '</label>' +
-        '<input type="text" id="stap-' + s[0] + '" inputmode="decimal" placeholder="0,00" data-focus-id="stap-' + s[0] + '" data-role="stap-veld" data-veld="' + s[0] + '" value="' + escapeAttr(state.resultaat.stap[s[0]]) + '"></div>';
+      html += '<div class="stap-rij"><label for="stap-' + s[0] + '">' + s[1] + "</label>" +
+        '<input type="text" id="stap-' + s[0] + '" inputmode="decimal" placeholder="0" data-focus-id="stap-' + s[0] + '" data-role="stap-veld" data-veld="' + s[0] + '" value="' + escapeAttr(state.resultaat.stap[s[0]]) + '"></div>';
     });
     html += "</div>";
 
-    html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting</h2>' + htmlRedeneerschema("BELASTING") + "</div>";
+    html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema("BELASTING") + "</div>";
     html += '<div class="paneel"><h2>RESULTAAT — Toewijzing overgedragen winst</h2>' + htmlRedeneerschema("RESULTAAT") + "</div>";
 
+    html += renderEindbalans();
+
     var getallen = berekenSlotcontroleGetallen();
-    html += '<div class="paneel"><h2>Slotcontrole</h2><p style="font-size:12px;color:var(--kleur-tekst-zacht);">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
+    html += '<div class="paneel"><h2>Slotcontrole</h2><p class="paneel-hint">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
     html += '<div class="slotcontrole-blok">' +
       '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleResultaat" ' + (state.resultaat.slotcontroleResultaat ? "checked" : "") + "> Is de resultatenrekening in evenwicht?</label></div>" +
       '<div class="slotcontrole-detail">Totaal klasse 6: ' + formatBedrag(getallen.resD) + "</div>" +
@@ -694,6 +1097,7 @@
   function htmlTrekBlok(nr, mar, entry) {
     var s = saldoVoorEntry(entry);
     var detail = uiState.tpanelDetail;
+    var heeftBoekingen = entry.D.length > 0 || entry.C.length > 0;
     var debetInhoud = "";
     var creditInhoud = "";
 
@@ -704,29 +1108,42 @@
       if (s.totalD > 0) debetInhoud += '<div class="trek-regel"><span>totaal</span><span>' + formatBedrag(s.totalD) + "</span></div>";
       if (s.totalC > 0) creditInhoud += '<div class="trek-regel"><span>totaal</span><span>' + formatBedrag(s.totalC) + "</span></div>";
     }
-    if (s.kant === "D") debetInhoud += '<div class="trek-regel trek-saldo-rij"><span>D-saldo</span><span>' + formatBedrag(s.saldo) + "</span></div>";
-    if (s.kant === "C") creditInhoud += '<div class="trek-regel trek-saldo-rij"><span>C-saldo</span><span>' + formatBedrag(s.saldo) + "</span></div>";
+
+    if (s.kant === "D") {
+      debetInhoud += '<div class="trek-regel trek-saldo-rij"><span>D-saldo</span><span>' + formatBedrag(s.saldo) + "</span></div>";
+    } else if (s.kant === "C") {
+      creditInhoud += '<div class="trek-regel trek-saldo-rij"><span>C-saldo</span><span>' + formatBedrag(s.saldo) + "</span></div>";
+    } else if (heeftBoekingen) {
+      // Debet en credit heffen elkaar precies op. Vroeger stond er dan
+      // helemaal geen saldo, wat verwarrend was ("ben ik iets vergeten?").
+      // Nu tonen we een nulsaldo aan de kant waar deze rekening normaal
+      // staat — bv. 400000 een D-saldo van 0, 440000 een C-saldo van 0.
+      var kant = verwachteKant(mar) || (mar.apko === "P" || mar.apko === "O" ? "C" : "D");
+      var nulRegel = '<div class="trek-regel trek-saldo-rij trek-saldo-nul"><span>' + kant + "-saldo</span><span>0</span></div>";
+      if (kant === "D") debetInhoud += nulRegel; else creditInhoud += nulRegel;
+    }
+
     if (!debetInhoud) debetInhoud = '<div class="trek-leeg">—</div>';
     if (!creditInhoud) creditInhoud = '<div class="trek-leeg">—</div>';
 
-    return '<div class="trek-blok"><div class="trek-titel"><span>' + nr + " " + escapeAttr(mar.naam) + "</span></div>" +
+    return '<div class="trek-blok' + (heeftBoekingen ? "" : " trek-blok-leeg") + '" id="trek-' + nr + '">' +
+      '<div class="trek-titel"><span>' + nr + " " + escapeAttr(mar.naam) + "</span></div>" +
       '<div class="trek-body"><div class="trek-kant debet">' + debetInhoud + '</div><div class="trek-kant credit">' + creditInhoud + "</div></div></div>";
   }
 
   // Suggesties voor het relatieveld (klant/leverancier): het optionele
   // startlijstje uit data-relaties.js, aangevuld met namen die de leerling
-  // zelf al eerder intikte bij andere boekingen op dezelfde rekening. Zo
-  // hoeft data-relaties.js niet bijgehouden te worden telkens er nieuwe
-  // documenten met andere klant-/leveranciersnamen bijkomen.
+  // zelf al eerder intikte bij andere boekingen op dezelfde rekening.
   function verzamelRelatieNamen(soort) {
     var nrDoel = soort === "klanten" ? "400000" : "440000";
     var namen = {};
     (RELATIES[soort] || []).forEach(function (n) { if (n) namen[n] = true; });
     Object.keys(state.boekingen).forEach(function (ref) {
-      state.boekingen[ref].rows.forEach(function (row) {
-        if (row.relatie && marBij(row.rekening) && String(marBij(row.rekening).nr) === nrDoel) {
-          namen[row.relatie] = true;
-        }
+      var b = state.boekingen[ref];
+      if (!b || !b.rows) return;
+      b.rows.forEach(function (row) {
+        var mar = marBij(row.rekening);
+        if (row.relatie && mar && String(mar.nr) === nrDoel) namen[row.relatie] = true;
       });
     });
     return Object.keys(namen).sort();
@@ -741,7 +1158,58 @@
   }
 
   /* ========================================================================
-     6b. MAR-zoekpopup — zoeken op nummer/naam + filteren op A/P/K/O
+     8b. Filters op klasse en rubriek (T-paneel + zoekscherm)
+     ======================================================================== */
+
+  function klassenMetRekeningen() {
+    return MAR_INDELING.filter(function (kl) {
+      return MAR.some(function (a) { return a.klasse === kl.klasse; });
+    });
+  }
+
+  function rubriekenVoorKlasse(klasse) {
+    var lijst = [];
+    MAR_INDELING.forEach(function (kl) {
+      if (klasse && kl.klasse !== klasse) return;
+      kl.rubrieken.forEach(function (r) {
+        if (!MAR.some(function (a) { return a.rubriek === r.rubriek; })) return;
+        lijst.push({ rubriek: r.rubriek, oms: r.oms, klasse: kl.klasse });
+      });
+    });
+    return lijst;
+  }
+
+  function vulKlasseSelect(selectEl, gekozen) {
+    if (!selectEl) return;
+    var html = '<option value="">alle klassen</option>';
+    klassenMetRekeningen().forEach(function (kl) {
+      html += '<option value="' + kl.klasse + '"' + (kl.klasse === gekozen ? " selected" : "") + ">klasse " + kl.klasse + " — " + escapeAttr(kl.oms) + "</option>";
+    });
+    selectEl.innerHTML = html;
+  }
+
+  function vulRubriekSelect(selectEl, klasse, gekozen) {
+    if (!selectEl) return;
+    var rubrieken = rubriekenVoorKlasse(klasse);
+    var html = '<option value="">alle rubrieken</option>';
+    rubrieken.forEach(function (r) {
+      html += '<option value="' + r.rubriek + '"' + (r.rubriek === gekozen ? " selected" : "") + ">" + r.rubriek + " — " + escapeAttr(r.oms) + "</option>";
+    });
+    selectEl.innerHTML = html;
+    selectEl.disabled = rubrieken.length === 0;
+  }
+
+  function rekeningPastBijFilter(a, filter) {
+    if (filter.apko && a.apko !== filter.apko) return false;
+    if (filter.klasse && a.klasse !== filter.klasse) return false;
+    if (filter.rubriek && a.rubriek !== filter.rubriek) return false;
+    var query = (filter.zoek || "").trim().toLowerCase();
+    if (query && String(a.nr).indexOf(query) === -1 && a.naam.toLowerCase().indexOf(query) === -1) return false;
+    return true;
+  }
+
+  /* ========================================================================
+     8c. MAR-zoekpopup — zoeken op nummer/naam + filteren
      ======================================================================== */
 
   function openMarModal(scope, row) {
@@ -750,9 +1218,13 @@
     marModal.row = row;
     marModal.zoek = "";
     marModal.apko = "";
+    marModal.klasse = "";
+    marModal.rubriek = "";
     document.getElementById("mar-modal-overlay").hidden = false;
     document.getElementById("mar-modal-zoek").value = "";
-    renderMarModalKnoppen();
+    vulKlasseSelect(document.getElementById("mar-modal-klasse"), "");
+    vulRubriekSelect(document.getElementById("mar-modal-rubriek"), "", "");
+    renderFilterKnoppen("mar-modal-apko-knoppen", marModal.apko);
     renderMarModalLijst();
     setTimeout(function () { document.getElementById("mar-modal-zoek").focus(); }, 0);
   }
@@ -762,24 +1234,20 @@
     document.getElementById("mar-modal-overlay").hidden = true;
   }
 
-  function renderMarModalKnoppen() {
-    var knoppen = document.querySelectorAll("#mar-modal-apko-knoppen [data-apko]");
-    knoppen.forEach(function (b) {
-      b.classList.toggle("actief", b.dataset.apko === marModal.apko);
+  function renderFilterKnoppen(containerId, actieveWaarde) {
+    var knoppen = document.querySelectorAll("#" + containerId + " [data-apko]");
+    Array.prototype.forEach.call(knoppen, function (b) {
+      b.classList.toggle("actief", b.dataset.apko === actieveWaarde);
     });
   }
 
   function renderMarModalLijst() {
     var el = document.getElementById("mar-modal-lijst");
     if (!el) return;
-    var query = (marModal.zoek || "").trim().toLowerCase();
-    var resultaten = MAR.filter(function (a) {
-      if (marModal.apko && a.apko !== marModal.apko) return false;
-      if (!query) return true;
-      return String(a.nr).indexOf(query) !== -1 || a.naam.toLowerCase().indexOf(query) !== -1;
-    });
+    var resultaten = MAR.filter(function (a) { return rekeningPastBijFilter(a, marModal); });
     if (!resultaten.length) {
-      el.innerHTML = '<p style="padding:10px;color:var(--kleur-tekst-zacht);font-size:13px;">Geen rekening gevonden.</p>';
+      el.innerHTML = '<p class="lijst-leeg">Geen rekening gevonden met deze filters.</p>';
+      el.scrollTop = 0;
       return;
     }
     el.innerHTML = resultaten
@@ -788,41 +1256,74 @@
           '<div class="mar-modal-item" data-nr="' + a.nr + '">' +
           '<span class="mar-modal-item-nr">' + a.nr + "</span>" +
           '<span class="mar-modal-item-naam">' + escapeAttr(a.naam) + "</span>" +
+          '<span class="mar-modal-item-rubriek">' + a.rubriek + "</span>" +
           '<span class="mar-modal-item-apko">' + a.apko + "</span>" +
           "</div>"
         );
       })
       .join("");
+    // Na elke filterwijziging terug bovenaan beginnen. Zonder dit bleef de
+    // lijst staan waar ze stond en leek een filter "ergens halverwege" uit
+    // te komen.
+    el.scrollTop = 0;
   }
 
   function renderTpanel() {
     var lijst = document.getElementById("tpanel-lijst");
     if (!lijst) return;
     var gb = berekenGrootboek();
-    var query = (uiState.tpanelZoek || "").trim().toLowerCase();
-    var nrsMetBeweging = Object.keys(gb);
-    var accounts;
-    if (query) {
-      var matches = MAR.filter(function (a) { return String(a.nr).indexOf(query) !== -1 || a.naam.toLowerCase().indexOf(query) !== -1; });
-      accounts = matches.map(function (a) { return { nr: String(a.nr), mar: a, entry: gb[String(a.nr)] || { D: [], C: [] } }; });
-    } else {
-      accounts = nrsMetBeweging.map(function (nr) { return { nr: nr, mar: marBij(nr), entry: gb[nr] }; }).filter(function (a) { return a.mar; });
-    }
+    var filter = {
+      zoek: uiState.tpanelZoek,
+      apko: uiState.tpanelApko,
+      klasse: uiState.tpanelKlasse,
+      rubriek: uiState.tpanelRubriek,
+    };
+    var heeftFilter = !!(filter.zoek || filter.apko || filter.klasse || filter.rubriek);
+
+    var accounts = MAR
+      .filter(function (a) { return rekeningPastBijFilter(a, filter); })
+      .map(function (a) {
+        var nr = String(a.nr);
+        return { nr: nr, mar: a, entry: gb[nr] || { D: [], C: [] } };
+      })
+      .filter(function (a) {
+        var heeftBoekingen = a.entry.D.length > 0 || a.entry.C.length > 0;
+        return heeftBoekingen || uiState.tpanelToonLeeg;
+      });
+
     accounts.sort(function (a, b) { return parseInt(a.nr, 10) - parseInt(b.nr, 10); });
 
     if (!accounts.length) {
-      lijst.innerHTML = '<p style="font-size:12px;color:var(--kleur-tekst-zacht);padding:6px 2px;">' + (query ? "Geen rekening gevonden." : "Nog geen boekingen.") + "</p>";
+      var boodschap;
+      if (uiState.tpanelToonLeeg || heeftFilter) boodschap = "Geen rekening gevonden met deze filters.";
+      else boodschap = "Nog geen boekingen. Vink <em>lege rekeningen tonen</em> aan als je toch alle rekeningen wil zien.";
+      lijst.innerHTML = '<p class="lijst-leeg">' + boodschap + "</p>";
+      lijst.scrollTop = 0;
       return;
     }
     lijst.innerHTML = accounts.map(function (a) { return htmlTrekBlok(a.nr, a.mar, a.entry); }).join("");
   }
 
   /* ========================================================================
-     9. Navigatie
+     9. Navigatie en voortgang
      ======================================================================== */
 
-  function paginaGelijk(a, b) {
-    return a.type === b.type && a.ref === b.ref;
+  function voortgang() {
+    var totaal = OPDRACHTEN.length;
+    var klaar = OPDRACHTEN.filter(function (o) {
+      return state.boekingen[o.ref] && state.boekingen[o.ref].geboekt;
+    }).length;
+    return { klaar: klaar, totaal: totaal, percent: totaal ? Math.round((klaar / totaal) * 100) : 0 };
+  }
+
+  function renderVoortgang() {
+    var v = voortgang();
+    var vulling = document.getElementById("voortgang-vulling");
+    var tekst = document.getElementById("voortgang-tekst");
+    if (vulling) vulling.style.width = v.percent + "%";
+    if (tekst) tekst.textContent = v.klaar + " van " + v.totaal + " geboekt";
+    var balk = document.getElementById("voortgang");
+    if (balk) balk.classList.toggle("voortgang-af", v.klaar === v.totaal && v.totaal > 0);
   }
 
   function renderNav() {
@@ -841,12 +1342,13 @@
         var geboekt = state.boekingen[o.ref] && state.boekingen[o.ref].geboekt;
         var actief = uiState.huidigePagina.type === "opdracht" && uiState.huidigePagina.ref === o.ref;
         html += '<div class="nav-link' + (actief ? " actief" : "") + '" data-page-type="opdracht" data-page-ref="' + escapeAttr(o.ref) + '">' +
-          "<span>" + escapeAttr(o.ref === o.titel ? o.ref : o.ref) + "</span>" +
+          "<span>" + escapeAttr(o.navLabel || o.ref) + "</span>" +
           '<span class="status-bolletje' + (geboekt ? " geboekt" : "") + '"></span></div>';
       });
     });
 
     html += '<div class="nav-categorie">Afsluiten</div>';
+    html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "relaties" ? " actief" : "") + '" data-page-type="relaties">Klanten &amp; leveranciers</div>';
     html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "controles" ? " actief" : "") + '" data-page-type="controles">Controles</div>';
     html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "resultaat" ? " actief" : "") + '" data-page-type="resultaat">Resultaatverwerking</div>';
 
@@ -854,7 +1356,7 @@
   }
 
   /* ========================================================================
-     10. Alles samen renderen (met focus-behoud)
+     10. Alles samen renderen (met focus- en scrollbehoud)
      ======================================================================== */
 
   function renderPagina() {
@@ -865,6 +1367,7 @@
     if (p.type === "start") html = renderStart();
     else if (p.type === "saldibalans") html = renderSaldibalans();
     else if (p.type === "opdracht") html = renderOpdracht(p.ref);
+    else if (p.type === "relaties") html = renderRelaties();
     else if (p.type === "controles") html = renderControles();
     else if (p.type === "resultaat") html = renderResultaat();
     else html = renderStart();
@@ -877,7 +1380,14 @@
     if (actief && actief.dataset && actief.dataset.focusId) {
       info = { id: actief.dataset.focusId, start: actief.selectionStart, end: actief.selectionEnd };
     }
+    var main = document.getElementById("main-content");
+    var scroll = main ? main.scrollTop : 0;
+    var vensterScroll = window.pageYOffset;
+
     fn();
+
+    if (main) main.scrollTop = scroll;
+    if (vensterScroll) window.scrollTo(0, vensterScroll);
     if (info) {
       var el = null;
       try { el = document.querySelector('[data-focus-id="' + CSS.escape(info.id) + '"]'); } catch (e) {}
@@ -896,6 +1406,7 @@
       renderPagina();
     });
     renderTpanel();
+    renderVoortgang();
     updateRelatieDatalists();
     updateOpslaanStatus();
   }
@@ -906,8 +1417,41 @@
 
   function opState(scope, rowIdx, veld, waarde) {
     var boeking = boekingVoor(scope);
-    if (!boeking.rows[rowIdx]) return;
-    boeking.rows[rowIdx][veld] = waarde;
+    var row = boeking.rows[rowIdx];
+    if (!row) return;
+    row[veld] = waarde;
+    // Een klant-/leveranciersnaam hoort enkel bij 400000 en 440000. Wijzigt
+    // het rekeningnummer naar iets anders, dan verdwijnt het invulveld — de
+    // ingetikte naam mag dan niet onzichtbaar blijven meeslepen, want dan
+    // duikt ze later weer op zodra dat nummer opnieuw gebruikt wordt.
+    if (veld === "rekening" && !relatieVeldVoorRekening(waarde)) row.relatie = "";
+  }
+
+  function toonRekeningInTpanel(nr) {
+    uiState.tpanelZoek = String(nr);
+    uiState.tpanelApko = "";
+    uiState.tpanelKlasse = "";
+    uiState.tpanelRubriek = "";
+    uiState.tpanelToonLeeg = true;
+    var zoekEl = document.getElementById("tpanel-zoek");
+    if (zoekEl) zoekEl.value = uiState.tpanelZoek;
+    var leegEl = document.getElementById("tpanel-leeg-check");
+    if (leegEl) leegEl.checked = true;
+    vulKlasseSelect(document.getElementById("tpanel-klasse"), "");
+    vulRubriekSelect(document.getElementById("tpanel-rubriek"), "", "");
+    renderFilterKnoppen("tpanel-apko-knoppen", "");
+    document.getElementById("layout").classList.remove("tpanel-verborgen");
+    document.getElementById("layout").classList.add("tpanel-open");
+    renderTpanel();
+  }
+
+  function plaatsKaart(nr, vakId) {
+    if (!nr) return;
+    if (vakId) state.eindbalans[nr] = vakId;
+    else delete state.eindbalans[nr];
+    uiState.gekozenKaart = null;
+    saveState();
+    renderAlles();
   }
 
   function initEvents() {
@@ -931,12 +1475,16 @@
     paginaEl.addEventListener("change", function (e) {
       var t = e.target;
       // Zelfde afhandeling als bij "input": nodig omdat <select>-velden
-      // (A/P/K/O, stijgt/daalt, D/C, relatie) in sommige browsers/situaties
-      // enkel "change" vuren en niet "input". Opnieuw dezelfde waarde
-      // wegschrijven is onschadelijk.
+      // (A/P/K/O, stijgt/daalt, D/C) in sommige browsers enkel "change"
+      // vuren. Opnieuw dezelfde waarde wegschrijven is onschadelijk.
       if (t.dataset && t.dataset.scope !== undefined && t.dataset.row !== undefined && t.dataset.field) {
         opState(t.dataset.scope, parseInt(t.dataset.row, 10), t.dataset.field, t.value);
         saveState();
+        renderAlles();
+        return;
+      }
+      if (t.dataset && t.dataset.role === "relatie-select") {
+        uiState.relatieKeuze[t.dataset.soort] = t.value;
         renderAlles();
         return;
       }
@@ -969,25 +1517,86 @@
     });
 
     paginaEl.addEventListener("click", function (e) {
-      var t = e.target;
-      var role = t.dataset ? t.dataset.role : null;
+      var knop = e.target.closest ? e.target.closest("[data-role]") : null;
+      if (!knop) return;
+      var role = knop.dataset.role;
+
       if (role === "rij-toevoegen") {
-        boekingVoor(t.dataset.scope).rows.push(maakLegeRij());
+        boekingVoor(knop.dataset.scope).rows.push(maakLegeRij());
         saveState(); renderAlles();
       } else if (role === "verwijder-rij") {
-        var b = boekingVoor(t.dataset.scope);
-        b.rows.splice(parseInt(t.dataset.row, 10), 1);
+        var b = boekingVoor(knop.dataset.scope);
+        b.rows.splice(parseInt(knop.dataset.row, 10), 1);
         if (!b.rows.length) b.rows.push(maakLegeRij());
         saveState(); renderAlles();
       } else if (role === "boeken") {
-        var bk = boekingVoor(t.dataset.scope);
+        var bk = boekingVoor(knop.dataset.scope);
         if (boekingKlaarOmTeBoeken(bk.rows)) { bk.geboekt = true; saveState(); renderAlles(); }
       } else if (role === "heropenen") {
-        boekingVoor(t.dataset.scope).geboekt = false;
+        boekingVoor(knop.dataset.scope).geboekt = false;
         saveState(); renderAlles();
       } else if (role === "mar-zoeken") {
-        openMarModal(t.dataset.scope, parseInt(t.dataset.row, 10));
+        openMarModal(knop.dataset.scope, parseInt(knop.dataset.row, 10));
+      } else if (role === "info") {
+        openInfoModal(knop.dataset.info);
+      } else if (role === "toon-rekening") {
+        toonRekeningInTpanel(knop.dataset.nr);
+      } else if (role === "ga-naar") {
+        uiState.huidigePagina = { type: knop.dataset.pageType };
+        renderAlles();
+        window.scrollTo(0, 0);
+      } else if (role === "kies-relatie") {
+        uiState.relatieKeuze[knop.dataset.soort] = knop.dataset.naam;
+        renderAlles();
+      } else if (role === "balans-hint") {
+        uiState.balansHint = uiState.balansHint === knop.dataset.vak ? null : knop.dataset.vak;
+        renderAlles();
+      } else if (role === "kaart-terug") {
+        e.stopPropagation();
+        plaatsKaart(knop.dataset.nr, null);
+      } else if (role === "balans-kaart") {
+        uiState.gekozenKaart = uiState.gekozenKaart === knop.dataset.nr ? null : knop.dataset.nr;
+        renderAlles();
+      } else if (role === "balans-vak") {
+        if (uiState.gekozenKaart) plaatsKaart(uiState.gekozenKaart, knop.dataset.vak || null);
+      } else if (role === "balans-leegmaken") {
+        state.eindbalans = {};
+        uiState.gekozenKaart = null;
+        saveState(); renderAlles();
       }
+    });
+
+    // Slepen van de balanskaartjes. Tikken werkt ook (zie hierboven), zodat
+    // dit ook bruikbaar blijft op een tablet zonder drag-ondersteuning.
+    paginaEl.addEventListener("dragstart", function (e) {
+      var kaart = e.target.closest ? e.target.closest('[data-role="balans-kaart"]') : null;
+      if (!kaart) return;
+      e.dataTransfer.setData("text/plain", kaart.dataset.nr);
+      e.dataTransfer.effectAllowed = "move";
+      kaart.classList.add("sleept");
+    });
+    paginaEl.addEventListener("dragend", function (e) {
+      var kaart = e.target.closest ? e.target.closest('[data-role="balans-kaart"]') : null;
+      if (kaart) kaart.classList.remove("sleept");
+    });
+    paginaEl.addEventListener("dragover", function (e) {
+      var vak = e.target.closest ? e.target.closest('[data-role="balans-vak"]') : null;
+      if (!vak) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      vak.classList.add("sleep-over");
+    });
+    paginaEl.addEventListener("dragleave", function (e) {
+      var vak = e.target.closest ? e.target.closest('[data-role="balans-vak"]') : null;
+      if (vak) vak.classList.remove("sleep-over");
+    });
+    paginaEl.addEventListener("drop", function (e) {
+      var vak = e.target.closest ? e.target.closest('[data-role="balans-vak"]') : null;
+      if (!vak) return;
+      e.preventDefault();
+      vak.classList.remove("sleep-over");
+      var nr = e.dataTransfer.getData("text/plain");
+      plaatsKaart(nr, vak.dataset.vak || null);
     });
 
     // MAR-zoekpopup: eigen, vaste DOM-elementen buiten #pagina-inhoud, dus
@@ -1000,7 +1609,17 @@
       var b = e.target.closest ? e.target.closest("[data-apko]") : null;
       if (!b) return;
       marModal.apko = b.dataset.apko;
-      renderMarModalKnoppen();
+      renderFilterKnoppen("mar-modal-apko-knoppen", marModal.apko);
+      renderMarModalLijst();
+    });
+    document.getElementById("mar-modal-klasse").addEventListener("change", function (e) {
+      marModal.klasse = e.target.value;
+      marModal.rubriek = "";
+      vulRubriekSelect(document.getElementById("mar-modal-rubriek"), marModal.klasse, "");
+      renderMarModalLijst();
+    });
+    document.getElementById("mar-modal-rubriek").addEventListener("change", function (e) {
+      marModal.rubriek = e.target.value;
       renderMarModalLijst();
     });
     document.getElementById("mar-modal-lijst").addEventListener("click", function (e) {
@@ -1015,8 +1634,24 @@
     document.getElementById("mar-modal-overlay").addEventListener("click", function (e) {
       if (e.target.id === "mar-modal-overlay") closeMarModal();
     });
+
+    // Uitlegvenster
+    document.body.addEventListener("click", function (e) {
+      var knop = e.target.closest ? e.target.closest('[data-role="info"]') : null;
+      if (!knop) return;
+      if (document.getElementById("pagina-inhoud").contains(knop)) return; // al afgehandeld
+      openInfoModal(knop.dataset.info);
+    });
+    document.getElementById("info-modal-sluiten").addEventListener("click", sluitInfoModal);
+    document.getElementById("info-modal-overlay").addEventListener("click", function (e) {
+      if (e.target.id === "info-modal-overlay") sluitInfoModal();
+    });
+
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && marModal.open) closeMarModal();
+      if (e.key !== "Escape") return;
+      if (marModal.open) closeMarModal();
+      sluitInfoModal();
+      sluitWissenModal();
     });
 
     document.getElementById("nav-links").addEventListener("click", function (e) {
@@ -1024,10 +1659,10 @@
       if (!t) return;
       var type = t.dataset.pageType;
       uiState.huidigePagina = type === "opdracht" ? { type: type, ref: t.dataset.pageRef } : { type: type };
-      uiState.sidebarOpen = false;
       document.getElementById("layout").classList.remove("sidebar-open");
       renderAlles();
       document.getElementById("main-content").scrollTop = 0;
+      window.scrollTo(0, 0);
     });
 
     // T-panel
@@ -1035,8 +1670,42 @@
       uiState.tpanelZoek = e.target.value;
       renderTpanel();
     });
+    document.getElementById("tpanel-apko-knoppen").addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-apko]") : null;
+      if (!b) return;
+      uiState.tpanelApko = b.dataset.apko;
+      renderFilterKnoppen("tpanel-apko-knoppen", uiState.tpanelApko);
+      renderTpanel();
+    });
+    document.getElementById("tpanel-klasse").addEventListener("change", function (e) {
+      uiState.tpanelKlasse = e.target.value;
+      uiState.tpanelRubriek = "";
+      vulRubriekSelect(document.getElementById("tpanel-rubriek"), uiState.tpanelKlasse, "");
+      renderTpanel();
+    });
+    document.getElementById("tpanel-rubriek").addEventListener("change", function (e) {
+      uiState.tpanelRubriek = e.target.value;
+      renderTpanel();
+    });
     document.getElementById("tpanel-detail-check").addEventListener("change", function (e) {
       uiState.tpanelDetail = !e.target.checked; // aangevinkt = enkel saldi
+      renderTpanel();
+    });
+    document.getElementById("tpanel-leeg-check").addEventListener("change", function (e) {
+      uiState.tpanelToonLeeg = e.target.checked;
+      renderTpanel();
+    });
+    document.getElementById("tpanel-filter-reset").addEventListener("click", function () {
+      uiState.tpanelZoek = "";
+      uiState.tpanelApko = "";
+      uiState.tpanelKlasse = "";
+      uiState.tpanelRubriek = "";
+      uiState.tpanelToonLeeg = false;
+      document.getElementById("tpanel-zoek").value = "";
+      document.getElementById("tpanel-leeg-check").checked = false;
+      vulKlasseSelect(document.getElementById("tpanel-klasse"), "");
+      vulRubriekSelect(document.getElementById("tpanel-rubriek"), "", "");
+      renderFilterKnoppen("tpanel-apko-knoppen", "");
       renderTpanel();
     });
     document.getElementById("tpanel-collapse").addEventListener("click", function () {
@@ -1059,6 +1728,7 @@
         state.boekingen = onbewaardWerk.boekingen;
         state.controles = onbewaardWerk.controles;
         state.resultaat = onbewaardWerk.resultaat;
+        state.eindbalans = onbewaardWerk.eindbalans || {};
         state.student = naam;
       }
       saveState();
@@ -1093,10 +1763,7 @@
             alert("Dit lijkt geen geldig bewaarbestand van deze app te zijn.");
             return;
           }
-          state = data;
-          if (!state.resultaat) state.resultaat = maakLegeState("").resultaat;
-          if (!state.controles) state.controles = {};
-          if (!state.boekingen) state.boekingen = {};
+          state = normaliseerState(data, data.student || "");
           document.getElementById("leerling-naam-input").value = state.student || "";
           saveState();
           renderAlles();
@@ -1109,6 +1776,22 @@
       e.target.value = "";
     });
 
+    // Alles wissen — pas na het intikken van het woord "wissen"
+    document.getElementById("btn-wissen").addEventListener("click", openWissenModal);
+    document.getElementById("wissen-modal-sluiten").addEventListener("click", sluitWissenModal);
+    document.getElementById("wissen-annuleer").addEventListener("click", sluitWissenModal);
+    document.getElementById("wissen-modal-overlay").addEventListener("click", function (e) {
+      if (e.target.id === "wissen-modal-overlay") sluitWissenModal();
+    });
+    document.getElementById("wissen-bevestig").addEventListener("input", function (e) {
+      var goed = e.target.value.trim().toLowerCase() === "wissen";
+      document.getElementById("wissen-bevestig-knop").disabled = !goed;
+    });
+    document.getElementById("wissen-bevestig-knop").addEventListener("click", function () {
+      if (document.getElementById("wissen-bevestig").value.trim().toLowerCase() !== "wissen") return;
+      wisAlles();
+    });
+
     // Mobiel: menu / T-panel toggles
     document.getElementById("btn-nav-toggle").addEventListener("click", function () {
       document.getElementById("layout").classList.toggle("sidebar-open");
@@ -1116,6 +1799,35 @@
     document.getElementById("btn-tpanel-toggle").addEventListener("click", function () {
       document.getElementById("layout").classList.toggle("tpanel-open");
     });
+  }
+
+  function openWissenModal() {
+    var veld = document.getElementById("wissen-bevestig");
+    veld.value = "";
+    document.getElementById("wissen-bevestig-knop").disabled = true;
+    document.getElementById("wissen-modal-overlay").hidden = false;
+    setTimeout(function () { veld.focus(); }, 0);
+  }
+
+  function sluitWissenModal() {
+    var overlay = document.getElementById("wissen-modal-overlay");
+    if (overlay) overlay.hidden = true;
+  }
+
+  function wisAlles() {
+    var naam = state.student;
+    try {
+      if (naam) localStorage.removeItem(storageKeyVoor(naam));
+    } catch (e) { console.error(e); }
+    state = maakLegeState(naam);
+    uiState.huidigePagina = { type: "start" };
+    uiState.gekozenKaart = null;
+    uiState.relatieKeuze = { klanten: "", leveranciers: "" };
+    laatstBewaardOm = null;
+    if (naam) saveState();
+    sluitWissenModal();
+    renderAlles();
+    window.scrollTo(0, 0);
   }
 
   /* ========================================================================
@@ -1129,6 +1841,8 @@
       laadStudent(laatsteNaam);
       document.getElementById("leerling-naam-input").value = laatsteNaam;
     }
+    vulKlasseSelect(document.getElementById("tpanel-klasse"), "");
+    vulRubriekSelect(document.getElementById("tpanel-rubriek"), "", "");
     initEvents();
     renderAlles();
   }

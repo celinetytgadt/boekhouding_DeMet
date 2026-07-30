@@ -21,11 +21,17 @@
     <span id="opslaan-status"></span>
     <button id="btn-export" type="button" title="Bewaar je werk als bestand">Exporteren</button>
     <button id="btn-import" type="button" title="Laad een eerder bewaard bestand">Importeren</button>
+    <button id="btn-wissen" type="button" class="btn-gevaar" title="Alles wissen en opnieuw beginnen">Alles wissen</button>
     <input type="file" id="import-file" accept="application/json" style="display:none">
   </div>
   <button id="btn-nav-toggle" type="button" aria-label="Menu">☰</button>
   <button id="btn-tpanel-toggle" type="button" aria-label="T-rekeningen">T</button>
 </header>
+
+<div id="voortgang" title="Hoeveel verantwoordingsstukken heb je al geboekt?">
+  <div id="voortgang-balk"><div id="voortgang-vulling"></div></div>
+  <span id="voortgang-tekst"></span>
+</div>
 
 <div id="layout">
   <nav id="sidebar">
@@ -39,14 +45,35 @@
   <aside id="tpanel">
     <div id="tpanel-header">
       <strong>T-rekeningen</strong>
-      <button id="tpanel-collapse" type="button" title="Inklappen">«</button>
+      <span class="tpanel-header-knoppen">
+        <button type="button" class="btn-info" data-role="info" data-info="tpanelFilter" title="Hoe werken de filters?" aria-label="Uitleg">i</button>
+        <button id="tpanel-collapse" type="button" title="Inklappen">«</button>
+      </span>
     </div>
     <div id="tpanel-controls">
-      <input type="text" id="tpanel-zoek" placeholder="zoek rekening…">
-      <label class="tpanel-detail-toggle">
-        <input type="checkbox" id="tpanel-detail-check">
-        enkel saldi
-      </label>
+      <input type="text" id="tpanel-zoek" placeholder="zoek op nummer of naam…">
+      <div id="tpanel-apko-knoppen" class="filter-knoppen">
+        <button type="button" data-apko="" class="actief">alle</button>
+        <button type="button" data-apko="A">A</button>
+        <button type="button" data-apko="P">P</button>
+        <button type="button" data-apko="K">K</button>
+        <button type="button" data-apko="O">O</button>
+      </div>
+      <div class="filter-rij">
+        <select id="tpanel-klasse" aria-label="Klasse"></select>
+        <select id="tpanel-rubriek" aria-label="Rubriek"></select>
+      </div>
+      <div class="tpanel-vinkjes">
+        <label class="tpanel-detail-toggle">
+          <input type="checkbox" id="tpanel-detail-check">
+          enkel saldi
+        </label>
+        <label class="tpanel-detail-toggle">
+          <input type="checkbox" id="tpanel-leeg-check">
+          lege rekeningen tonen
+        </label>
+      </div>
+      <button type="button" id="tpanel-filter-reset" class="btn-filter-reset">filters wissen</button>
     </div>
     <div id="tpanel-lijst"></div>
   </aside>
@@ -59,26 +86,65 @@
   <div class="mar-modal">
     <div class="mar-modal-header">
       <strong>Rekening zoeken</strong>
-      <button type="button" id="mar-modal-sluiten" title="Sluiten">✕</button>
+      <span class="tpanel-header-knoppen">
+        <button type="button" class="btn-info" data-role="info" data-info="rekeningZoeken" title="Hoe zoek je een rekening?" aria-label="Uitleg">i</button>
+        <button type="button" id="mar-modal-sluiten" title="Sluiten">✕</button>
+      </span>
     </div>
     <div class="mar-modal-filters">
       <input type="text" id="mar-modal-zoek" placeholder="zoek op nummer of naam…">
-      <div id="mar-modal-apko-knoppen" class="mar-modal-apko-knoppen">
-        <button type="button" data-apko="">alle</button>
+      <div id="mar-modal-apko-knoppen" class="filter-knoppen">
+        <button type="button" data-apko="" class="actief">alle</button>
         <button type="button" data-apko="A">A</button>
         <button type="button" data-apko="P">P</button>
         <button type="button" data-apko="K">K</button>
         <button type="button" data-apko="O">O</button>
+      </div>
+      <div class="filter-rij">
+        <select id="mar-modal-klasse" aria-label="Klasse"></select>
+        <select id="mar-modal-rubriek" aria-label="Rubriek"></select>
       </div>
     </div>
     <div id="mar-modal-lijst" class="mar-modal-lijst"></div>
   </div>
 </div>
 
+<div id="info-modal-overlay" class="mar-modal-overlay" hidden>
+  <div class="mar-modal info-modal">
+    <div class="mar-modal-header">
+      <strong id="info-modal-titel">Uitleg</strong>
+      <button type="button" id="info-modal-sluiten" title="Sluiten">✕</button>
+    </div>
+    <div id="info-modal-inhoud" class="info-modal-inhoud"></div>
+  </div>
+</div>
+
+<div id="wissen-modal-overlay" class="mar-modal-overlay" hidden>
+  <div class="mar-modal wissen-modal">
+    <div class="mar-modal-header">
+      <strong>Alles wissen</strong>
+      <button type="button" id="wissen-modal-sluiten" title="Sluiten">✕</button>
+    </div>
+    <div class="wissen-modal-inhoud">
+      <p><strong>Opgelet: dit kan je niet ongedaan maken.</strong> Al je boekingen, je controles en je eindbalans verdwijnen.</p>
+      <p>Wil je toch eerst een kopie bewaren? Sluit dit venster en klik op <em>Exporteren</em>.</p>
+      <p>Typ hieronder het woord <strong>wissen</strong> om te bevestigen.</p>
+      <input type="text" id="wissen-bevestig" placeholder="wissen" autocomplete="off">
+      <div class="wissen-modal-acties">
+        <button type="button" id="wissen-annuleer">Annuleren</button>
+        <button type="button" id="wissen-bevestig-knop" class="btn-gevaar-vol" disabled>Definitief wissen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="js/mar.js"></script>
+<script src="js/data-mar-indeling.js"></script>
 <script src="js/data-opdrachten.js"></script>
 <script src="js/data-relaties.js"></script>
 <script src="js/data-controles.js"></script>
+<script src="js/data-balans.js"></script>
+<script src="js/data-info.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
