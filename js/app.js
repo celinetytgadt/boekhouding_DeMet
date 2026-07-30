@@ -945,7 +945,10 @@
 
   function htmlKaart(kaart, geplaatst) {
     var gekozen = uiState.gekozenKaarten.indexOf(kaart.id) !== -1;
-    return '<div class="balans-kaart' + (gekozen ? " gekozen" : "") + '" draggable="true" ' +
+    // Een kaartje dat al op de balans ligt, is "afgewerkt": het wordt kleiner
+    // en grijzer, zodat de vaknamen en de bedragen bovenaan blijven staan en
+    // de balans leesbaar blijft.
+    return '<div class="balans-kaart' + (geplaatst ? " geplaatst" : "") + (gekozen ? " gekozen" : "") + '" draggable="true" ' +
       'data-role="balans-kaart" data-kaart="' + escapeAttr(kaart.id) + '" ' +
       'title="' + escapeAttr("Rubriek " + kaart.id + " — " + kaart.rekeningen.join(", ")) + '">' +
       '<span class="kaart-nr">' + kaart.id + "</span>" +
@@ -978,6 +981,26 @@
     return !!(b1 && b1.geboekt && b2 && b2.geboekt);
   }
 
+  // Is de eindbalans afgewerkt? Alle rubrieken geplaatst én de optelling
+  // klopt. Welke optelling dat is, hangt ervan af of de resultaatverwerking
+  // al geboekt is (zie htmlBalansEvenwichtsregel).
+  function balansAf() {
+    var kaarten = balansKaarten();
+    if (!kaarten.length) return false;
+    var alleGeplaatst = kaarten.every(function (k) { return !!state.eindbalans[k.id]; });
+    if (!alleGeplaatst) return false;
+    var b = BALANS_STRUCTUUR.balans.kolommen;
+    var r = BALANS_STRUCTUUR.resultatenrekening.kolommen;
+    var activa = kolomTotaal(b[0], kaarten);
+    var passiva = kolomTotaal(b[1], kaarten);
+    var kosten = kolomTotaal(r[0], kaarten);
+    var opbrengsten = kolomTotaal(r[1], kaarten);
+    if (resultaatverwerkingGeboekt()) {
+      return Math.abs(activa - passiva) < 0.005 && Math.abs(kosten - opbrengsten) < 0.005;
+    }
+    return Math.abs(activa + kosten - passiva - opbrengsten) < 0.005;
+  }
+
   function htmlBalansDeel(deelNaam, kaarten, toonEvenwicht) {
     var deel = BALANS_STRUCTUUR[deelNaam];
     var perVak = {};
@@ -1006,7 +1029,7 @@
             '<span class="balans-vak-totaal">' + (inhoud.length ? formatBedrag(vakTotaal) : "") + "</span>" +
             "</div>";
           kolomHtml += '<div class="balans-vak-inhoud">' +
-            (inhoud.length ? inhoud.map(function (k) { return htmlKaart(k, true); }).join("") : '<span class="balans-vak-leeg">leeg</span>') +
+            inhoud.map(function (k) { return htmlKaart(k, true); }).join("") +
             "</div></div>";
         });
         kolomHtml += "</div>";
@@ -1086,7 +1109,7 @@
     var teplaatsen = kaarten.filter(function (k) { return !state.eindbalans[k.id]; });
     var klaar = resultaatverwerkingGeboekt();
 
-    var html = '<div class="paneel"><h2>Eindbalans en resultatenrekening ' + htmlInfoKnop("eindbalans", "Hoe werkt dit?") + "</h2>";
+    var html = '<div class="paneel" id="paneel-eindbalans"><h2>Eindbalans en resultatenrekening ' + htmlInfoKnop("eindbalans", "Hoe werkt dit?") + "</h2>";
     if (!kaarten.length) {
       html += "<p>Zodra je boekingen hebt, verschijnen hier alle rubrieken met een saldo.</p></div>";
       return html;
@@ -1148,6 +1171,18 @@
 
     var getallen = berekenSlotcontroleGetallen();
     html += '<div class="paneel"><h2>Slotcontrole</h2><p class="paneel-hint">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
+
+    // Na het boeken van BELASTING en RESULTAAT verandert de balans nog: de
+    // winst verhuist naar het overgedragen resultaat. Ze moeten dus eerst
+    // terug naar boven vóór ze hier kunnen afronden.
+    if (resultaatverwerkingGeboekt() && !balansAf()) {
+      html += '<div class="slotcontrole-terug">' +
+        "<p><strong>Je hebt de resultaatverwerking geboekt. Werk nu eerst de eindbalans en de resultatenrekening bovenaan af.</strong></p>" +
+        "<p>Door BELASTING en RESULTAAT verschuift de winst naar het overgedragen resultaat, dus de bedragen op je balans zijn veranderd. Pas als activa gelijk is aan passiva én kosten aan opbrengsten, kan je hier afronden.</p>" +
+        '<button type="button" class="btn-secundair" data-role="naar-eindbalans">Naar de eindbalans</button>' +
+        "</div>";
+    }
+
     html += '<div class="slotcontrole-blok">' +
       '<div class="slotcontrole-vraag"><label><input type="checkbox" data-role="slot-check" data-veld="slotcontroleResultaat" ' + (state.resultaat.slotcontroleResultaat ? "checked" : "") + "> Is de resultatenrekening in evenwicht?</label></div>" +
       '<div class="slotcontrole-detail">Totaal klasse 6: ' + formatBedrag(getallen.resD) + "</div>" +
@@ -1586,6 +1621,10 @@
             state.resultaat.slotcontroleMelding = { type: "fout", tekst: "Er staan nog fouten of openstaande punten in het tabblad Controles. Los die eerst op vóór je de slotcontrole kan afronden." };
             state.resultaat.slotcontroleResultaat = false;
             state.resultaat.slotcontroleBalans = false;
+          } else if (!balansAf()) {
+            state.resultaat.slotcontroleMelding = { type: "fout", tekst: "Je eindbalans en resultatenrekening bovenaan zijn nog niet af. Zet elke rubriek op haar plaats en zorg dat activa gelijk is aan passiva én kosten aan opbrengsten." };
+            state.resultaat.slotcontroleResultaat = false;
+            state.resultaat.slotcontroleBalans = false;
           } else if (cijfersKloppen) {
             state.resultaat.slotcontroleMelding = { type: "goed", tekst: "Hoera, je bent er geraakt! Laat de vakexpert dit nog even nakijken, want deze app kan maar beperkte controles doorvoeren. Ondertussen mag jij alvast trots zijn op jezelf!" };
           } else {
@@ -1634,6 +1673,9 @@
         openMarModal(knop.dataset.scope, parseInt(knop.dataset.row, 10));
       } else if (role === "info") {
         openInfoModal(knop.dataset.info);
+      } else if (role === "naar-eindbalans") {
+        var doel = document.getElementById("paneel-eindbalans");
+        if (doel && doel.scrollIntoView) doel.scrollIntoView({ behavior: "smooth", block: "start" });
       } else if (role === "ga-naar") {
         uiState.huidigePagina = { type: knop.dataset.pageType };
         renderAlles();
