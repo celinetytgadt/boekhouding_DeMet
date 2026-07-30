@@ -46,14 +46,13 @@ const SALDO_GEEN_CONTROLE = [
 // type "check-met-document"  ja/nee-vraag + klein documentbeeld ernaast
 //
 // Optionele velden bij elke controle:
-//   toelichting  één zin extra uitleg onder de vraag
+//   toelichting  één of enkele zinnen extra uitleg onder de vraag
 //   uitleg       sleutel uit data-info.js — zet een i-icoontje bij de vraag
-//   rekeningen   welke rekeningen de leerling hiervoor moet bekijken. De app
-//                toont ze met hun saldo, klikbaar naar het T-paneel. Je kan
-//                een volledig nummer opgeven ("340000") of een patroon met
-//                een sterretje ("411*" voor alles wat met 411 begint).
 //   filterTip    welke filter ze in het T-paneel kunnen zetten om dit na te
 //                kijken
+//
+// De app toont bewust GEEN saldi bij een controle: dan valt er niets meer na
+// te kijken. De leerling zoekt zelf in het T-paneel met de filtertip.
 const HANDMATIGE_CONTROLES = [
   {
     id: "btw-tussentijds-leeg",
@@ -67,20 +66,18 @@ const HANDMATIGE_CONTROLES = [
     type: "check-met-document",
     vraag: "Is het banksaldo op het laatste afschrift gelijk aan het saldo op 550000?",
     docConfig: "laatsteBankRef",
-    rekeningen: ["550000"],
   },
   {
     id: "kassaldo-klopt",
     type: "check-met-document",
     vraag: "Is het kassaldo op het laatste kasblad gelijk aan het saldo op 570000?",
     docConfig: "laatsteKasRef",
-    rekeningen: ["570000"],
   },
   {
     id: "voorraad-klopt",
     type: "check-met-document",
     vraag: "Klopt de voorraad met de telling?",
-    toelichting: "Het saldo van de actief rekening "Voorraad handelsgoederen" moet gelijk zijn aan de waarde van de voorraadtelling hiernaast.",
+    toelichting: "Het saldo van de actiefrekening \"Voorraad handelsgoederen\" moet gelijk zijn aan de waarde van de voorraadtelling hiernaast.",
     docConfig: "voorraadRef",
     filterTip: "Filter in het T-paneel op voorraad.",
   },
@@ -88,11 +85,7 @@ const HANDMATIGE_CONTROLES = [
     id: "vaste-activa-nummers",
     type: "check",
     vraag: "Hoort bij elke aanschafwaarde de afschrijving met hetzelfde nummer?",
-    toelichting: "Elk soort vast actief heeft in het MAR twee rekeningen die bij elkaar horen:",
-      { stap: "de aanschafwaarde, bijvoorbeeld 230000 Installaties, machines en uitrusting;" },
-      { stap: "de geboekte afschrijvingen, met hetzelfde nummer maar eindigend op 9: 230009." },
-      "Die twee moeten altijd hetzelfde basisnummer hebben. Boek je de aankoop van een machine op 230000, dan hoort de afschrijving erop op 230009 — niet op 240009 of 241009.",
-      "Klopt dat niet, dan lijkt het alsof je een machine afschrijft die je nooit gekocht hebt, én alsof je meubilair hebt dat nooit afgeschreven wordt.",
+    toelichting: "Elk soort vast actief heeft twee rekeningen die bij elkaar horen: de aanschafwaarde (bv. 230000) en de geboekte afschrijvingen met hetzelfde basisnummer, eindigend op 9 (230009). Boek je de aankoop van een machine op 230000, dan hoort de afschrijving erop op 230009 — niet op 240009 of 241009. Klopt dat niet, dan lijkt het alsof je een machine afschrijft die je nooit gekocht hebt.",
     filterTip: "Filter in het T-paneel op klasse 2 (Vaste activa).",
   },
   {

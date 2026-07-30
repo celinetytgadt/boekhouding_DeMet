@@ -37,8 +37,6 @@ const OPDRACHTEN = [
   { ref: "AK08", categorie: "Aankopen", titel: "Aankoop AK08", doc: "AK08" },
   { ref: "AK09", categorie: "Aankopen", titel: "Aankoop AK09", doc: "AK09" },
   { ref: "AK10", categorie: "Aankopen", titel: "Aankoop AK10", doc: "AK10" },
-  { ref: "AK11", categorie: "Aankopen", titel: "Aankoop AK11", doc: "AK11" },
-  { ref: "AK12", categorie: "Aankopen", titel: "Aankoop AK12", doc: "AK12" },
 
   { ref: "VK01", categorie: "Verkopen", titel: "Verkoop VK01", doc: "VK01" },
   { ref: "VK02", categorie: "Verkopen", titel: "Verkoop VK02", doc: "VK02" },
@@ -52,6 +50,15 @@ const OPDRACHTEN = [
   { ref: "ONTV01", categorie: "Dagontvangsten", titel: "Dagontvangsten ONTV01", doc: "ONTV01" },
 
   { ref: "LOON", categorie: "Loonverwerking", titel: "Loonstaat LOON", doc: "LOON" },
+  // AK11 en AK12 zijn aankoopfacturen die bij de loonverwerking horen. Ze
+  // staan hier en niet bij de andere aankopen, want ze zijn pas te boeken
+  // nadat de loonstaat gezien is.
+  { ref: "AK11", categorie: "Loonverwerking", titel: "Aankoop AK11", doc: "AK11" },
+  { ref: "AK12", categorie: "Loonverwerking", titel: "Aankoop AK12", doc: "AK12" },
+
+  // Eerst de kas, dan de bank: zo is de tegenboeking op 580000 (interne
+  // overboekingen) duidelijker.
+  { ref: "KAS01", categorie: "Financiële verrichtingen", titel: "Kasblad KAS01", doc: "KAS01" },
 
   { ref: "BANK01", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK01", doc: "BANK01" },
   { ref: "BANK02", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK02", doc: "BANK02" },
@@ -68,7 +75,6 @@ const OPDRACHTEN = [
   { ref: "BANK11", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK11", doc: "BANK11" },
   { ref: "BANK12", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK12", doc: "BANK12" },
   { ref: "BANK13", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK13", doc: "BANK13", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
-  { ref: "KAS01", categorie: "Financiële verrichtingen", titel: "Kasblad KAS01", doc: "KAS01" },
 
   {
     ref: "BTW", categorie: "BTW-verwerking", titel: "Btw-verwerking BTW", geenDocument: true,
@@ -97,3 +103,14 @@ const CATEGORIE_VOLGORDE = [
   "BTW-verwerking",
   "Eindejaarsverrichtingen",
 ];
+
+// Een korte tip die net boven het redeneerschema verschijnt (geen popup, ze
+// moeten ze zien staan). Wil je er één bij een andere opdracht, zet dan
+// gewoon een veld "tip" bij dat item in de lijst hierboven.
+const TIP_BANK =
+  "Klopt je saldo op de T-rekening van de bank met het bankafschrift? " +
+  "Check dat vóór én na je boeking — zo weet je zeker dat je wijziging op de bankrekening juist geboekt is.";
+
+OPDRACHTEN.forEach(function (o) {
+  if (String(o.ref).indexOf("BANK") === 0 && !o.tip) o.tip = TIP_BANK;
+});

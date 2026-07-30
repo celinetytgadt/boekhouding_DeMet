@@ -45,10 +45,7 @@
   <aside id="tpanel">
     <div id="tpanel-header">
       <strong>T-rekeningen</strong>
-      <span class="tpanel-header-knoppen">
-        <button type="button" class="btn-info" data-role="info" data-info="tpanelFilter" title="Hoe werken de filters?" aria-label="Uitleg">i</button>
-        <button id="tpanel-collapse" type="button" title="Inklappen">«</button>
-      </span>
+      <button id="tpanel-collapse" type="button" title="T-rekeningen inklappen">«</button>
     </div>
     <div id="tpanel-controls">
       <input type="text" id="tpanel-zoek" placeholder="zoek op nummer of naam…">
@@ -77,6 +74,12 @@
     </div>
     <div id="tpanel-lijst"></div>
   </aside>
+
+  <!-- Verschijnt enkel als het T-paneel ingeklapt is, zodat het altijd
+       terug te halen valt. -->
+  <button id="tpanel-heropen" type="button" title="T-rekeningen terug tonen">
+    <span>T-rekeningen</span> »
+  </button>
 </div>
 
 <datalist id="datalist-klanten"></datalist>
@@ -116,6 +119,19 @@
       <button type="button" id="info-modal-sluiten" title="Sluiten">✕</button>
     </div>
     <div id="info-modal-inhoud" class="info-modal-inhoud"></div>
+  </div>
+</div>
+
+<div id="melding-modal-overlay" class="mar-modal-overlay" hidden>
+  <div class="mar-modal melding-modal">
+    <div class="mar-modal-header">
+      <strong id="melding-modal-titel">Even nakijken</strong>
+      <button type="button" id="melding-modal-sluiten" title="Sluiten">✕</button>
+    </div>
+    <div id="melding-modal-inhoud" class="info-modal-inhoud"></div>
+    <div class="melding-modal-acties">
+      <button type="button" id="melding-modal-ok" class="btn-secundair">Terug naar mijn schema</button>
+    </div>
   </div>
 </div>
 

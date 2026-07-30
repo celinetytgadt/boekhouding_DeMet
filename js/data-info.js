@@ -50,12 +50,15 @@ const INFO_TEKSTEN = {
   eindbalans: {
     titel: "De eindbalans opstellen",
     regels: [
-      "Je vindt hier alle rekeningen waarop je geboekt hebt en die een saldo overhouden. Klik op één of meerdere rekeningen en klik dan op het vak van de balans of resultatenrekening waar ze thuishoren.",
+      "Je vindt hier alle rubrieken waarop je geboekt hebt en die een saldo overhouden. Klik op één of meerdere rubrieken en klik dan op het vak van de balans of resultatenrekening waar ze thuishoren. Slepen mag ook.",
+      "Het bedrag op een kaartje is het saldo van de hele rubriek samen. Bij rubriek 23 is dat dus de aanschafwaarde min de geboekte afschrijvingen.",
       { kop: "Waar hoort wat?" },
-      "De rubriek van een rekening (de eerste twee cijfers) zegt bijna altijd waar ze staat.",
+      "De rubriek is de eerste twee cijfers van een rekeningnummer, en die zegt bijna altijd waar ze op de balans staat.",
       { kop: "Wanneer klopt het?" },
-      "Als alle kaartjes een plaats hebben, moet totaal activa gelijk zijn aan totaal passiva, en totaal kosten aan totaal opbrengsten — de winst is dan immers al toegewezen aan het overgedragen resultaat.",
-      "De app telt enkel op wat jij erin legt. Ze zegt niet of een rekening in het juiste vak ligt: dat kijkt je leerkracht na.",
+      "Zolang je de resultaatverwerking (BELASTING en RESULTAAT) nog niet geboekt hebt, zit de winst nog in de resultatenrekening. Dan moet activa + kosten gelijk zijn aan passiva + opbrengsten.",
+      "Heb je de resultaatverwerking wél geboekt, dan is de winst toegewezen aan het overgedragen resultaat. Dan moet totaal activa gelijk zijn aan totaal passiva, én totaal kosten aan totaal opbrengsten.",
+      "Bovenaan zie je altijd welke van de twee regels op dit moment geldt.",
+      "De app telt enkel op wat jij erin legt. Ze zegt niet of een rubriek in het juiste vak ligt: dat kijkt je leerkracht na.",
     ],
   },
 
