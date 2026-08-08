@@ -19,6 +19,10 @@
     <label for="leerling-naam-input">Naam:</label>
     <input type="text" id="leerling-naam-input" placeholder="bv. Julie D.">
     <span id="opslaan-status"></span>
+    <!-- Testversie: de handleiding voor de leerkrachten die meetesten. De
+         bestandsnaam moet exact overeenkomen — GitHub Pages is
+         hoofdlettergevoelig. -->
+    <a id="link-handleiding" class="topbar-link" href="Handleiding-testleerkrachten.pdf" target="_blank" rel="noopener" title="Handleiding voor testleerkrachten (pdf)">Handleiding</a>
     <button id="btn-export" type="button" title="Bewaar je werk als bestand">Exporteren</button>
     <button id="btn-import" type="button" title="Laad een eerder bewaard bestand">Importeren</button>
     <button id="btn-wissen" type="button" class="btn-gevaar" title="Alles wissen en opnieuw beginnen">Alles wissen</button>
@@ -119,19 +123,6 @@
       <button type="button" id="info-modal-sluiten" title="Sluiten">✕</button>
     </div>
     <div id="info-modal-inhoud" class="info-modal-inhoud"></div>
-  </div>
-</div>
-
-<div id="melding-modal-overlay" class="mar-modal-overlay" hidden>
-  <div class="mar-modal melding-modal">
-    <div class="mar-modal-header">
-      <strong id="melding-modal-titel">Even nakijken</strong>
-      <button type="button" id="melding-modal-sluiten" title="Sluiten">✕</button>
-    </div>
-    <div id="melding-modal-inhoud" class="info-modal-inhoud"></div>
-    <div class="melding-modal-acties">
-      <button type="button" id="melding-modal-ok" class="btn-secundair">Terug naar mijn schema</button>
-    </div>
   </div>
 </div>
 

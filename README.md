@@ -74,12 +74,25 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   eigen browser en eigen export-bestand.
 - **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
   klant of leverancier zelf in bij de boeking. Op het tabblad
-  *Klanten & leveranciers* staat dan per relatie het volledige verloop
-  (factuur, betaling, lopend saldo) en of alles vereffend is. Omdat de namen
+  *Klanten & leveranciers* staat dan per relatie **één regel per factuur**,
+  met daarnaast de betaling(en) die erop volgden en wat er van die factuur
+  nog openstaat; het totaal staat onderaan. De koppeling gebeurt automatisch,
+  oudste factuur eerst (de volgorde van `data-opdrachten.js` is chronologisch).
+  Een deelbetaling toont het toegewezen bedrag tussen haakjes bij de
+  referentie. Wordt er méér betaald dan er aan facturen geboekt is, dan komt
+  die betaling apart onder de tabel te staan als waarschuwing. Omdat de namen
   handmatig ingevoerd worden, leveren tikfouten twee aparte relaties op — het
   invulveld stelt daarom eerder gebruikte namen voor.
+- **Wat is verplicht in het redeneerschema?** Enkel het bedrag, het
+  rekeningnummer en debet of credit. De kolommen *Redenering*, *A/P/K/O* en
+  *Stijgt/daalt* staan er als denkhulp: de leerling mag ze invullen, maar de
+  app controleert ze niet en de knop *Boeken* wacht er niet op. De vroegere
+  controles daarop ("A die daalt kan geen debet zijn", "440000 is geen
+  A-rekening") zijn bewust verwijderd — die beoordeling gebeurt door de
+  leerkracht.
 - De regel voor "juist soort saldo" (automatische controle) werkt op basis
-  van A/P/K/O, rekeningen die op **9** eindigen (geboekte afschrijvingen) en
+  van A/P/K/O **van de rekening in het MAR** (niet van wat de leerling
+  invulde), rekeningen die op **9** eindigen (geboekte afschrijvingen) en
   de lijst `SALDO_UITZONDERINGEN` voor contrarekeningen. Andere uitzonderingen
   worden niet herkend — de leerkracht kijkt dit sowieso nog na.
 - **De eindbalans is een sleepoefening**: de app telt op wat de leerling in

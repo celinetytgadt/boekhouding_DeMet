@@ -103,6 +103,19 @@ button {
 }
 #topbar-leerling button:hover { background: rgba(255,255,255,0.28); }
 
+/* De link naar de handleiding ziet eruit als de knoppen ernaast. */
+#topbar-leerling .topbar-link {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+#topbar-leerling .topbar-link:hover { background: rgba(255,255,255,0.28); }
+
 #btn-nav-toggle, #btn-tpanel-toggle {
   background: transparent;
   border: none;
@@ -650,7 +663,6 @@ table.redeneerschema tr.rij-onvolledig td.kol-bedrag { box-shadow: inset 3px 0 0
 .trek-leeg { color: var(--kleur-tekst-zacht); font-size: 10.5px; font-style: italic; }
 
 #layout.tpanel-verborgen #tpanel { display: none; }
-#layout.sidebar-verborgen #sidebar { display: none; }
 
 /* ---------- Saldibalans ---------- */
 
@@ -669,12 +681,6 @@ table.saldibalans th:nth-child(2), table.saldibalans td:nth-child(2) {
   text-align: left;
 }
 table.saldibalans tfoot td { font-weight: 700; border-top: 2px solid var(--kleur-tekst); }
-table.saldibalans tr.subtotaal-klasse td {
-  font-weight: 700;
-  background: var(--kleur-achtergrond);
-  border-top: 1px solid var(--kleur-rand);
-  border-bottom: 1px solid var(--kleur-rand);
-}
 
 /* ---------- Controles ---------- */
 
@@ -703,10 +709,6 @@ table.saldibalans tr.subtotaal-klasse td {
   margin: 4px 0 0 0;
   padding-left: 18px;
 }
-
-.openstaand-tabel { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
-.openstaand-tabel th, .openstaand-tabel td { padding: 4px 6px; border-bottom: 1px solid var(--kleur-rand); text-align: right; }
-.openstaand-tabel th:first-child, .openstaand-tabel td:first-child { text-align: left; }
 
 /* ---------- Resultaatverwerking stappen ---------- */
 
@@ -950,12 +952,27 @@ table.relatie-detail th, table.relatie-detail td {
 table.relatie-overzicht th:first-child, table.relatie-overzicht td:first-child,
 table.relatie-overzicht th:last-child, table.relatie-overzicht td:last-child,
 table.relatie-detail th:first-child, table.relatie-detail td:first-child,
-table.relatie-detail th:nth-child(2), table.relatie-detail td:nth-child(2) {
+table.relatie-detail th:nth-child(3), table.relatie-detail td:nth-child(3) {
   text-align: left;
 }
 table.relatie-overzicht tr.relatie-gekozen { background: #e9eaf7; }
-.relatie-redenering { color: var(--kleur-tekst-zacht); }
-.relatie-loopsaldo { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Detail: één regel per factuur, met de betaling(en) die erop volgden. */
+table.relatie-detail td { font-variant-numeric: tabular-nums; }
+table.relatie-detail td:first-child { font-weight: 600; }
+table.relatie-detail tr.factuur-open { background: #fffaf0; }
+table.relatie-detail tr.factuur-open td:last-child { font-weight: 600; color: #8a5a00; }
+.relatie-betaling { color: var(--kleur-tekst-zacht); }
+.relatie-niet-betaald { font-style: italic; }
+.relatie-leeg { color: var(--kleur-tekst-zacht); font-style: italic; text-align: left; }
+table.relatie-detail tfoot td {
+  border-top: 2px solid var(--kleur-rand);
+  border-bottom: none;
+  font-weight: 700;
+  padding-top: 7px;
+}
+table.relatie-detail tfoot td.totaal-open { color: #8a5a00; }
+table.relatie-detail tfoot td.totaal-fout { color: var(--kleur-fout); }
 .relatie-status {
   font-size: 11.5px;
   font-weight: 600;
@@ -1165,29 +1182,6 @@ table.relatie-overzicht tr.relatie-gekozen { background: #e9eaf7; }
   line-height: 1.45;
 }
 
-/* ---------- Meldingsvenster bij het boeken ---------- */
-
-.melding-modal { max-width: 480px; }
-.melding-modal-acties {
-  padding: 0 18px 16px 18px;
-  display: flex;
-  justify-content: flex-end;
-}
-.melding-punten {
-  margin: 4px 0 0 0;
-  padding-left: 20px;
-  font-size: 14px;
-  font-weight: 600;
-}
-.melding-punten li { margin-bottom: 5px; }
-.melding-slot {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--kleur-rand);
-  font-size: 12.5px;
-  color: var(--kleur-tekst-zacht);
-}
-
 /* ---------- Evenwichtsregel boven de eindbalans ---------- */
 
 .balans-regel {
@@ -1232,11 +1226,15 @@ table.relatie-overzicht tr.relatie-gekozen { background: #e9eaf7; }
   #topbar-leerling { flex-wrap: nowrap; overflow: hidden; }
   #opslaan-status { display: none; }
   #topbar-leerling button { padding: 4px 6px; font-size: 11px; white-space: nowrap; }
+  #topbar-leerling .topbar-link { padding: 4px 6px; font-size: 11px; }
   #leerling-naam-input { width: 110px; }
 }
 
 @media (max-width: 620px) {
   #topbar-title { display: none; }
   #topbar-leerling label { display: none; }
+  /* Op een smal scherm is er geen plaats meer: de knoppen van de leerling
+     hebben voorrang op de link naar de handleiding. */
+  #topbar-leerling .topbar-link { display: none; }
   #leerling-naam-input { width: 90px; }
 }

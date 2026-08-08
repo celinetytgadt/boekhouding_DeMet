@@ -251,7 +251,7 @@
         if (!mar) return;
         var nr = String(mar.nr);
         if (!gb[nr]) gb[nr] = { D: [], C: [] };
-        gb[nr][row.dc].push({ bedrag: bedrag, ref: o.ref, relatie: row.relatie || "", redenering: row.redenering || "" });
+        gb[nr][row.dc].push({ bedrag: bedrag, ref: o.ref });
       });
     });
     return gb;
@@ -269,47 +269,19 @@
   // Wat ontbreekt er nog aan deze rij? Vroeger bleef de knop Boeken gewoon
   // grijs met een algemene boodschap, waardoor een half ingevulde rij (of een
   // rekeningnummer dat niet in het MAR bestaat) moeilijk terug te vinden was.
+  //
+  // Verplicht zijn enkel bedrag, rekeningnummer en D/C. De kolommen
+  // A/P/K/O en Stijgt/daalt zijn denkhulp: de leerling mag ze invullen, maar
+  // de app rekent er niet op en controleert ze niet.
   function ontbreektInRij(row) {
     var mist = [];
     var bedrag = parseBedrag(row.bedrag);
     if (bedrag === null) mist.push("bedrag");
     else if (bedrag <= 0) mist.push("bedrag groter dan 0");
-    if (!row.apko) mist.push("soort (A/P/K/O)");
-    if (!row.stijgtDaalt) mist.push("stijgt of daalt");
     if (!row.rekening) mist.push("rekeningnummer");
     else if (!marBij(row.rekening)) mist.push("bestaand rekeningnummer (" + row.rekening + " staat niet in het MAR)");
     if (row.dc !== "D" && row.dc !== "C") mist.push("debet of credit");
     return mist;
-  }
-
-  // Welke kant hoort erbij als je zelf zegt dat het een actief is dat stijgt,
-  // een passief dat daalt, enzovoort?
-  function verwachteDCUitRedenering(apko, stijgtDaalt) {
-    if (!apko || !stijgtDaalt) return null;
-    var debetBijStijging = apko === "A" || apko === "K";
-    if (stijgtDaalt === "Stijgt") return debetBijStijging ? "D" : "C";
-    if (stijgtDaalt === "Daalt") return debetBijStijging ? "C" : "D";
-    return null;
-  }
-
-  // De twee controles die de app wél kan doen op de redenering zelf.
-  // Bewust géén bevestiging als alles klopt: dat zou de indruk wekken dat de
-  // boeking juist is, terwijl de app enkel de innerlijke logica nakijkt.
-  // En bewust geen antwoorden: enkel de reden waarom er nog iets scheelt.
-  function logicaProblemen(rows) {
-    var punten = [];
-    rows.forEach(function (row, idx) {
-      var rij = "Rij " + (idx + 1) + ": ";
-      var mar = marBij(row.rekening);
-      if (mar && row.apko && mar.apko !== row.apko) {
-        punten.push(rij + row.rekening + " is geen " + row.apko + "-rekening.");
-      }
-      var verwacht = verwachteDCUitRedenering(row.apko, row.stijgtDaalt);
-      if (verwacht && row.dc && verwacht !== row.dc) {
-        punten.push(rij + row.apko + " " + row.stijgtDaalt.toLowerCase() + " is geen " + row.dc + ".");
-      }
-    });
-    return punten;
   }
 
   function rijLeeg(row) {
@@ -520,22 +492,6 @@
     document.getElementById("info-modal-overlay").hidden = true;
   }
 
-  // Klein meldingsvenster, gebruikt als een boeking innerlijk niet klopt.
-  function openMeldingModal(titel, punten, slot) {
-    document.getElementById("melding-modal-titel").textContent = titel;
-    var html = '<ul class="melding-punten">' +
-      punten.map(function (p) { return "<li>" + escapeAttr(p) + "</li>"; }).join("") +
-      "</ul>";
-    if (slot) html += '<p class="melding-slot">' + escapeAttr(slot) + "</p>";
-    document.getElementById("melding-modal-inhoud").innerHTML = html;
-    document.getElementById("melding-modal-overlay").hidden = false;
-  }
-
-  function sluitMeldingModal() {
-    var el = document.getElementById("melding-modal-overlay");
-    if (el) el.hidden = true;
-  }
-
   /* ========================================================================
      6. Redeneerschema-component (herbruikt voor elke opdracht + BELASTING/RESULTAAT)
      ======================================================================== */
@@ -625,7 +581,10 @@
       '<col class="c-rekening"><col class="c-omschrijving"><col class="c-dc"><col class="c-verwijder">' +
       "</colgroup>" +
       "<thead><tr>" +
-      "<th>Bedrag</th><th>Redenering</th><th>A/P/K/O</th><th>Stijgt/daalt</th>" +
+      "<th>Bedrag</th>" +
+      '<th title="Denkhulp — niet verplicht">Redenering</th>' +
+      '<th title="Denkhulp — niet verplicht">A/P/K/O</th>' +
+      '<th title="Denkhulp — niet verplicht">Stijgt/daalt</th>' +
       "<th>Rekeningnr.</th><th>Omschrijving</th><th>D/C</th><th></th>" +
       "</tr></thead><tbody>";
     boeking.rows.forEach(function (row, idx) { html += htmlRedeneerschemaRij(ref, row, idx, geboekt); });
@@ -692,9 +651,9 @@
 + 
       "<p>Vooral aan het einde zitten nog wat lossen eindjes (zoals klanten/leveranciers om een zicht te hebben op de open facturen en de resultaatverwerking (te veel op 1 pagina, wat onduidelijk). Buiten dat, ben ik best wel al tevreden. Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
 +
-      "<p>_______________________________________________________ </p>"        
+      "<p>_______________________________________________________ </p>"       
 +           
-"<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in — je bedrag, je redenering, of het een actief/passief/kost/opbrengst is, of het stijgt of daalt, het rekeningnummer, en zelf of het debet of credit is. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
+"<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in. Verplicht zijn het bedrag, het rekeningnummer en debet of credit; de kolommen redenering, A/P/K/O en stijgt/daalt zijn denkhulp en mag je invullen zoals het je past. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
       "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
       "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt de vakexpert na. Ze controleert wel of debet en credit kloppen.</p>" +
       "<p>Overal waar je een <span class=\"btn-info btn-info-voorbeeld\">i</span> ziet staan, vind je uitleg over hoe dat onderdeel werkt.</p>" +
@@ -821,10 +780,108 @@
         if (bedrag === null || !row.dc) return;
         var naam = (row.relatie || "").trim() || "— geen naam ingevuld —";
         if (!perRelatie[naam]) perRelatie[naam] = [];
-        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag, redenering: row.redenering || "" });
+        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag });
       });
     });
     return perRelatie;
+  }
+
+  // Koppelt betalingen aan facturen, oudste factuur eerst (de volgorde van
+  // data-opdrachten.js is chronologisch). Zo ziet de leerling niet enkel een
+  // saldo, maar wélke factuur nog openstaat en waarmee ze vereffend is.
+  // Een deelbetaling wordt over meerdere facturen verdeeld; wat overblijft
+  // (meer betaald dan er aan facturen geboekt is) komt apart te staan.
+  function koppelFacturen(regels, isKlant) {
+    var factuurKant = isKlant ? "D" : "C";
+    var facturen = [];
+    var betalingen = [];
+    regels.forEach(function (r) {
+      if (r.dc === factuurKant) facturen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag, betaald: [] });
+      else betalingen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag });
+    });
+    betalingen.forEach(function (b) {
+      facturen.forEach(function (f) {
+        if (b.rest < 0.005 || f.rest < 0.005) return;
+        var deel = round2(Math.min(b.rest, f.rest));
+        f.betaald.push({ ref: b.ref, bedrag: deel, gedeeltelijk: deel < round2(b.bedrag) - 0.005 || deel < round2(f.bedrag) - 0.005 });
+        f.rest = round2(f.rest - deel);
+        b.rest = round2(b.rest - deel);
+      });
+    });
+    return {
+      facturen: facturen,
+      losseBetalingen: betalingen.filter(function (b) { return b.rest > 0.005; }),
+    };
+  }
+
+  // Referenties van de facturen die nog (deels) openstaan — handig als
+  // korte aanduiding in de overzichtstabel.
+  function openFactuurRefs(regels, isKlant) {
+    return koppelFacturen(regels, isKlant).facturen
+      .filter(function (f) { return f.rest > 0.005; })
+      .map(function (f) { return f.ref; });
+  }
+
+  // Detail van één relatie: één regel per factuur, met de betaling(en) die
+  // erop volgden. Geen loopsaldo per regel meer — enkel het totaal onderaan.
+  function htmlRelatieDetail(naam, regels, isKlant) {
+    var koppeling = koppelFacturen(regels, isKlant);
+    var facturen = koppeling.facturen;
+    var los = koppeling.losseBetalingen;
+
+    var totaalFacturen = som(facturen.map(function (f) { return f.bedrag; }));
+    var totaalOpen = round2(som(facturen.map(function (f) { return f.rest; })) - som(los.map(function (b) { return b.rest; })));
+
+    var kopBetaling = isKlant ? "Betaling ontvangen" : "Betaling gedaan";
+    var html = '<table class="relatie-detail"><thead><tr>' +
+      "<th>Factuur</th><th>Bedrag</th><th>" + kopBetaling + "</th><th>Nog open</th>" +
+      "</tr></thead><tbody>";
+
+    if (!facturen.length) {
+      html += '<tr><td colspan="4" class="relatie-leeg">Er staat geen enkele factuur van ' + escapeAttr(naam) +
+        " op deze rekening — enkel betalingen. Kijk na of je de factuur wel geboekt hebt.</td></tr>";
+    }
+
+    facturen.forEach(function (f) {
+      var openRegel = f.rest > 0.005;
+      var betalingTekst = f.betaald.length
+        ? f.betaald.map(function (b) {
+          return escapeAttr(b.ref) + (b.gedeeltelijk ? " (" + formatBedrag(b.bedrag) + ")" : "");
+        }).join(", ")
+        : '<span class="relatie-niet-betaald">nog niet betaald</span>';
+      html += '<tr class="' + (openRegel ? "factuur-open" : "factuur-vereffend") + '">' +
+        "<td>" + escapeAttr(f.ref) + "</td>" +
+        "<td>" + formatBedrag(f.bedrag) + "</td>" +
+        '<td class="relatie-betaling">' + betalingTekst + "</td>" +
+        "<td>" + (openRegel
+          ? formatBedrag(f.rest)
+          : '<span class="relatie-status betaald">vereffend</span>') + "</td></tr>";
+    });
+
+    html += "</tbody><tfoot><tr>" +
+      "<td>Totaal</td>" +
+      "<td>" + formatBedrag(totaalFacturen) + "</td>" +
+      "<td></td>" +
+      '<td class="' + (Math.abs(totaalOpen) < 0.005 ? "" : (totaalOpen > 0 ? "totaal-open" : "totaal-fout")) + '">' +
+      (Math.abs(totaalOpen) < 0.005 ? formatBedrag(0) : formatBedrag(Math.abs(totaalOpen))) +
+      "</td></tr></tfoot></table>";
+
+    if (los.length) {
+      html += '<p class="relatie-conclusie verkeerd">Deze ' + (isKlant ? "ontvangst" : "betaling") +
+        (los.length > 1 ? "en horen" : " hoort") + " bij geen enkele geboekte factuur: " +
+        los.map(function (b) { return escapeAttr(b.ref) + " (" + formatBedrag(b.rest) + ")"; }).join(", ") +
+        ". Er is meer " + (isKlant ? "ontvangen" : "betaald") +
+        " dan er aan facturen geboekt is — kijk na of een factuur ontbreekt of te laag geboekt is.</p>";
+    } else if (Math.abs(totaalOpen) < 0.005) {
+      html += '<p class="relatie-conclusie betaald">Alle facturen van ' + escapeAttr(naam) + " zijn vereffend.</p>";
+    } else {
+      var aantalOpen = facturen.filter(function (f) { return f.rest > 0.005; }).length;
+      html += '<p class="relatie-conclusie openstaand">Er staat nog ' + formatBedrag(totaalOpen) + " open over " +
+        aantalOpen + (aantalOpen === 1 ? " factuur." : " facturen.") +
+        " Zou die al betaald moeten zijn? Kijk dan na of het bedrag klopt en of je de betalingskorting geboekt hebt.</p>";
+    }
+
+    return html;
   }
 
   function htmlRelatieBlok(soort) {
@@ -853,10 +910,11 @@
       var facturen = isKlant ? d : c;
       var betalingen = isKlant ? c : d;
       var open = round2(facturen - betalingen);
+      var openRefs = open > 0.005 ? openFactuurRefs(regels, isKlant) : [];
       var status = Math.abs(open) < 0.005
         ? '<span class="relatie-status betaald">alles betaald</span>'
         : (open > 0
-          ? '<span class="relatie-status openstaand">nog ' + formatBedrag(open) + " open</span>"
+          ? '<span class="relatie-status openstaand">nog open' + (openRefs.length ? ": " + escapeAttr(openRefs.join(", ")) : "") + "</span>"
           : '<span class="relatie-status teveel">' + formatBedrag(Math.abs(open)) + " te veel " + (isKlant ? "ontvangen" : "betaald") + "</span>");
       html += '<tr class="' + (naam === gekozen ? "relatie-gekozen" : "") + '">' +
         '<td><button type="button" class="link-knop" data-role="kies-relatie" data-soort="' + soort + '" data-naam="' + escapeAttr(naam) + '">' + escapeAttr(naam) + "</button></td>" +
@@ -875,30 +933,7 @@
       "</select></div>";
 
     if (gekozen) {
-      var regels = perRelatie[gekozen];
-      var loopSaldo = 0;
-      html += '<table class="relatie-detail"><thead><tr><th>Ref.</th><th>Wat</th><th>Debet</th><th>Credit</th><th>Saldo</th></tr></thead><tbody>';
-      regels.forEach(function (r) {
-        loopSaldo = round2(loopSaldo + (r.dc === "D" ? r.bedrag : -r.bedrag));
-        var kant = Math.abs(loopSaldo) < 0.005 ? "" : (loopSaldo > 0 ? " D" : " C");
-        html += "<tr><td>" + escapeAttr(r.ref) + "</td>" +
-          '<td class="relatie-redenering">' + escapeAttr(r.redenering) + "</td>" +
-          "<td>" + (r.dc === "D" ? formatBedrag(r.bedrag) : "") + "</td>" +
-          "<td>" + (r.dc === "C" ? formatBedrag(r.bedrag) : "") + "</td>" +
-          '<td class="relatie-loopsaldo">' + formatBedrag(Math.abs(loopSaldo)) + kant + "</td></tr>";
-      });
-      html += "</tbody></table>";
-      if (Math.abs(loopSaldo) < 0.005) {
-        html += '<p class="relatie-conclusie betaald">Het saldo staat op nul: alle facturen van ' + escapeAttr(gekozen) + " zijn vereffend.</p>";
-      } else {
-        var openKant = loopSaldo > 0 ? "D" : "C";
-        var normaal = isKlant ? "D" : "C";
-        html += '<p class="relatie-conclusie ' + (openKant === normaal ? "openstaand" : "verkeerd") + '">' +
-          (openKant === normaal
-            ? "Er staat nog " + formatBedrag(Math.abs(loopSaldo)) + " open " + (isKlant ? "bij deze klant." : "bij deze leverancier.")
-            : "Let op: het saldo staat aan de verkeerde kant (" + openKant + "). Kijk na of er een bedrag dubbel of aan de verkeerde kant geboekt is, of dat er een betalingskorting ontbreekt.") +
-          "</p>";
-      }
+      html += htmlRelatieDetail(gekozen, perRelatie[gekozen], isKlant);
     }
 
     html += "</div>";
@@ -1664,15 +1699,6 @@
       } else if (role === "boeken") {
         var bk = boekingVoor(knop.dataset.scope);
         if (!boekingKlaarOmTeBoeken(bk.rows)) return;
-        // Pas bij het boeken kijkt de app of de redenering met zichzelf
-        // klopt. Tijdens het invullen zwijgt ze, zodat een half ingevulde
-        // lijn niet meteen "fout" lijkt.
-        var problemen = logicaProblemen(bk.rows);
-        if (problemen.length) {
-          openMeldingModal("Er klopt nog iets niet in je redenering", problemen,
-            "Deze app kijkt enkel na of je redenering met zichzelf klopt. Ook als alles hier in orde is, wil dat niet zeggen dat je boeking juist is — dat kijkt je leerkracht na.");
-          return;
-        }
         bk.geboekt = true; saveState(); renderAlles();
       } else if (role === "heropenen") {
         boekingVoor(knop.dataset.scope).geboekt = false;
@@ -1792,17 +1818,10 @@
       if (e.target.id === "info-modal-overlay") sluitInfoModal();
     });
 
-    document.getElementById("melding-modal-sluiten").addEventListener("click", sluitMeldingModal);
-    document.getElementById("melding-modal-ok").addEventListener("click", sluitMeldingModal);
-    document.getElementById("melding-modal-overlay").addEventListener("click", function (e) {
-      if (e.target.id === "melding-modal-overlay") sluitMeldingModal();
-    });
-
     document.addEventListener("keydown", function (e) {
       if (e.key !== "Escape") return;
       if (marModal.open) closeMarModal();
       sluitInfoModal();
-      sluitMeldingModal();
       sluitWissenModal();
     });
 
