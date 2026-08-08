@@ -49,6 +49,18 @@ const INFO_TEKSTEN = {
     ],
   },
 
+  resultatenrekeningOpbouw: {
+    titel: "De resultatenrekening opbouwen",
+    regels: [
+      "Om de winst te kunnen berekenen heb je enkel de resultatenrekening nodig. Klik op één of meerdere rubrieken en klik dan op het vak waar ze thuishoren. Slepen mag ook.",
+      "In de lijst staan álle rubrieken waarop je geboekt hebt en die een saldo overhouden — ook die van de balans. Kies zelf welke je hier nodig hebt en laat de rest gewoon staan.",
+      "Het bedrag op een kaartje is het saldo van de hele rubriek samen.",
+      { kop: "Waarom geen evenwicht?" },
+      "Kosten en opbrengsten zijn hier nog niet gelijk, en dat hóórt ook zo: het verschil is precies de winst die je nog moet verwerken. Daarom staat hier geen controle.",
+      "Wat je hier plaatst, staat ook al op zijn plaats op het tabblad Eindbalans.",
+    ],
+  },
+
   eindbalans: {
     titel: "De eindbalans opstellen",
     regels: [
@@ -70,8 +82,8 @@ const INFO_TEKSTEN = {
       "Kies bovenaan een klant of een leverancier. Links staan de facturen, rechts waarmee ze vereffend zijn. Onderaan staat het totaal.",
       "De app betaalt altijd eerst de oudste openstaande factuur af. Gaat een betaling maar over een deel, dan zie je het toegewezen bedrag tussen haakjes bij de referentie en blijft de rest in de kolom „Nog open”.",
       { kop: "Een creditnota" },
-      "Een creditnota is geen betaling maar een verkoop- of aankoopdocument. Ze staat daarom links, ingesprongen onder de factuur die ze vermindert, met het bedrag dat na de creditnota nog te betalen valt.",
-      "Verschijnt een creditnota onderaan als los document, dan staat ze vóór elke factuur van die relatie. Kijk dan na of je de bijhorende factuur wel geboekt hebt.",
+      "Een creditnota is geen betaling maar een verkoop- of aankoopdocument. Ze staat daarom op dezelfde regel als de factuur die ze vermindert: je ziet het bedrag dat na de creditnota nog te betalen valt, met de berekening er klein onder.",
+      "Verschijnt een creditnota als losse regel, dan staat ze vóór elke factuur van die relatie. Kijk dan na of je de bijhorende factuur wel geboekt hebt.",
       { kop: "Een klant" },
       "Een verkoopfactuur zet je debet op 400000: de klant moet je nog betalen. Bij ontvangst van het geld boek je credit. Staat de factuur nog open, dan is er (nog) geen ontvangst tegenover geboekt.",
       { kop: "Een leverancier" },

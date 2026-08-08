@@ -764,16 +764,14 @@
 
   /* ---------- Klanten & leveranciers ---------- */
 
-  // Staat er in deze boeking een geldrekening (klasse 5: bank, kas, interne
-  // overboekingen)? Daaraan herkent de app een betaling, zonder iets te
-  // moeten weten van referenties als "BANK…" of "VK…". Een verkoop- of
-  // aankoopfactuur en een creditnota hebben zo'n rekening niet; een
-  // bankafschrift of kasblad wel. Verandert de bundel, dan blijft dit werken.
-  function boekingRaaktGeld(rows) {
-    return rows.some(function (row) {
-      var mar = marBij(row.rekening);
-      return !!mar && String(mar.nr).charAt(0) === "5";
-    });
+  // Is dit verantwoordingsstuk een betaalstuk (bankafschrift, kasblad)? Dat
+  // staat in CATEGORIE_BETALINGEN in data-opdrachten.js, niet in de code, en
+  // wordt bewust niet afgeleid uit de rekeningen die de leerling koos: boekt
+  // die een factuur rechtstreeks op de bank, dan blijft het document hier een
+  // factuur en blijft de fout zichtbaar.
+  function isBetaalstuk(opdracht) {
+    return typeof CATEGORIE_BETALINGEN !== "undefined" &&
+      CATEGORIE_BETALINGEN.indexOf(opdracht.categorie) !== -1;
   }
 
   // Alle boekingen op 400000 / 440000, per relatie, in de volgorde waarin de
@@ -785,7 +783,7 @@
     OPDRACHTEN.forEach(function (o) {
       var b = state.boekingen[o.ref];
       if (!b || !b.geboekt) return;
-      var viaGeld = boekingRaaktGeld(b.rows);
+      var betaalstuk = isBetaalstuk(o);
       b.rows.forEach(function (row) {
         var mar = marBij(row.rekening);
         if (!mar || String(mar.nr) !== nrDoel) return;
@@ -793,7 +791,7 @@
         if (bedrag === null || !row.dc) return;
         var naam = (row.relatie || "").trim() || "— geen naam ingevuld —";
         if (!perRelatie[naam]) perRelatie[naam] = [];
-        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag, viaGeld: viaGeld });
+        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag, betaalstuk: betaalstuk });
       });
     });
     return perRelatie;
@@ -806,9 +804,10 @@
   //
   //  1. Elke regel krijgt een soort:
   //       - normale kant (klant debet, leverancier credit) → FACTUUR, links;
-  //       - tegenkant zonder geldrekening in dezelfde boeking → CREDITNOTA,
-  //         ook links, want dat is een verkoop-/aankoopdocument;
-  //       - tegenkant mét geldrekening → BETALING, rechts.
+  //       - tegenkant, van een aankoop-/verkoopdocument → CREDITNOTA, ook
+  //         links, samen met de factuur die ze vermindert;
+  //       - tegenkant, van een betaalstuk (zie CATEGORIE_BETALINGEN in
+  //         data-opdrachten.js) → BETALING, rechts.
   //  2. Een creditnota hoort bij de laatste factuur die ervóór geboekt is.
   //     Ze vermindert het bedrag dat van die factuur nog te betalen valt.
   //  3. De betalingen punten de oudste nog openstaande factuur af. Is een
@@ -824,7 +823,7 @@
         facturen.push({ ref: r.ref, bedrag: r.bedrag, netto: r.bedrag, rest: r.bedrag, creditnotas: [], betaald: [] });
         return;
       }
-      if (r.viaGeld) {
+      if (r.betaalstuk) {
         betalingen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag });
         return;
       }
@@ -861,9 +860,6 @@
     var los = koppeling.losseBetalingen;
     var losseCn = koppeling.losseCreditnotas;
 
-    var totaalDocumenten = round2(
-      som(facturen.map(function (f) { return f.netto; })) - som(losseCn.map(function (c) { return c.bedrag; }))
-    );
     var totaalOpen = round2(
       som(facturen.map(function (f) { return f.rest; })) -
       som(los.map(function (b) { return b.rest; })) -
@@ -893,20 +889,23 @@
       var laatsteKolom = negatief
         ? '<span class="relatie-status teveel">' + formatBedrag(Math.abs(f.netto)) + " te veel gecrediteerd</span>"
         : (openRegel ? formatBedrag(f.rest) : '<span class="relatie-status betaald">vereffend</span>');
+
+      // De creditnota staat op dezelfde regel als de factuur die ze
+      // vermindert: het bedrag is het nettobedrag, met de berekening eronder.
+      var documentTekst = escapeAttr(f.ref);
+      var bedragTekst = formatBedrag(f.netto);
+      if (f.creditnotas.length) {
+        documentTekst += " − " + f.creditnotas.map(function (c) { return escapeAttr(c.ref); }).join(", ") +
+          (f.creditnotas.length === 1 ? " (creditnota)" : " (creditnota's)");
+        bedragTekst += '<span class="relatie-berekening">' + formatBedrag(f.bedrag) +
+          f.creditnotas.map(function (c) { return " − " + formatBedrag(c.bedrag); }).join("") + "</span>";
+      }
+
       html += '<tr class="' + (openRegel || negatief ? "factuur-open" : "factuur-vereffend") + '">' +
-        "<td>" + escapeAttr(f.ref) + "</td>" +
-        "<td>" + formatBedrag(f.bedrag) + "</td>" +
+        "<td>" + documentTekst + "</td>" +
+        "<td>" + bedragTekst + "</td>" +
         '<td class="relatie-betaling">' + betalingTekst + "</td>" +
         "<td>" + laatsteKolom + "</td></tr>";
-      // De creditnota's staan links, onder de factuur die ze verminderen.
-      // Het nettobedrag komt maar één keer, onder de laatste creditnota.
-      f.creditnotas.forEach(function (c, i) {
-        var laatste = i === f.creditnotas.length - 1;
-        html += '<tr class="relatie-creditnota">' +
-          "<td>↳ " + escapeAttr(c.ref) + " · creditnota</td>" +
-          "<td>− " + formatBedrag(c.bedrag) + "</td>" +
-          '<td colspan="2">' + (laatste && !negatief ? "te betalen na creditnota: " + formatBedrag(f.netto) : "") + "</td></tr>";
-      });
     });
 
     // Een creditnota zonder factuur ervóór kan de app nergens aan hangen.
@@ -917,10 +916,11 @@
         '<td colspan="2">staat vóór elke factuur van deze relatie — kijk na of de factuur geboekt is</td></tr>';
     });
 
+    // Geen totaal onder Bedrag: een opgetelde factuurkolom leest te makkelijk
+    // als een openstaand saldo. Enkel wat er nog openstaat, met een label
+    // ernaast zodat het cijfer niet los onderaan zweeft.
     html += "</tbody><tfoot><tr>" +
-      "<td>Totaal</td>" +
-      "<td>" + formatBedrag(totaalDocumenten) + "</td>" +
-      "<td></td>" +
+      '<td colspan="3">Totaal nog open</td>' +
       '<td class="' + (Math.abs(totaalOpen) < 0.005 ? "" : (totaalOpen > 0 ? "totaal-open" : "totaal-fout")) + '">' +
       (Math.abs(totaalOpen) < 0.005 ? formatBedrag(0) : formatBedrag(Math.abs(totaalOpen))) +
       "</td></tr></tfoot></table>";
@@ -1239,20 +1239,35 @@
     return html;
   }
 
-  function renderEindbalans() {
+  // De sleepoefening. Ze wordt op twee tabbladen gebruikt en verschilt daar
+  // enkel in wát er getoond wordt:
+  //   opties.delen       welke delen van BALANS_STRUCTUUR er staan
+  //                      (["resultatenrekening"] of ["balans","resultatenrekening"])
+  //   opties.titel       de titel boven het paneel
+  //   opties.toonRegel   de evenwichtsregel bovenaan tonen of niet
+  // De plaatsingen zelf zitten in één en dezelfde state.eindbalans: legt de
+  // leerling een rubriek op het ene tabblad, dan staat ze op het andere
+  // meteen mee.
+  function renderEindbalans(opties) {
+    var o = opties || {};
+    var delen = o.delen || ["balans", "resultatenrekening"];
+    var titel = o.titel || "Eindbalans en resultatenrekening";
+    var toonRegel = o.toonRegel !== false;
+    var infoSleutel = o.info || "eindbalans";
+
     var kaarten = balansKaarten();
     var teplaatsen = kaarten.filter(function (k) { return !state.eindbalans[k.id]; });
     var klaar = resultaatverwerkingGeboekt();
 
-    var html = '<div class="paneel" id="paneel-eindbalans"><h2>Eindbalans en resultatenrekening ' + htmlInfoKnop("eindbalans", "Hoe werkt dit?") + "</h2>";
+    var html = '<div class="paneel" id="paneel-eindbalans"><h2>' + escapeAttr(titel) + " " + htmlInfoKnop(infoSleutel, "Hoe werkt dit?") + "</h2>";
     if (!kaarten.length) {
       html += "<p>Zodra je boekingen hebt, verschijnen hier alle rubrieken met een saldo.</p></div>";
       return html;
     }
 
-    html += htmlBalansEvenwichtsregel(kaarten);
+    if (toonRegel) html += htmlBalansEvenwichtsregel(kaarten);
 
-    html += '<p class="paneel-hint">Klik één of meer rubrieken aan en klik daarna op het vak waar ze thuishoren. Slepen mag ook.</p>';
+    html += '<p class="paneel-hint">Klik één of meer rubrieken aan en klik daarna op het vak waar ze thuishoren. Slepen mag ook. Je krijgt álle rubrieken met een saldo te zien — kies zelf welke je hier nodig hebt.</p>';
 
     html += '<div class="balans-voorraad" data-role="balans-vak" data-vak="">' +
       '<div class="balans-voorraad-titel">Nog te plaatsen (' + teplaatsen.length + " van " + kaarten.length + ")</div>" +
@@ -1262,8 +1277,9 @@
         : '<span class="balans-vak-leeg">Alle rubrieken hebben een plaats.</span>') +
       "</div></div>";
 
-    html += htmlBalansDeel("balans", kaarten, klaar);
-    html += htmlBalansDeel("resultatenrekening", kaarten, klaar);
+    delen.forEach(function (deelNaam) {
+      html += htmlBalansDeel(deelNaam, kaarten, toonRegel && klaar);
+    });
 
     html += '<div class="balans-acties"><button type="button" class="btn-secundair" data-role="balans-leegmaken">Alles terug naar de lijst</button></div>';
     html += "</div>";
@@ -1273,7 +1289,7 @@
   function renderResultaat() {
     var ok = alleControlesOk();
     var html = '<h1 class="pagina-titel">Resultaatverwerking — BELASTING + RESULTAAT</h1>';
-    html += '<p class="pagina-subtitel">Vennootschapsbelasting, toewijzing aan overgedragen winst en de eindbalans.</p>';
+    html += '<p class="pagina-subtitel">Bouw eerst de resultatenrekening op, bereken daarna de winst en de vennootschapsbelasting, en boek BELASTING en RESULTAAT.</p>';
 
     if (!ok) {
       html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
@@ -1283,9 +1299,17 @@
 
     html += htmlBannerNaamOntbreekt();
 
-    // De balans staat bovenaan: ze is het doel van dit tabblad, en de
-    // evenwichtsregel erboven vertelt meteen waar de leerling staat.
-    html += renderEindbalans();
+    // Enkel de resultatenrekening: die heeft de leerling nodig om de winst
+    // te kunnen berekenen. De rubrieken van de balans blijven wel in de
+    // lijst staan — de leerling kiest zelf wat ze hier nodig heeft.
+    // Geen evenwichtscontrole: zolang de resultaatverwerking niet geboekt
+    // is, hoort er logischerwijs een verschil te staan.
+    html += renderEindbalans({
+      delen: ["resultatenrekening"],
+      titel: "Resultatenrekening opbouwen",
+      toonRegel: false,
+      info: "resultatenrekeningOpbouw",
+    });
 
     html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p class="paneel-hint">Reken dit zelf uit op basis van je eigen boekingen. De app controleert dit niet.</p>';
     var stappen = [
@@ -1303,6 +1327,19 @@
 
     html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema("BELASTING") + "</div>";
     html += '<div class="paneel"><h2>RESULTAAT — Toewijzing overgedragen winst</h2>' + htmlRedeneerschema("RESULTAAT") + "</div>";
+
+    return html;
+  }
+
+  // Tabblad Eindbalans: de volledige sleepoefening (balans én
+  // resultatenrekening) met daaronder de slotcontrole.
+  function renderEindbalansPagina() {
+    var html = '<h1 class="pagina-titel">Eindbalans</h1>';
+    html += '<p class="pagina-subtitel">Zet elke rubriek op haar plaats in de eindbalans en de resultatenrekening, en rond af met de slotcontrole.</p>';
+
+    html += htmlBannerNaamOntbreekt();
+
+    html += renderEindbalans();
 
     var getallen = berekenSlotcontroleGetallen();
     html += '<div class="paneel"><h2>Slotcontrole</h2><p class="paneel-hint">De app oordeelt hier niet — kijk zelf na of het klopt en bevestig het.</p>';
@@ -1612,6 +1649,7 @@
     html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "relaties" ? " actief" : "") + '" data-page-type="relaties">Klanten &amp; leveranciers</div>';
     html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "controles" ? " actief" : "") + '" data-page-type="controles">Controles</div>';
     html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "resultaat" ? " actief" : "") + '" data-page-type="resultaat">Resultaatverwerking</div>';
+    html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "eindbalans" ? " actief" : "") + '" data-page-type="eindbalans">Eindbalans</div>';
 
     el.innerHTML = html;
   }
@@ -1631,6 +1669,7 @@
     else if (p.type === "relaties") html = renderRelaties();
     else if (p.type === "controles") html = renderControles();
     else if (p.type === "resultaat") html = renderResultaat();
+    else if (p.type === "eindbalans") html = renderEindbalansPagina();
     else html = renderStart();
     el.innerHTML = html;
   }

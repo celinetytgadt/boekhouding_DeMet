@@ -104,6 +104,19 @@ const CATEGORIE_VOLGORDE = [
   "Eindejaarsverrichtingen",
 ];
 
+// Welke categorieën bevatten BETALINGEN? Op het tabblad Klanten &
+// leveranciers bepaalt dit of een verrichting op 400000/440000 rechts komt
+// (een betaling) of links (een factuur of creditnota). Een bankafschrift of
+// kasblad is een betaling; een aankoop- of verkoopdocument niet.
+//
+// Bewust op de categorie en niet op de rekeningen in de boeking: boekt een
+// leerling een factuur rechtstreeks op de bank, dan blijft het document hier
+// een factuur en valt de fout op in plaats van weggemoffeld te worden.
+// Verandert de bundel van opbouw, dan pas je enkel dit lijstje aan.
+const CATEGORIE_BETALINGEN = [
+  "Financiële verrichtingen",
+];
+
 // Een korte tip die net boven het redeneerschema verschijnt (geen popup, ze
 // moeten ze zien staan). Wil je er één bij een andere opdracht, zet dan
 // gewoon een veld "tip" bij dat item in de lijst hierboven.

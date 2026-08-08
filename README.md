@@ -41,6 +41,28 @@ documenten/                afbeeldingen van de verantwoordingsstukken (zie docum
   het bewaarde werk van de leerlingen.
 - **De uitleg achter een i-icoontje** → `js/data-info.js`.
 
+### De twee laatste tabbladen
+
+De sleepoefening met de rubrieken staat op twee tabbladen, telkens met een
+ander stuk van `BALANS_STRUCTUUR`:
+
+- **Resultaatverwerking** — enkel de resultatenrekening, want dat is alles
+  wat de leerling nodig heeft om de winst te berekenen. Daaronder de
+  stapsgewijze berekening en de schema's BELASTING en RESULTAAT. Geen
+  slotcontrole en geen evenwichtsmelding: zolang de resultaatverwerking niet
+  geboekt is, hóórt er een verschil tussen kosten en opbrengsten te staan.
+- **Eindbalans** — de volledige balans én de resultatenrekening, met de
+  evenwichtsregel bovenaan en de slotcontrole onderaan.
+
+Op beide tabbladen krijgt de leerling **alle** rubrieken met een saldo in de
+lijst *Nog te plaatsen*, ook die van de balans: ze kiest zelf wat ze waar
+nodig heeft. De plaatsingen zitten in één en dezelfde `state.eindbalans` —
+wat ze op het ene tabblad in een vak legt, staat op het andere meteen mee.
+
+Beide tabbladen roepen dezelfde functie `renderEindbalans(opties)` aan; de
+opties bepalen welke delen getoond worden, welke titel erboven staat, welke
+info-tekst achter het i-icoontje zit en of de evenwichtsregel meekomt.
+
 Inhoud en logica zijn bewust gescheiden: een nieuw jaar/bundel betekent
 in principe enkel aanpassingen in de `data-*.js`-bestanden en de map
 `documenten/` — `app.js` blijft ongemoeid.
@@ -79,22 +101,32 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld
   stelt daarom eerder gebruikte namen voor.
 
-  De app deelt de boekingen in **zonder naar de referentie te kijken**, zodat
-  dit blijft werken als de bundel verandert:
+  De app deelt de boekingen in:
 
   1. Staat een regel op de normale kant (klant debet, leverancier credit),
      dan is het een **factuur** → links.
-  2. Staat ze op de tegenkant en zit er in diezelfde boeking **geen rekening
-     van klasse 5** (bank, kas, interne overboekingen), dan is het een
-     **creditnota** → ook links, ingesprongen onder de factuur die er vlak
-     vóór staat, want een creditnota vermindert die factuur.
-  3. Staat ze op de tegenkant mét een klasse 5-rekening in de boeking, dan is
-     het een **betaling** → rechts.
+  2. Staat ze op de tegenkant van een **betaalstuk**, dan is het een
+     **betaling** → rechts. Welke opdrachten betaalstukken zijn, staat in
+     `CATEGORIE_BETALINGEN` in `js/data-opdrachten.js` — nu de categorie
+     *Financiële verrichtingen*, dus alle bankafschriften en het kasblad.
+  3. Staat ze op de tegenkant van een ander document, dan is het een
+     **creditnota** → op dezelfde regel als de factuur die er vlak vóór
+     staat, want een creditnota vermindert die factuur. Je ziet het
+     nettobedrag met de berekening er klein onder.
+
+  Punt 2 kijkt bewust naar de **categorie van het document** en niet naar de
+  rekeningen die de leerling koos. Boekt iemand een factuur rechtstreeks op de
+  bank, of vergeet iemand de bankregel bij een afschrift, dan blijft het stuk
+  staan waar het hoort en blijft de fout zichtbaar in plaats van weggemoffeld.
+  Komt er een nieuwe categorie betaalstukken bij, dan volstaat één regel in
+  `CATEGORIE_BETALINGEN`.
 
   De betalingen punten daarna de oudste nog openstaande factuur af; een
   overschot schuift door naar de volgende. Bij een deelbetaling staat het
-  toegewezen bedrag tussen haakjes bij de referentie. Wordt er méér betaald
-  of gecrediteerd dan er gefactureerd is, of staat een creditnota vóór elke
+  toegewezen bedrag tussen haakjes bij de referentie. Onderaan staat enkel
+  *Totaal nog open* — bewust geen totaal van de factuurkolom, want dat leest
+  te makkelijk als een openstaand saldo. Wordt er méér betaald of
+  gecrediteerd dan er gefactureerd is, of staat een creditnota vóór elke
   factuur van die relatie, dan zegt de app dat expliciet onder de tabel.
 
   Getest tegen `MetWear_oplossingssleutel_Q1_2026.xlsx`: alle relaties komen
