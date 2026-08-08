@@ -1326,7 +1326,7 @@
     html += "</div>";
 
     html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema("BELASTING") + "</div>";
-    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing overgedragen winst</h2>' + htmlRedeneerschema("RESULTAAT") + "</div>";
+    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing van het resultaat ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + </h2>' + htmlRedeneerschema("RESULTAAT") + "</div>";
 
     return html;
   }
