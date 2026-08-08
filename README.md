@@ -74,15 +74,33 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   eigen browser en eigen export-bestand.
 - **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
   klant of leverancier zelf in bij de boeking. Op het tabblad
-  *Klanten & leveranciers* staat dan per relatie **één regel per factuur**,
-  met daarnaast de betaling(en) die erop volgden en wat er van die factuur
-  nog openstaat; het totaal staat onderaan. De koppeling gebeurt automatisch,
-  oudste factuur eerst (de volgorde van `data-opdrachten.js` is chronologisch).
-  Een deelbetaling toont het toegewezen bedrag tussen haakjes bij de
-  referentie. Wordt er méér betaald dan er aan facturen geboekt is, dan komt
-  die betaling apart onder de tabel te staan als waarschuwing. Omdat de namen
-  handmatig ingevoerd worden, leveren tikfouten twee aparte relaties op — het
-  invulveld stelt daarom eerder gebruikte namen voor.
+  *Klanten & leveranciers* staan links de facturen en rechts waarmee ze
+  vereffend zijn; het totaal staat onderaan. Omdat de namen handmatig
+  ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld
+  stelt daarom eerder gebruikte namen voor.
+
+  De app deelt de boekingen in **zonder naar de referentie te kijken**, zodat
+  dit blijft werken als de bundel verandert:
+
+  1. Staat een regel op de normale kant (klant debet, leverancier credit),
+     dan is het een **factuur** → links.
+  2. Staat ze op de tegenkant en zit er in diezelfde boeking **geen rekening
+     van klasse 5** (bank, kas, interne overboekingen), dan is het een
+     **creditnota** → ook links, ingesprongen onder de factuur die er vlak
+     vóór staat, want een creditnota vermindert die factuur.
+  3. Staat ze op de tegenkant mét een klasse 5-rekening in de boeking, dan is
+     het een **betaling** → rechts.
+
+  De betalingen punten daarna de oudste nog openstaande factuur af; een
+  overschot schuift door naar de volgende. Bij een deelbetaling staat het
+  toegewezen bedrag tussen haakjes bij de referentie. Wordt er méér betaald
+  of gecrediteerd dan er gefactureerd is, of staat een creditnota vóór elke
+  factuur van die relatie, dan zegt de app dat expliciet onder de tabel.
+
+  Getest tegen `MetWear_oplossingssleutel_Q1_2026.xlsx`: alle relaties komen
+  correct uit, met 22.264 open bij Sportclub De Kern (VK06) en 21.091 bij
+  Textura (AK07 na creditnota AK08) — exact de saldi van 400000 en 440000
+  in de proef- en saldibalans.
 - **Wat is verplicht in het redeneerschema?** Enkel het bedrag, het
   rekeningnummer en debet of credit. De kolommen *Redenering*, *A/P/K/O* en
   *Stijgt/daalt* staan er als denkhulp: de leerling mag ze invullen, maar de

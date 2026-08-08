@@ -764,6 +764,18 @@
 
   /* ---------- Klanten & leveranciers ---------- */
 
+  // Staat er in deze boeking een geldrekening (klasse 5: bank, kas, interne
+  // overboekingen)? Daaraan herkent de app een betaling, zonder iets te
+  // moeten weten van referenties als "BANK…" of "VK…". Een verkoop- of
+  // aankoopfactuur en een creditnota hebben zo'n rekening niet; een
+  // bankafschrift of kasblad wel. Verandert de bundel, dan blijft dit werken.
+  function boekingRaaktGeld(rows) {
+    return rows.some(function (row) {
+      var mar = marBij(row.rekening);
+      return !!mar && String(mar.nr).charAt(0) === "5";
+    });
+  }
+
   // Alle boekingen op 400000 / 440000, per relatie, in de volgorde waarin de
   // opdrachten in data-opdrachten.js staan. Zo kan een leerling factuur en
   // betaling naast elkaar leggen.
@@ -773,6 +785,7 @@
     OPDRACHTEN.forEach(function (o) {
       var b = state.boekingen[o.ref];
       if (!b || !b.geboekt) return;
+      var viaGeld = boekingRaaktGeld(b.rows);
       b.rows.forEach(function (row) {
         var mar = marBij(row.rekening);
         if (!mar || String(mar.nr) !== nrDoel) return;
@@ -780,57 +793,82 @@
         if (bedrag === null || !row.dc) return;
         var naam = (row.relatie || "").trim() || "— geen naam ingevuld —";
         if (!perRelatie[naam]) perRelatie[naam] = [];
-        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag });
+        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag, viaGeld: viaGeld });
       });
     });
     return perRelatie;
   }
 
-  // Koppelt betalingen aan facturen, oudste factuur eerst (de volgorde van
-  // data-opdrachten.js is chronologisch). Zo ziet de leerling niet enkel een
-  // saldo, maar wélke factuur nog openstaat en waarmee ze vereffend is.
-  // Een deelbetaling wordt over meerdere facturen verdeeld; wat overblijft
-  // (meer betaald dan er aan facturen geboekt is) komt apart te staan.
+  // Bouwt het klantenrekening-/leveranciersrekeningbeeld van één relatie op
+  // in drie stappen. Er wordt nergens naar een referentie gekeken, enkel naar
+  // de kant van de boeking en naar de rekeningen die erin voorkomen — zo
+  // blijft dit werken als de bundel volgend jaar andere documenten bevat.
+  //
+  //  1. Elke regel krijgt een soort:
+  //       - normale kant (klant debet, leverancier credit) → FACTUUR, links;
+  //       - tegenkant zonder geldrekening in dezelfde boeking → CREDITNOTA,
+  //         ook links, want dat is een verkoop-/aankoopdocument;
+  //       - tegenkant mét geldrekening → BETALING, rechts.
+  //  2. Een creditnota hoort bij de laatste factuur die ervóór geboekt is.
+  //     Ze vermindert het bedrag dat van die factuur nog te betalen valt.
+  //  3. De betalingen punten de oudste nog openstaande factuur af. Is een
+  //     betaling groter, dan schuift het overschot door naar de volgende.
   function koppelFacturen(regels, isKlant) {
     var factuurKant = isKlant ? "D" : "C";
     var facturen = [];
     var betalingen = [];
+    var losseCreditnotas = [];
+
     regels.forEach(function (r) {
-      if (r.dc === factuurKant) facturen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag, betaald: [] });
-      else betalingen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag });
+      if (r.dc === factuurKant) {
+        facturen.push({ ref: r.ref, bedrag: r.bedrag, netto: r.bedrag, rest: r.bedrag, creditnotas: [], betaald: [] });
+        return;
+      }
+      if (r.viaGeld) {
+        betalingen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag });
+        return;
+      }
+      var doel = facturen[facturen.length - 1];
+      if (!doel) { losseCreditnotas.push({ ref: r.ref, bedrag: r.bedrag }); return; }
+      doel.creditnotas.push({ ref: r.ref, bedrag: r.bedrag });
+      doel.netto = round2(doel.netto - r.bedrag);
+      doel.rest = round2(doel.rest - r.bedrag);
     });
+
     betalingen.forEach(function (b) {
       facturen.forEach(function (f) {
         if (b.rest < 0.005 || f.rest < 0.005) return;
         var deel = round2(Math.min(b.rest, f.rest));
-        f.betaald.push({ ref: b.ref, bedrag: deel, gedeeltelijk: deel < round2(b.bedrag) - 0.005 || deel < round2(f.bedrag) - 0.005 });
+        f.betaald.push({ ref: b.ref, bedrag: deel, gedeeltelijk: deel < round2(b.bedrag) - 0.005 || deel < round2(f.netto) - 0.005 });
         f.rest = round2(f.rest - deel);
         b.rest = round2(b.rest - deel);
       });
     });
+
     return {
       facturen: facturen,
       losseBetalingen: betalingen.filter(function (b) { return b.rest > 0.005; }),
+      losseCreditnotas: losseCreditnotas,
     };
   }
 
-  // Referenties van de facturen die nog (deels) openstaan — handig als
-  // korte aanduiding in de overzichtstabel.
-  function openFactuurRefs(regels, isKlant) {
-    return koppelFacturen(regels, isKlant).facturen
-      .filter(function (f) { return f.rest > 0.005; })
-      .map(function (f) { return f.ref; });
-  }
-
-  // Detail van één relatie: één regel per factuur, met de betaling(en) die
-  // erop volgden. Geen loopsaldo per regel meer — enkel het totaal onderaan.
+  // Detail van één relatie: links de facturen (met hun creditnota's eronder),
+  // rechts waarmee ze vereffend zijn. Geen loopsaldo per regel — enkel het
+  // totaal onderaan.
   function htmlRelatieDetail(naam, regels, isKlant) {
     var koppeling = koppelFacturen(regels, isKlant);
     var facturen = koppeling.facturen;
     var los = koppeling.losseBetalingen;
+    var losseCn = koppeling.losseCreditnotas;
 
-    var totaalFacturen = som(facturen.map(function (f) { return f.bedrag; }));
-    var totaalOpen = round2(som(facturen.map(function (f) { return f.rest; })) - som(los.map(function (b) { return b.rest; })));
+    var totaalDocumenten = round2(
+      som(facturen.map(function (f) { return f.netto; })) - som(losseCn.map(function (c) { return c.bedrag; }))
+    );
+    var totaalOpen = round2(
+      som(facturen.map(function (f) { return f.rest; })) -
+      som(los.map(function (b) { return b.rest; })) -
+      som(losseCn.map(function (c) { return c.bedrag; }))
+    );
 
     var kopBetaling = isKlant ? "Betaling ontvangen" : "Betaling gedaan";
     var html = '<table class="relatie-detail"><thead><tr>' +
@@ -839,28 +877,49 @@
 
     if (!facturen.length) {
       html += '<tr><td colspan="4" class="relatie-leeg">Er staat geen enkele factuur van ' + escapeAttr(naam) +
-        " op deze rekening — enkel betalingen. Kijk na of je de factuur wel geboekt hebt.</td></tr>";
+        " op deze rekening. Kijk na of je ze wel geboekt hebt.</td></tr>";
     }
 
+    var teVeelGecrediteerd = false;
     facturen.forEach(function (f) {
       var openRegel = f.rest > 0.005;
+      var negatief = f.netto < -0.005;
+      if (negatief) teVeelGecrediteerd = true;
       var betalingTekst = f.betaald.length
         ? f.betaald.map(function (b) {
           return escapeAttr(b.ref) + (b.gedeeltelijk ? " (" + formatBedrag(b.bedrag) + ")" : "");
         }).join(", ")
         : '<span class="relatie-niet-betaald">nog niet betaald</span>';
-      html += '<tr class="' + (openRegel ? "factuur-open" : "factuur-vereffend") + '">' +
+      var laatsteKolom = negatief
+        ? '<span class="relatie-status teveel">' + formatBedrag(Math.abs(f.netto)) + " te veel gecrediteerd</span>"
+        : (openRegel ? formatBedrag(f.rest) : '<span class="relatie-status betaald">vereffend</span>');
+      html += '<tr class="' + (openRegel || negatief ? "factuur-open" : "factuur-vereffend") + '">' +
         "<td>" + escapeAttr(f.ref) + "</td>" +
         "<td>" + formatBedrag(f.bedrag) + "</td>" +
         '<td class="relatie-betaling">' + betalingTekst + "</td>" +
-        "<td>" + (openRegel
-          ? formatBedrag(f.rest)
-          : '<span class="relatie-status betaald">vereffend</span>') + "</td></tr>";
+        "<td>" + laatsteKolom + "</td></tr>";
+      // De creditnota's staan links, onder de factuur die ze verminderen.
+      // Het nettobedrag komt maar één keer, onder de laatste creditnota.
+      f.creditnotas.forEach(function (c, i) {
+        var laatste = i === f.creditnotas.length - 1;
+        html += '<tr class="relatie-creditnota">' +
+          "<td>↳ " + escapeAttr(c.ref) + " · creditnota</td>" +
+          "<td>− " + formatBedrag(c.bedrag) + "</td>" +
+          '<td colspan="2">' + (laatste && !negatief ? "te betalen na creditnota: " + formatBedrag(f.netto) : "") + "</td></tr>";
+      });
+    });
+
+    // Een creditnota zonder factuur ervóór kan de app nergens aan hangen.
+    losseCn.forEach(function (c) {
+      html += '<tr class="relatie-creditnota">' +
+        "<td>" + escapeAttr(c.ref) + " · creditnota</td>" +
+        "<td>− " + formatBedrag(c.bedrag) + "</td>" +
+        '<td colspan="2">staat vóór elke factuur van deze relatie — kijk na of de factuur geboekt is</td></tr>';
     });
 
     html += "</tbody><tfoot><tr>" +
       "<td>Totaal</td>" +
-      "<td>" + formatBedrag(totaalFacturen) + "</td>" +
+      "<td>" + formatBedrag(totaalDocumenten) + "</td>" +
       "<td></td>" +
       '<td class="' + (Math.abs(totaalOpen) < 0.005 ? "" : (totaalOpen > 0 ? "totaal-open" : "totaal-fout")) + '">' +
       (Math.abs(totaalOpen) < 0.005 ? formatBedrag(0) : formatBedrag(Math.abs(totaalOpen))) +
@@ -872,6 +931,14 @@
         los.map(function (b) { return escapeAttr(b.ref) + " (" + formatBedrag(b.rest) + ")"; }).join(", ") +
         ". Er is meer " + (isKlant ? "ontvangen" : "betaald") +
         " dan er aan facturen geboekt is — kijk na of een factuur ontbreekt of te laag geboekt is.</p>";
+    } else if (losseCn.length) {
+      html += '<p class="relatie-conclusie verkeerd">' +
+        (losseCn.length > 1 ? "Deze creditnota's staan" : "Deze creditnota staat") + " vóór elke factuur van " +
+        escapeAttr(naam) + ": " + losseCn.map(function (c) { return escapeAttr(c.ref); }).join(", ") +
+        ". Een creditnota hoort bij een factuur die er al is — kijk na of die factuur geboekt is, of in de juiste volgorde staat.</p>";
+    } else if (teVeelGecrediteerd) {
+      html += '<p class="relatie-conclusie verkeerd">Er is meer gecrediteerd dan er gefactureerd is. ' +
+        "Kijk na of de creditnota bij de juiste factuur hoort en of het bedrag klopt.</p>";
     } else if (Math.abs(totaalOpen) < 0.005) {
       html += '<p class="relatie-conclusie betaald">Alle facturen van ' + escapeAttr(naam) + " zijn vereffend.</p>";
     } else {
@@ -901,16 +968,40 @@
       return html;
     }
 
-    // Overzichtstabel van alle relaties, met openstaand saldo
-    html += '<table class="relatie-overzicht"><thead><tr><th>Naam</th><th>Facturen</th><th>Betalingen</th><th>Openstaand</th><th>Status</th></tr></thead><tbody>';
+    // Overzichtstabel van alle relaties, met openstaand saldo. De kolom
+    // Creditnota's verschijnt enkel als er in deze bundel creditnota's zijn.
+    var perNaam = {};
+    var ergensCreditnota = false;
     namen.forEach(function (naam) {
-      var regels = perRelatie[naam];
-      var d = som(regels.filter(function (r) { return r.dc === "D"; }).map(function (r) { return r.bedrag; }));
-      var c = som(regels.filter(function (r) { return r.dc === "C"; }).map(function (r) { return r.bedrag; }));
-      var facturen = isKlant ? d : c;
-      var betalingen = isKlant ? c : d;
-      var open = round2(facturen - betalingen);
-      var openRefs = open > 0.005 ? openFactuurRefs(regels, isKlant) : [];
+      var k = koppelFacturen(perRelatie[naam], isKlant);
+      var facturen = som(k.facturen.map(function (f) { return f.bedrag; }));
+      var creditnotas = round2(
+        som(k.facturen.map(function (f) { return som(f.creditnotas.map(function (c) { return c.bedrag; })); })) +
+        som(k.losseCreditnotas.map(function (c) { return c.bedrag; }))
+      );
+      var betalingen = round2(
+        som(k.facturen.map(function (f) { return som(f.betaald.map(function (b) { return b.bedrag; })); })) +
+        som(k.losseBetalingen.map(function (b) { return b.rest; }))
+      );
+      if (creditnotas > 0.005) ergensCreditnota = true;
+      perNaam[naam] = {
+        facturen: facturen,
+        creditnotas: creditnotas,
+        betalingen: betalingen,
+        open: round2(facturen - creditnotas - betalingen),
+        openRefs: k.facturen.filter(function (f) { return f.rest > 0.005; }).map(function (f) { return f.ref; }),
+      };
+    });
+
+    html += '<table class="relatie-overzicht"><thead><tr><th>Naam</th><th>Facturen</th>' +
+      (ergensCreditnota ? "<th>Creditnota's</th>" : "") +
+      "<th>Betalingen</th><th>Openstaand</th><th>Status</th></tr></thead><tbody>";
+    namen.forEach(function (naam) {
+      var cijfers = perNaam[naam];
+      var facturen = cijfers.facturen;
+      var betalingen = cijfers.betalingen;
+      var open = cijfers.open;
+      var openRefs = open > 0.005 ? cijfers.openRefs : [];
       var status = Math.abs(open) < 0.005
         ? '<span class="relatie-status betaald">alles betaald</span>'
         : (open > 0
@@ -919,6 +1010,7 @@
       html += '<tr class="' + (naam === gekozen ? "relatie-gekozen" : "") + '">' +
         '<td><button type="button" class="link-knop" data-role="kies-relatie" data-soort="' + soort + '" data-naam="' + escapeAttr(naam) + '">' + escapeAttr(naam) + "</button></td>" +
         "<td>" + formatBedrag(facturen) + "</td>" +
+        (ergensCreditnota ? "<td>" + (cijfers.creditnotas > 0.005 ? "− " + formatBedrag(cijfers.creditnotas) : "") + "</td>" : "") +
         "<td>" + formatBedrag(betalingen) + "</td>" +
         "<td>" + formatBedrag(Math.abs(open)) + "</td>" +
         "<td>" + status + "</td></tr>";

@@ -67,8 +67,11 @@ const INFO_TEKSTEN = {
   klantenLeveranciers: {
     titel: "Openstaande facturen opvolgen",
     regels: [
-      "Kies bovenaan een klant of een leverancier. Je krijgt dan één regel per factuur, met daarnaast de betaling die erop volgde en wat er van die factuur nog openstaat. Onderaan staat het totaal.",
-      "De app koppelt de oudste factuur aan de eerste betaling. Betaalt iemand maar een deel, dan zie je het betaalde bedrag tussen haakjes bij de referentie staan en blijft de rest in de kolom „Nog open”.",
+      "Kies bovenaan een klant of een leverancier. Links staan de facturen, rechts waarmee ze vereffend zijn. Onderaan staat het totaal.",
+      "De app betaalt altijd eerst de oudste openstaande factuur af. Gaat een betaling maar over een deel, dan zie je het toegewezen bedrag tussen haakjes bij de referentie en blijft de rest in de kolom „Nog open”.",
+      { kop: "Een creditnota" },
+      "Een creditnota is geen betaling maar een verkoop- of aankoopdocument. Ze staat daarom links, ingesprongen onder de factuur die ze vermindert, met het bedrag dat na de creditnota nog te betalen valt.",
+      "Verschijnt een creditnota onderaan als los document, dan staat ze vóór elke factuur van die relatie. Kijk dan na of je de bijhorende factuur wel geboekt hebt.",
       { kop: "Een klant" },
       "Een verkoopfactuur zet je debet op 400000: de klant moet je nog betalen. Bij ontvangst van het geld boek je credit. Staat de factuur nog open, dan is er (nog) geen ontvangst tegenover geboekt.",
       { kop: "Een leverancier" },
