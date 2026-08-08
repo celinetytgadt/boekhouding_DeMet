@@ -1311,7 +1311,7 @@
       info: "resultatenrekeningOpbouw",
     });
 
-    html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p class="paneel-hint">Reken dit zelf uit op basis van je eigen boekingen. De app controleert dit niet.</p>';
+    html += '<div class="paneel"><h2>Stapsgewijze berekening</h2><p class="paneel-hint">De resultatenrekening hierboven beantwoordt de eerste 2 vragen als je de rubrieken juist hebt geordend. Reken de rest zelf uit.</p>';
     var stappen = [
       ["opbrengsten", "1. Hoeveel opbrengsten maakte het bedrijf? (klasse 7)"],
       ["kosten", "2. Hoeveel kosten maakte het bedrijf? (klasse 6)"],
