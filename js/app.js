@@ -127,6 +127,11 @@
         slotcontroleMelding: null,
       },
       eindbalans: {},
+      // Afpuntingen op het tabblad Klanten & leveranciers: de leerling
+      // koppelt zelf een betaling of creditnota aan een factuur. Elke
+      // koppeling is { van: "REF:rijnummer", naar: "REF:rijnummer" } —
+      // van = de betaling/creditnota, naar = de factuur.
+      afpuntingen: [],
     };
   }
 
@@ -141,6 +146,10 @@
     if (!s.boekingen) s.boekingen = {};
     if (!s.controles) s.controles = {};
     if (!s.eindbalans) s.eindbalans = {};
+    if (!Array.isArray(s.afpuntingen)) s.afpuntingen = [];
+    s.afpuntingen = s.afpuntingen.filter(function (k) {
+      return k && typeof k.van === "string" && typeof k.naar === "string";
+    });
     if (!s.resultaat) s.resultaat = maakLegeState("").resultaat;
     if (!s.resultaat.stap) s.resultaat.stap = maakLegeState("").resultaat.stap;
 
@@ -229,6 +238,7 @@
     tpanelRubriek: "",
     relatieKeuze: { klanten: "", leveranciers: "" },
     gekozenKaarten: [],        // eindbalans: aangetikte rubrieken
+    afpuntSelectie: null,      // klanten & leveranciers: aangetikte betaling/creditnota
   };
   var docImgTeller = 0;
 
@@ -530,6 +540,16 @@
         'title="Optioneel: bij wie hoort dit? Zo kan je later zien welke facturen nog openstaan." ' +
         'data-focus-id="' + focusId(ref, idx, "relatie") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="relatie" ' +
         'value="' + escapeAttr(row.relatie) + '" ' + (geboekt ? "disabled" : "") + ">";
+      // Bijna dezelfde naam als een eerdere boeking (enkel hoofdletters,
+      // spaties of leestekens verschillen)? Waarschuw meteen, anders worden
+      // het twee aparte relaties in het overzicht.
+      if (!geboekt && row.relatie) {
+        var lijktOp = lijktOpAndereNaam(relatieSoort, row.relatie);
+        if (lijktOp) {
+          relatieHtml += '<div class="relatie-waarschuwing">Lijkt op „' + escapeAttr(lijktOp) + "” — zelfde " +
+            (relatieSoort === "klanten" ? "klant" : "leverancier") + "? Gebruik dan exact dezelfde schrijfwijze.</div>";
+        }
+      }
     }
 
     return (
@@ -723,6 +743,28 @@
      Wat de leerling wél krijgt, is een filtertip waarmee ze de juiste
      rekeningen zelf in het T-paneel terugvindt. */
 
+  // Compact tabelletje bij de zelfcontrole van 400000/440000: per relatie
+  // het bedrag dat nog openstaat, met het totaal eronder.
+  function htmlControleRelatieTabel(soort) {
+    var isKlant = soort === "klanten";
+    var perRelatie = boekingenPerRelatie(soort);
+    var namen = Object.keys(perRelatie).sort();
+    if (!namen.length) {
+      return '<p class="controle-toelichting">Nog geen boekingen met een naam op ' +
+        (isKlant ? "400000" : "440000") + " — vul de namen aan in je redeneerschema's.</p>";
+    }
+    var totaal = 0;
+    var rijen = namen.map(function (naam) {
+      var open = openBedragVoor(koppelFacturen(perRelatie[naam], isKlant));
+      totaal = round2(totaal + open);
+      return "<tr><td>" + escapeAttr(naam) + "</td><td>" + formatBedrag(open) + "</td></tr>";
+    }).join("");
+    return '<table class="relatie-overzicht controle-relatie-tabel"><thead><tr>' +
+      "<th>" + (isKlant ? "Klant" : "Leverancier") + "</th><th>Nog open</th></tr></thead>" +
+      "<tbody>" + rijen + "</tbody>" +
+      "<tfoot><tr><td>Totaal nog open</td><td>" + formatBedrag(totaal) + "</td></tr></tfoot></table>";
+  }
+
   function renderControles() {
     var refC = controleReferenties();
     var saldoC = controleSaldoSoort();
@@ -749,6 +791,11 @@
       if (c.uitleg) html += " " + htmlInfoKnop(c.uitleg, "Meer uitleg");
       if (c.toelichting) html += '<p class="controle-toelichting">' + escapeAttr(c.toelichting) + "</p>";
       if (c.filterTip) html += '<p class="controle-filtertip">' + escapeAttr(c.filterTip) + "</p>";
+      // Zelfcontrole van de subadministratie: toon per klant/leverancier wat
+      // er nog openstaat, zodat de leerling dat naast het saldo van
+      // 400000/440000 in het T-paneel kan leggen zonder van scherm te
+      // wisselen. Deze cijfers komen uit hun eigen boekingen.
+      if (c.relatieSoort) html += htmlControleRelatieTabel(c.relatieSoort);
       html += "</div>";
       if (doc) html += "<div>" + htmlDocumentAfbeelding(doc, true) + "</div>";
       html += "</div>";
@@ -776,7 +823,8 @@
 
   // Alle boekingen op 400000 / 440000, per relatie, in de volgorde waarin de
   // opdrachten in data-opdrachten.js staan. Zo kan een leerling factuur en
-  // betaling naast elkaar leggen.
+  // betaling naast elkaar leggen. Elke regel krijgt een vaste id
+  // ("REF:rijnummer") waarmee de afpuntingen ze terugvinden.
   function boekingenPerRelatie(soort) {
     var nrDoel = soort === "klanten" ? "400000" : "440000";
     var perRelatie = {};
@@ -784,91 +832,113 @@
       var b = state.boekingen[o.ref];
       if (!b || !b.geboekt) return;
       var betaalstuk = isBetaalstuk(o);
-      b.rows.forEach(function (row) {
+      b.rows.forEach(function (row, idx) {
         var mar = marBij(row.rekening);
         if (!mar || String(mar.nr) !== nrDoel) return;
         var bedrag = parseBedrag(row.bedrag);
         if (bedrag === null || !row.dc) return;
         var naam = (row.relatie || "").trim() || "— geen naam ingevuld —";
         if (!perRelatie[naam]) perRelatie[naam] = [];
-        perRelatie[naam].push({ ref: o.ref, dc: row.dc, bedrag: bedrag, betaalstuk: betaalstuk });
+        perRelatie[naam].push({ id: o.ref + ":" + idx, ref: o.ref, dc: row.dc, bedrag: bedrag, betaalstuk: betaalstuk });
       });
     });
     return perRelatie;
   }
 
-  // Bouwt het klantenrekening-/leveranciersrekeningbeeld van één relatie op
-  // in drie stappen. Er wordt nergens naar een referentie gekeken, enkel naar
-  // de kant van de boeking en naar de rekeningen die erin voorkomen — zo
-  // blijft dit werken als de bundel volgend jaar andere documenten bevat.
+  // Namen die op elkaar lijken (enkel verschil in hoofdletters, spaties of
+  // leestekens) zijn bijna zeker tikfouten: "bloomwear " en "Bloomwear"
+  // worden anders twee aparte relaties.
+  function normaliseerNaam(n) {
+    return String(n || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  }
+
+  function lijktOpAndereNaam(soort, naam) {
+    var eigen = normaliseerNaam(naam);
+    if (!eigen) return null;
+    var namen = verzamelRelatieNamen(soort);
+    for (var i = 0; i < namen.length; i++) {
+      if (namen[i] !== naam && normaliseerNaam(namen[i]) === eigen) return namen[i];
+    }
+    return null;
+  }
+
+  // Bouwt het klantenrekening-/leveranciersrekeningbeeld van één relatie op.
+  // Elke regel krijgt een soort:
+  //   - normale kant (klant debet, leverancier credit) → FACTUUR, links;
+  //   - tegenkant, van een betaalstuk (zie CATEGORIE_BETALINGEN in
+  //     data-opdrachten.js) → BETALING;
+  //   - tegenkant, van een ander document → CREDITNOTA.
   //
-  //  1. Elke regel krijgt een soort:
-  //       - normale kant (klant debet, leverancier credit) → FACTUUR, links;
-  //       - tegenkant, van een aankoop-/verkoopdocument → CREDITNOTA, ook
-  //         links, samen met de factuur die ze vermindert;
-  //       - tegenkant, van een betaalstuk (zie CATEGORIE_BETALINGEN in
-  //         data-opdrachten.js) → BETALING, rechts.
-  //  2. Een creditnota hoort bij de laatste factuur die ervóór geboekt is.
-  //     Ze vermindert het bedrag dat van die factuur nog te betalen valt.
-  //  3. De betalingen punten de oudste nog openstaande factuur af. Is een
-  //     betaling groter, dan schuift het overschot door naar de volgende.
+  // Het afpunten gebeurt NIET automatisch: de leerling koppelt zelf elke
+  // betaling en creditnota aan de factuur waar ze bij hoort (klik de
+  // betaling aan, klik dan de factuur). De koppelingen staan in
+  // state.afpuntingen; het toegewezen bedrag rekent de app zelf uit als het
+  // maximum dat op beide nog openstaat. Zo kan één betaling over meerdere
+  // facturen gespreid worden door ze meermaals te koppelen.
   function koppelFacturen(regels, isKlant) {
     var factuurKant = isKlant ? "D" : "C";
     var facturen = [];
-    var betalingen = [];
-    var losseCreditnotas = [];
+    var verminderingen = [];   // betalingen én creditnota's
+    var perId = {};
 
     regels.forEach(function (r) {
+      var item = { id: r.id, ref: r.ref, bedrag: r.bedrag, rest: r.bedrag };
       if (r.dc === factuurKant) {
-        facturen.push({ ref: r.ref, bedrag: r.bedrag, netto: r.bedrag, rest: r.bedrag, creditnotas: [], betaald: [] });
-        return;
+        item.koppelingen = [];
+        facturen.push(item);
+      } else {
+        item.soortItem = r.betaalstuk ? "betaling" : "creditnota";
+        verminderingen.push(item);
       }
-      if (r.betaalstuk) {
-        betalingen.push({ ref: r.ref, bedrag: r.bedrag, rest: r.bedrag });
-        return;
-      }
-      var doel = facturen[facturen.length - 1];
-      if (!doel) { losseCreditnotas.push({ ref: r.ref, bedrag: r.bedrag }); return; }
-      doel.creditnotas.push({ ref: r.ref, bedrag: r.bedrag });
-      doel.netto = round2(doel.netto - r.bedrag);
-      doel.rest = round2(doel.rest - r.bedrag);
+      perId[item.id] = item;
     });
 
-    betalingen.forEach(function (b) {
-      facturen.forEach(function (f) {
-        if (b.rest < 0.005 || f.rest < 0.005) return;
-        var deel = round2(Math.min(b.rest, f.rest));
-        f.betaald.push({ ref: b.ref, bedrag: deel, gedeeltelijk: deel < round2(b.bedrag) - 0.005 || deel < round2(f.netto) - 0.005 });
-        f.rest = round2(f.rest - deel);
-        b.rest = round2(b.rest - deel);
-      });
+    state.afpuntingen.forEach(function (k) {
+      var van = perId[k.van];
+      var naar = perId[k.naar];
+      // Enkel koppelingen die binnen deze relatie vallen én de juiste kant
+      // op gaan (vermindering → factuur). De rest hoort bij een andere
+      // relatie of is ongeldig geworden en wordt gewoon overgeslagen.
+      if (!van || !naar || !van.soortItem || !naar.koppelingen) return;
+      var deel = round2(Math.min(van.rest, naar.rest));
+      if (deel < 0) deel = 0;
+      naar.koppelingen.push({ van: van, bedrag: deel, kVan: k.van, kNaar: k.naar });
+      van.rest = round2(van.rest - deel);
+      naar.rest = round2(naar.rest - deel);
     });
 
-    return {
-      facturen: facturen,
-      losseBetalingen: betalingen.filter(function (b) { return b.rest > 0.005; }),
-      losseCreditnotas: losseCreditnotas,
-    };
+    return { facturen: facturen, verminderingen: verminderingen };
   }
 
-  // Detail van één relatie: links de facturen (met hun creditnota's eronder),
-  // rechts waarmee ze vereffend zijn. Geen loopsaldo per regel — enkel het
-  // totaal onderaan.
+  // Wat staat er bedragmatig nog open bij één relatie? Facturen min alle
+  // betalingen en creditnota's — onafhankelijk van het afpunten, zodat dit
+  // altijd overeenkomt met wat die relatie bijdraagt aan het saldo van
+  // 400000/440000.
+  function openBedragVoor(koppeling) {
+    return round2(
+      som(koppeling.facturen.map(function (f) { return f.bedrag; })) -
+      som(koppeling.verminderingen.map(function (v) { return v.bedrag; }))
+    );
+  }
+
+  // Detail van één relatie: de facturen in een tabel, met per factuur de
+  // betalingen en creditnota's die de leerling er zelf aan koppelde.
+  // Daaronder de nog af te punten betalingen/creditnota's als klikbare
+  // knoppen. Geen loopsaldo per regel — enkel het totaal onderaan.
   function htmlRelatieDetail(naam, regels, isKlant) {
     var koppeling = koppelFacturen(regels, isKlant);
     var facturen = koppeling.facturen;
-    var los = koppeling.losseBetalingen;
-    var losseCn = koppeling.losseCreditnotas;
+    var teKoppelen = koppeling.verminderingen.filter(function (v) { return v.rest > 0.005; });
+    var totaalOpen = openBedragVoor(koppeling);
 
-    var totaalOpen = round2(
-      som(facturen.map(function (f) { return f.rest; })) -
-      som(los.map(function (b) { return b.rest; })) -
-      som(losseCn.map(function (c) { return c.bedrag; }))
-    );
+    var selectie = uiState.afpuntSelectie;
+    var selectieHier = !!selectie && teKoppelen.some(function (v) { return v.id === selectie; });
 
-    var kopBetaling = isKlant ? "Betaling ontvangen" : "Betaling gedaan";
-    var html = '<table class="relatie-detail"><thead><tr>' +
-      "<th>Factuur</th><th>Bedrag</th><th>" + kopBetaling + "</th><th>Nog open</th>" +
+    var html = '<p class="paneel-hint">Punt zelf af: klik onderaan een betaling of creditnota aan en klik daarna op de factuur waar ze bij hoort. ' +
+      "Met het kruisje maak je een koppeling weer los.</p>";
+
+    html += '<table class="relatie-detail' + (selectieHier ? " afpunt-actief" : "") + '"><thead><tr>' +
+      "<th>Factuur</th><th>Bedrag</th><th>Afgepunt met</th><th>Nog open</th>" +
       "</tr></thead><tbody>";
 
     if (!facturen.length) {
@@ -876,44 +946,24 @@
         " op deze rekening. Kijk na of je ze wel geboekt hebt.</td></tr>";
     }
 
-    var teVeelGecrediteerd = false;
     facturen.forEach(function (f) {
       var openRegel = f.rest > 0.005;
-      var negatief = f.netto < -0.005;
-      if (negatief) teVeelGecrediteerd = true;
-      var betalingTekst = f.betaald.length
-        ? f.betaald.map(function (b) {
-          return escapeAttr(b.ref) + (b.gedeeltelijk ? " (" + formatBedrag(b.bedrag) + ")" : "");
-        }).join(", ")
-        : '<span class="relatie-niet-betaald">nog niet betaald</span>';
-      var laatsteKolom = negatief
-        ? '<span class="relatie-status teveel">' + formatBedrag(Math.abs(f.netto)) + " te veel gecrediteerd</span>"
-        : (openRegel ? formatBedrag(f.rest) : '<span class="relatie-status betaald">vereffend</span>');
+      var chips = f.koppelingen.map(function (kop) {
+        var cn = kop.van.soortItem === "creditnota";
+        return '<span class="afpunt-chip' + (cn ? " creditnota" : "") + '">' +
+          escapeAttr(kop.van.ref) + " (" + formatBedrag(kop.bedrag) + ")" + (cn ? " cn" : "") +
+          '<button type="button" class="afpunt-x" data-role="afpunt-verwijder" ' +
+          'data-van="' + escapeAttr(kop.kVan) + '" data-naar="' + escapeAttr(kop.kNaar) + '" ' +
+          'title="Koppeling losmaken" aria-label="Koppeling losmaken">×</button></span>';
+      }).join(" ");
+      if (!chips) chips = '<span class="relatie-niet-betaald">nog niet afgepunt</span>';
 
-      // De creditnota staat op dezelfde regel als de factuur die ze
-      // vermindert: het bedrag is het nettobedrag, met de berekening eronder.
-      var documentTekst = escapeAttr(f.ref);
-      var bedragTekst = formatBedrag(f.netto);
-      if (f.creditnotas.length) {
-        documentTekst += " − " + f.creditnotas.map(function (c) { return escapeAttr(c.ref); }).join(", ") +
-          (f.creditnotas.length === 1 ? " (creditnota)" : " (creditnota's)");
-        bedragTekst += '<span class="relatie-berekening">' + formatBedrag(f.bedrag) +
-          f.creditnotas.map(function (c) { return " − " + formatBedrag(c.bedrag); }).join("") + "</span>";
-      }
-
-      html += '<tr class="' + (openRegel || negatief ? "factuur-open" : "factuur-vereffend") + '">' +
-        "<td>" + documentTekst + "</td>" +
-        "<td>" + bedragTekst + "</td>" +
-        '<td class="relatie-betaling">' + betalingTekst + "</td>" +
-        "<td>" + laatsteKolom + "</td></tr>";
-    });
-
-    // Een creditnota zonder factuur ervóór kan de app nergens aan hangen.
-    losseCn.forEach(function (c) {
-      html += '<tr class="relatie-creditnota">' +
-        "<td>" + escapeAttr(c.ref) + " · creditnota</td>" +
-        "<td>− " + formatBedrag(c.bedrag) + "</td>" +
-        '<td colspan="2">staat vóór elke factuur van deze relatie — kijk na of de factuur geboekt is</td></tr>';
+      html += '<tr class="' + (openRegel ? "factuur-open" : "factuur-vereffend") + (selectieHier ? " afpunt-doelbaar" : "") + '" ' +
+        'data-role="afpunt-doel" data-item="' + escapeAttr(f.id) + '">' +
+        "<td>" + escapeAttr(f.ref) + "</td>" +
+        "<td>" + formatBedrag(f.bedrag) + "</td>" +
+        '<td class="relatie-betaling">' + chips + "</td>" +
+        "<td>" + (openRegel ? formatBedrag(f.rest) : '<span class="relatie-status betaald">vereffend</span>') + "</td></tr>";
     });
 
     // Geen totaal onder Bedrag: een opgetelde factuurkolom leest te makkelijk
@@ -925,27 +975,38 @@
       (Math.abs(totaalOpen) < 0.005 ? formatBedrag(0) : formatBedrag(Math.abs(totaalOpen))) +
       "</td></tr></tfoot></table>";
 
-    if (los.length) {
-      html += '<p class="relatie-conclusie verkeerd">Deze ' + (isKlant ? "ontvangst" : "betaling") +
-        (los.length > 1 ? "en horen" : " hoort") + " bij geen enkele geboekte factuur: " +
-        los.map(function (b) { return escapeAttr(b.ref) + " (" + formatBedrag(b.rest) + ")"; }).join(", ") +
-        ". Er is meer " + (isKlant ? "ontvangen" : "betaald") +
-        " dan er aan facturen geboekt is — kijk na of een factuur ontbreekt of te laag geboekt is.</p>";
-    } else if (losseCn.length) {
+    // De nog af te punten betalingen en creditnota's.
+    if (teKoppelen.length) {
+      html += '<div class="afpunt-bak"><div class="afpunt-bak-titel">Nog af te punten</div><div class="afpunt-bak-inhoud">' +
+        teKoppelen.map(function (v) {
+          var deels = v.rest < round2(v.bedrag) - 0.005;
+          return '<button type="button" class="afpunt-item' + (v.id === selectie ? " gekozen" : "") + '" ' +
+            'data-role="afpunt-bron" data-item="' + escapeAttr(v.id) + '">' +
+            escapeAttr(v.ref) + " · " + (v.soortItem === "creditnota" ? "creditnota" : (isKlant ? "ontvangst" : "betaling")) + " · " +
+            (deels ? "nog " + formatBedrag(v.rest) + " van " + formatBedrag(v.bedrag) : formatBedrag(v.rest)) +
+            "</button>";
+        }).join("") +
+        "</div></div>";
+    }
+
+    // Conclusie onder de tabel.
+    var openFacturen = facturen.filter(function (f) { return f.rest > 0.005; });
+    if (teKoppelen.length && !openFacturen.length) {
       html += '<p class="relatie-conclusie verkeerd">' +
-        (losseCn.length > 1 ? "Deze creditnota's staan" : "Deze creditnota staat") + " vóór elke factuur van " +
-        escapeAttr(naam) + ": " + losseCn.map(function (c) { return escapeAttr(c.ref); }).join(", ") +
-        ". Een creditnota hoort bij een factuur die er al is — kijk na of die factuur geboekt is, of in de juiste volgorde staat.</p>";
-    } else if (teVeelGecrediteerd) {
-      html += '<p class="relatie-conclusie verkeerd">Er is meer gecrediteerd dan er gefactureerd is. ' +
-        "Kijk na of de creditnota bij de juiste factuur hoort en of het bedrag klopt.</p>";
-    } else if (Math.abs(totaalOpen) < 0.005) {
-      html += '<p class="relatie-conclusie betaald">Alle facturen van ' + escapeAttr(naam) + " zijn vereffend.</p>";
-    } else {
-      var aantalOpen = facturen.filter(function (f) { return f.rest > 0.005; }).length;
+        (teKoppelen.length > 1 ? "Deze verrichtingen kunnen" : "Deze verrichting kan") + " nergens meer aan gekoppeld worden: " +
+        teKoppelen.map(function (v) { return escapeAttr(v.ref) + " (" + formatBedrag(v.rest) + ")"; }).join(", ") +
+        ". Er is meer " + (isKlant ? "ontvangen of gecrediteerd" : "betaald of gecrediteerd") +
+        " dan er aan facturen geboekt is — kijk na of een factuur ontbreekt of te laag geboekt is.</p>";
+    } else if (teKoppelen.length) {
+      html += '<p class="relatie-conclusie openstaand">Nog niet alles is afgepunt. Koppel ' +
+        teKoppelen.map(function (v) { return escapeAttr(v.ref); }).join(", ") +
+        " aan de juiste factuur, of stel vast dat er iets niet klopt.</p>";
+    } else if (openFacturen.length) {
       html += '<p class="relatie-conclusie openstaand">Er staat nog ' + formatBedrag(totaalOpen) + " open over " +
-        aantalOpen + (aantalOpen === 1 ? " factuur." : " facturen.") +
+        openFacturen.length + (openFacturen.length === 1 ? " factuur." : " facturen.") +
         " Zou die al betaald moeten zijn? Kijk dan na of het bedrag klopt en of je de betalingskorting geboekt hebt.</p>";
+    } else if (facturen.length) {
+      html += '<p class="relatie-conclusie betaald">Alle facturen van ' + escapeAttr(naam) + " zijn vereffend en afgepunt.</p>";
     }
 
     return html;
@@ -975,14 +1036,8 @@
     namen.forEach(function (naam) {
       var k = koppelFacturen(perRelatie[naam], isKlant);
       var facturen = som(k.facturen.map(function (f) { return f.bedrag; }));
-      var creditnotas = round2(
-        som(k.facturen.map(function (f) { return som(f.creditnotas.map(function (c) { return c.bedrag; })); })) +
-        som(k.losseCreditnotas.map(function (c) { return c.bedrag; }))
-      );
-      var betalingen = round2(
-        som(k.facturen.map(function (f) { return som(f.betaald.map(function (b) { return b.bedrag; })); })) +
-        som(k.losseBetalingen.map(function (b) { return b.rest; }))
-      );
+      var creditnotas = som(k.verminderingen.filter(function (v) { return v.soortItem === "creditnota"; }).map(function (v) { return v.bedrag; }));
+      var betalingen = som(k.verminderingen.filter(function (v) { return v.soortItem === "betaling"; }).map(function (v) { return v.bedrag; }));
       if (creditnotas > 0.005) ergensCreditnota = true;
       perNaam[naam] = {
         facturen: facturen,
@@ -992,6 +1047,22 @@
         openRefs: k.facturen.filter(function (f) { return f.rest > 0.005; }).map(function (f) { return f.ref; }),
       };
     });
+
+    // Vermoedelijke tikfouten: twee namen die enkel in hoofdletters, spaties
+    // of leestekens verschillen, zijn bijna zeker dezelfde relatie.
+    var perNorm = {};
+    var dubbels = [];
+    namen.forEach(function (n) {
+      var sleutel = normaliseerNaam(n);
+      if (perNorm[sleutel]) dubbels.push([perNorm[sleutel], n]);
+      else perNorm[sleutel] = n;
+    });
+    if (dubbels.length) {
+      html += '<p class="relatie-conclusie verkeerd">Vermoedelijke tikfout: ' +
+        dubbels.map(function (p) { return "„" + escapeAttr(p[0]) + "” en „" + escapeAttr(p[1]) + "”"; }).join(", ") +
+        " lijken dezelfde " + (isKlant ? "klant" : "leverancier") +
+        ". Maak de schrijfwijze gelijk in je boekingen, anders tellen ze apart.</p>";
+    }
 
     html += '<table class="relatie-overzicht"><thead><tr><th>Naam</th><th>Facturen</th>' +
       (ergensCreditnota ? "<th>Creditnota's</th>" : "") +
@@ -1334,6 +1405,20 @@
   // Tabblad Eindbalans: de volledige sleepoefening (balans én
   // resultatenrekening) met daaronder de slotcontrole.
   function renderEindbalansPagina() {
+    // Is er sinds de geslaagde slotcontrole iets gewijzigd (een boeking, een
+    // kaartje op de balans …) waardoor ze niet meer klopt? Dan verdwijnen de
+    // melding en de vinkjes weer. Klopt alles nog, dan blijven ze staan.
+    if (state.resultaat.slotcontroleMelding && state.resultaat.slotcontroleMelding.type === "goed") {
+      var g0 = berekenSlotcontroleGetallen();
+      var nogOk = alleControlesOk() && balansAf() && g0.resD === g0.resC && g0.actD === g0.pasC;
+      if (!nogOk) {
+        state.resultaat.slotcontroleMelding = null;
+        state.resultaat.slotcontroleResultaat = false;
+        state.resultaat.slotcontroleBalans = false;
+        saveState();
+      }
+    }
+
     var html = '<h1 class="pagina-titel">Eindbalans</h1>';
     html += '<p class="pagina-subtitel">Zet elke rubriek op haar plaats in de eindbalans en de resultatenrekening, en rond af met de slotcontrole.</p>';
 
@@ -1832,7 +1917,38 @@
         if (!boekingKlaarOmTeBoeken(bk.rows)) return;
         bk.geboekt = true; saveState(); renderAlles();
       } else if (role === "heropenen") {
-        boekingVoor(knop.dataset.scope).geboekt = false;
+        var refH = knop.dataset.scope;
+        boekingVoor(refH).geboekt = false;
+        // Wijzigen = opnieuw controleren: de handmatige vinkjes en de
+        // slotcontrole gaan uit, en afpuntingen die op deze boeking steunen
+        // vervallen (de rijen kunnen immers veranderen).
+        state.controles = {};
+        state.resultaat.slotcontroleResultaat = false;
+        state.resultaat.slotcontroleBalans = false;
+        state.resultaat.slotcontroleMelding = null;
+        state.afpuntingen = state.afpuntingen.filter(function (k) {
+          return k.van.split(":")[0] !== refH && k.naar.split(":")[0] !== refH;
+        });
+        saveState(); renderAlles();
+      } else if (role === "afpunt-bron") {
+        var bronId = knop.dataset.item;
+        uiState.afpuntSelectie = uiState.afpuntSelectie === bronId ? null : bronId;
+        renderAlles();
+      } else if (role === "afpunt-doel") {
+        if (uiState.afpuntSelectie) {
+          var vanId = uiState.afpuntSelectie;
+          var naarId = knop.dataset.item;
+          var bestaatAl = state.afpuntingen.some(function (k) { return k.van === vanId && k.naar === naarId; });
+          if (!bestaatAl) state.afpuntingen.push({ van: vanId, naar: naarId });
+          uiState.afpuntSelectie = null;
+          saveState(); renderAlles();
+        }
+      } else if (role === "afpunt-verwijder") {
+        var wegVan = knop.dataset.van;
+        var wegNaar = knop.dataset.naar;
+        state.afpuntingen = state.afpuntingen.filter(function (k) {
+          return !(k.van === wegVan && k.naar === wegNaar);
+        });
         saveState(); renderAlles();
       } else if (role === "mar-zoeken") {
         openMarModal(knop.dataset.scope, parseInt(knop.dataset.row, 10));
@@ -2130,6 +2246,7 @@
     uiState.huidigePagina = { type: "start" };
     uiState.gekozenKaarten = [];
     uiState.relatieKeuze = { klanten: "", leveranciers: "" };
+    uiState.afpuntSelectie = null;
     laatstBewaardOm = null;
     if (naam) saveState();
     sluitWissenModal();

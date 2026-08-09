@@ -24,11 +24,10 @@ documenten/                afbeeldingen van de verantwoordingsstukken (zie docum
 
 ### Waar pas je wat aan?
 
-- **Een controlevraag anders formuleren, of er rekeningen bij zetten die de
-  leerling moet bekijken** → `js/data-controles.js`. Bij elke controle kan je
-  `toelichting`, `rekeningen` (bv. `["411*", "451*"]`) en `filterTip`
-  invullen; de app toont die rekeningen dan met hun saldo, klikbaar naar het
-  T-paneel.
+- **Een controlevraag anders formuleren of toevoegen** → `js/data-controles.js`.
+  Bij elke controle kan je `toelichting`, `uitleg` (i-icoontje), `filterTip`
+  en `relatieSoort` invullen; dat laatste toont een tabelletje met per
+  klant/leverancier wat er nog openstaat.
 - **Een contrarekening die aan de "verkeerde" kant hoort te staan**
   (retours, handelskortingen, voorraadwijziging) → `SALDO_UITZONDERINGEN` in
   `js/data-controles.js`.
@@ -82,10 +81,11 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 
 ## Wat nog moet gebeuren
 
-- **Documentafbeeldingen** toevoegen in `documenten/` (zie
-  `documenten/README.md`) — die zijn in deze versie nog niet meegebouwd.
+- **Documentafbeeldingen** staan in `documenten/` (zie `documenten/README.md`);
+  bij een nieuwe bundel vervang je ze daar.
 - **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
-  opdrachtenbundel van dit jaar vastligt.
+  opdrachtenbundel van dit jaar vastligt (mag ook leeg blijven: de app
+  onthoudt de namen die leerlingen zelf intikken).
 - **Nakijken door de leerkracht via Google Sheets (§10 van de
   specificatie)** — bewust nog niet gebouwd. Deze versie werkt volledig
   op zichzelf (autosave in de browser + export/import als JSON-bestand),
@@ -95,24 +95,21 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   werk of bij een gedeeld Google Sheet — elke leerling werkt in zijn/haar
   eigen browser en eigen export-bestand.
 - **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
-  klant of leverancier zelf in bij de boeking. Op het tabblad
-  *Klanten & leveranciers* staan links de facturen en rechts waarmee ze
-  vereffend zijn; het totaal staat onderaan. Omdat de namen handmatig
+  klant of leverancier zelf in bij de boeking. Omdat de namen handmatig
   ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld
-  stelt daarom eerder gebruikte namen voor.
+  stelt eerder gebruikte namen voor én waarschuwt als een naam enkel in
+  hoofdletters, spaties of leestekens verschilt van een bestaande.
 
   De app deelt de boekingen in:
 
   1. Staat een regel op de normale kant (klant debet, leverancier credit),
-     dan is het een **factuur** → links.
+     dan is het een **factuur**.
   2. Staat ze op de tegenkant van een **betaalstuk**, dan is het een
-     **betaling** → rechts. Welke opdrachten betaalstukken zijn, staat in
+     **betaling**. Welke opdrachten betaalstukken zijn, staat in
      `CATEGORIE_BETALINGEN` in `js/data-opdrachten.js` — nu de categorie
      *Financiële verrichtingen*, dus alle bankafschriften en het kasblad.
   3. Staat ze op de tegenkant van een ander document, dan is het een
-     **creditnota** → op dezelfde regel als de factuur die er vlak vóór
-     staat, want een creditnota vermindert die factuur. Je ziet het
-     nettobedrag met de berekening er klein onder.
+     **creditnota**.
 
   Punt 2 kijkt bewust naar de **categorie van het document** en niet naar de
   rekeningen die de leerling koos. Boekt iemand een factuur rechtstreeks op de
@@ -121,18 +118,19 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   Komt er een nieuwe categorie betaalstukken bij, dan volstaat één regel in
   `CATEGORIE_BETALINGEN`.
 
-  De betalingen punten daarna de oudste nog openstaande factuur af; een
-  overschot schuift door naar de volgende. Bij een deelbetaling staat het
-  toegewezen bedrag tussen haakjes bij de referentie. Onderaan staat enkel
-  *Totaal nog open* — bewust geen totaal van de factuurkolom, want dat leest
-  te makkelijk als een openstaand saldo. Wordt er méér betaald of
-  gecrediteerd dan er gefactureerd is, of staat een creditnota vóór elke
-  factuur van die relatie, dan zegt de app dat expliciet onder de tabel.
-
-  Getest tegen `MetWear_oplossingssleutel_Q1_2026.xlsx`: alle relaties komen
-  correct uit, met 22.264 open bij Sportclub De Kern (VK06) en 21.091 bij
-  Textura (AK07 na creditnota AK08) — exact de saldi van 400000 en 440000
-  in de proef- en saldibalans.
+  Het **afpunten doet de leerling zelf** (bewust — dat is een leerdoel): in
+  het detail van een relatie klikt ze een betaling of creditnota aan en
+  daarna de factuur waar die bij hoort. De app wijst het bedrag automatisch
+  toe (het maximum dat op beide nog openstaat), zodat één betaling over
+  meerdere facturen gespreid kan worden door ze meermaals te koppelen. Met
+  het kruisje gaat een koppeling weer los. De koppelingen staan in
+  `state.afpuntingen` en vervallen automatisch als de boeking waarop ze
+  steunen heropend wordt. Onderaan staat enkel *Totaal nog open*; dat totaal
+  hangt níét af van het afpunten en komt dus altijd overeen met wat die
+  relatie bijdraagt aan het saldo van 400000/440000 — daarop steunt de
+  zelfcontrole op het tabblad Controles. Wordt er méér betaald of
+  gecrediteerd dan er gefactureerd is, dan zegt de app dat expliciet onder
+  de tabel.
 - **Wat is verplicht in het redeneerschema?** Enkel het bedrag, het
   rekeningnummer en debet of credit. De kolommen *Redenering*, *A/P/K/O* en
   *Stijgt/daalt* staan er als denkhulp: de leerling mag ze invullen, maar de
@@ -148,6 +146,12 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 - **De eindbalans is een sleepoefening**: de app telt op wat de leerling in
   een vak legt en toont of activa en passiva gelijk zijn, maar zegt niet of
   een rekening in het juiste vak ligt. Dat blijft bewust nakijkwerk.
+- **Wijzigen = opnieuw controleren.** Heropent een leerling een boeking, dan
+  gaan de handmatige controle-vinkjes en de slotcontrole automatisch weer
+  uit, en vervallen de afpuntingen die op die boeking steunen. De geslaagde
+  slotcontrole-melding ("Hoera…") wordt bovendien bij elk bezoek aan het
+  tabblad Eindbalans herberekend: klopt er intussen iets niet meer (bv. een
+  kaartje verplaatst), dan verdwijnt ze weer.
 
 ## Leerling-identificatie
 

@@ -79,11 +79,14 @@ const INFO_TEKSTEN = {
   klantenLeveranciers: {
     titel: "Openstaande facturen opvolgen",
     regels: [
-      "Kies bovenaan een klant of een leverancier. Links staan de facturen, rechts waarmee ze vereffend zijn. Onderaan staat het totaal.",
-      "De app betaalt altijd eerst de oudste openstaande factuur af. Gaat een betaling maar over een deel, dan zie je het toegewezen bedrag tussen haakjes bij de referentie en blijft de rest in de kolom „Nog open”.",
+      "Kies bovenaan een klant of een leverancier. In de tabel staan de facturen; jij punt zelf af waarmee ze vereffend zijn. Onderaan staat het totaal dat nog openstaat.",
+      { kop: "Zelf afpunten" },
+      { stap: "Klik onder de tabel bij Nog af te punten een betaling of creditnota aan." },
+      { stap: "Klik daarna op de factuur waar ze bij hoort. De app wijst het bedrag automatisch toe." },
+      { stap: "Verkeerd gekoppeld? Klik op het kruisje bij de koppeling om ze weer los te maken." },
+      "Is een betaling groter dan de factuur, dan blijft de rest bij Nog af te punten staan — koppel die aan de volgende factuur.",
       { kop: "Een creditnota" },
-      "Een creditnota is geen betaling maar een verkoop- of aankoopdocument. Ze staat daarom op dezelfde regel als de factuur die ze vermindert: je ziet het bedrag dat na de creditnota nog te betalen valt, met de berekening er klein onder.",
-      "Verschijnt een creditnota als losse regel, dan staat ze vóór elke factuur van die relatie. Kijk dan na of je de bijhorende factuur wel geboekt hebt.",
+      "Een creditnota is geen betaling maar een verkoop- of aankoopdocument dat een factuur vermindert. Punt ze dus af op de factuur waar ze bij hoort.",
       { kop: "Een klant" },
       "Een verkoopfactuur zet je debet op 400000: de klant moet je nog betalen. Bij ontvangst van het geld boek je credit. Staat de factuur nog open, dan is er (nog) geen ontvangst tegenover geboekt.",
       { kop: "Een leverancier" },

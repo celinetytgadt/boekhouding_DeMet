@@ -1257,3 +1257,94 @@ table.relatie-detail tfoot td.totaal-fout { color: var(--kleur-fout); }
   #topbar-leerling .topbar-link { display: none; }
   #leerling-naam-input { width: 90px; }
 }
+
+/* ========================================================================
+   Zelf afpunten (tabblad Klanten & leveranciers)
+   ======================================================================== */
+
+/* De bak met nog af te punten betalingen en creditnota's. */
+.afpunt-bak {
+  margin-top: 12px;
+  border: 1px dashed var(--kleur-rand);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--kleur-achtergrond);
+}
+.afpunt-bak-titel {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kleur-tekst-zacht);
+  margin-bottom: 6px;
+}
+.afpunt-bak-inhoud { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Eén klikbare betaling/creditnota. */
+.afpunt-item {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 20px;
+  background: var(--kleur-paneel);
+  color: var(--kleur-tekst);
+  cursor: pointer;
+}
+.afpunt-item:hover { border-color: var(--kleur-primair); }
+.afpunt-item.gekozen {
+  background: var(--kleur-primair);
+  border-color: var(--kleur-primair);
+  color: #fff;
+}
+
+/* Zolang er een betaling/creditnota gekozen is, zijn de factuurregels het
+   doel: de cursor en een lichte tint maken dat duidelijk. */
+table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"] { cursor: pointer; }
+table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { background: #e9eaf7; }
+
+/* Een gelegde koppeling in de kolom "Afgepunt met". */
+.afpunt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  padding: 2px 4px 2px 8px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 20px;
+  background: var(--kleur-paneel);
+  white-space: nowrap;
+  margin: 1px 0;
+}
+.afpunt-chip.creditnota { border-style: dashed; }
+.afpunt-x {
+  border: none;
+  background: transparent;
+  color: var(--kleur-tekst-zacht);
+  font-size: 13px;
+  line-height: 1;
+  padding: 1px 4px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.afpunt-x:hover { color: var(--kleur-fout); background: #ffece9; }
+
+/* Waarschuwing onder het relatieveld in het redeneerschema: de naam lijkt
+   sterk op een eerder gebruikte naam. */
+.relatie-waarschuwing {
+  font-size: 11px;
+  color: #8a5a00;
+  background: #fff6e5;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 3px;
+}
+
+/* Het compacte tabelletje bij de zelfcontrole van 400000/440000. */
+.controle-relatie-tabel { max-width: 420px; margin-top: 8px; }
+.controle-relatie-tabel tfoot td {
+  border-top: 2px solid var(--kleur-rand);
+  border-bottom: none;
+  font-weight: 700;
+  padding-top: 6px;
+}

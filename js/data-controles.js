@@ -50,6 +50,11 @@ const SALDO_GEEN_CONTROLE = [
 //   uitleg       sleutel uit data-info.js — zet een i-icoontje bij de vraag
 //   filterTip    welke filter ze in het T-paneel kunnen zetten om dit na te
 //                kijken
+//   relatieSoort "klanten" of "leveranciers" — toont onder de vraag een
+//                tabelletje met per relatie het bedrag dat nog openstaat
+//                (uit het tabblad Klanten & leveranciers), zodat de leerling
+//                dat naast het saldo van 400000/440000 in het T-paneel kan
+//                leggen zonder van scherm te wisselen
 //
 // De app toont bewust GEEN saldi bij een controle: dan valt er niets meer na
 // te kijken. De leerling zoekt zelf in het T-paneel met de filtertip.
@@ -94,6 +99,22 @@ const HANDMATIGE_CONTROLES = [
     vraag: "Staat 580000 (interne overboekingen) terug op 0?",
     toelichting: "Elke overboeking tussen bank en kas passeert hier, één keer debet en één keer credit. Blijft er iets staan, dan ontbreekt de tegenboeking.",
     filterTip: "Filter in het T-paneel op 580000.",
+  },
+  {
+    id: "klanten-openstaand-klopt",
+    type: "check",
+    relatieSoort: "klanten",
+    vraag: "Is het totaal nog open bij je klanten gelijk aan het saldo op 400000?",
+    toelichting: "Het overzicht hieronder komt uit je eigen boekingen op het tabblad Klanten & leveranciers. Punt daar ook alles af: elke betaling en creditnota hoort bij een factuur.",
+    filterTip: "Filter in het T-paneel op 400000.",
+  },
+  {
+    id: "leveranciers-openstaand-klopt",
+    type: "check",
+    relatieSoort: "leveranciers",
+    vraag: "Is het totaal nog open bij je leveranciers gelijk aan het saldo op 440000?",
+    toelichting: "Het overzicht hieronder komt uit je eigen boekingen op het tabblad Klanten & leveranciers. Punt daar ook alles af: elke betaling en creditnota hoort bij een factuur.",
+    filterTip: "Filter in het T-paneel op 440000.",
   },
   {
     id: "lonen-uitbetaald",
