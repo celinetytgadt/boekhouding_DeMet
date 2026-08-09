@@ -1004,7 +1004,7 @@
     } else if (openFacturen.length) {
       html += '<p class="relatie-conclusie openstaand">Er staat nog ' + formatBedrag(totaalOpen) + " open over " +
         openFacturen.length + (openFacturen.length === 1 ? " factuur." : " facturen.") +
-        " Zou die al betaald moeten zijn? Kijk dan na of het bedrag klopt en of je de betalingskorting geboekt hebt.</p>";
+        " Zou die al vereffend moeten zijn? Kijk dan je boekingen van die factuur nog eens na.</p>";
     } else if (facturen.length) {
       html += '<p class="relatie-conclusie betaald">Alle facturen van ' + escapeAttr(naam) + " zijn vereffend en afgepunt.</p>";
     }
@@ -1045,6 +1045,8 @@
         betalingen: betalingen,
         open: round2(facturen - creditnotas - betalingen),
         openRefs: k.facturen.filter(function (f) { return f.rest > 0.005; }).map(function (f) { return f.ref; }),
+        // Hoeveel betalingen/creditnota's hangen er nog nergens aan vast?
+        nietAfgepunt: k.verminderingen.filter(function (v) { return v.rest > 0.005; }).length,
       };
     });
 
@@ -1073,11 +1075,20 @@
       var betalingen = cijfers.betalingen;
       var open = cijfers.open;
       var openRefs = open > 0.005 ? cijfers.openRefs : [];
-      var status = Math.abs(open) < 0.005
-        ? '<span class="relatie-status betaald">alles betaald</span>'
-        : (open > 0
-          ? '<span class="relatie-status openstaand">nog open' + (openRefs.length ? ": " + escapeAttr(openRefs.join(", ")) : "") + "</span>"
-          : '<span class="relatie-status teveel">' + formatBedrag(Math.abs(open)) + " te veel " + (isKlant ? "ontvangen" : "betaald") + "</span>");
+      // Zolang niet alles afgepunt is, zegt de app niet of er nog iets
+      // openstaat: dan zou ze het antwoord van de oefening weggeven. Eerst
+      // zelf koppelen, daarna pas de conclusie.
+      var status;
+      if (cijfers.nietAfgepunt) {
+        status = '<span class="relatie-status afpunten">nog ' + cijfers.nietAfgepunt +
+          (cijfers.nietAfgepunt === 1 ? " af te punten" : " af te punten") + "</span>";
+      } else if (Math.abs(open) < 0.005) {
+        status = '<span class="relatie-status betaald">alles betaald</span>';
+      } else if (open > 0) {
+        status = '<span class="relatie-status openstaand">nog open' + (openRefs.length ? ": " + escapeAttr(openRefs.join(", ")) : "") + "</span>";
+      } else {
+        status = '<span class="relatie-status teveel">' + formatBedrag(Math.abs(open)) + " te veel " + (isKlant ? "ontvangen" : "betaald") + "</span>";
+      }
       html += '<tr class="' + (naam === gekozen ? "relatie-gekozen" : "") + '">' +
         '<td><button type="button" class="link-knop" data-role="kies-relatie" data-soort="' + soort + '" data-naam="' + escapeAttr(naam) + '">' + escapeAttr(naam) + "</button></td>" +
         "<td>" + formatBedrag(facturen) + "</td>" +
@@ -1106,8 +1117,7 @@
   function renderRelaties() {
     var html = '<h1 class="pagina-titel">Klanten &amp; leveranciers ' + htmlInfoKnop("klantenLeveranciers", "Hoe lees je dit?") + "</h1>";
     html += '<p class="pagina-subtitel">Wie moet er nog betalen, en wat staat er bij jou nog open?</p>';
-    html += '<div class="paneel paneel-tip"><p>Dit overzicht is opgebouwd uit de namen die je zelf bij je boekingen op 400000 en 440000 invulde. Ontbreekt er een naam, ga dan terug naar die boeking en vul ze aan.</p>' +
-      "<p><strong>Betalingskorting</strong> boek je pas bij de betaling, niet al bij de factuur — pas dan weet je of je op tijd betaalt. De btw op de factuur bereken je wél al na aftrek van die korting.</p></div>";
+    html += '<div class="paneel paneel-tip"><p>Dit overzicht is opgebouwd uit de namen die je zelf bij je boekingen op 400000 en 440000 invulde. Ontbreekt er een naam, ga dan terug naar die boeking en vul ze aan.</p></div>';
     html += htmlRelatieBlok("klanten");
     html += htmlRelatieBlok("leveranciers");
     return html;
@@ -1293,12 +1303,15 @@
     var allesGeplaatst = geplaatst === kaarten.length && kaarten.length > 0;
     var klopt = allesGeplaatst && Math.abs(links) < 0.005 && Math.abs(rechts) < 0.005;
 
-    var html = '<div class="balans-regel ' + (klopt ? "ok" : "nog-niet") + '">';
+    // Bovenaan staat nooit een groene "het klopt"-boodschap: die hoort
+    // onderaan, ná de slotcontrole. Hier staat enkel welke regel op dit
+    // moment geldt en wat er nog te doen is.
+    var html = '<div class="balans-regel ' + (klopt ? "neutraal" : "nog-niet") + '">';
     html += "<p>" + escapeAttr(uitleg) + "</p>";
     if (!allesGeplaatst) {
       html += "<p><strong>Nog " + (kaarten.length - geplaatst) + " van de " + kaarten.length + " rubrieken te plaatsen.</strong></p>";
     } else if (klopt) {
-      html += "<p><strong>Dat klopt. Laat je leerkracht wel nog nakijken of elke rubriek op de juiste plaats staat — dat kan deze app niet zien.</strong></p>";
+      html += "<p><strong>Alle rubrieken staan op een plaats. Kijk zelf na of de totalen kloppen en rond af met de slotcontrole onderaan.</strong></p>";
     } else {
       html += "<p><strong>Er zit nog een verschil van " + formatBedrag(Math.abs(links)) + " op " + escapeAttr(labelLinks) + ".</strong>";
       if (labelRechts && Math.abs(rechts) >= 0.005) {
