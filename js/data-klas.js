@@ -22,6 +22,8 @@
 // vrije naamveld zoals vroeger. Handig zolang je met collega's test.
 
 const KLASLIJST = [
+  "Tom TW (code1234),
+  "Cecilia SKW (code 1234),
   "Zeger",
   "Mats",
   "Mai",
