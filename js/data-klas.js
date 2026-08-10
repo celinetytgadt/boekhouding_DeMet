@@ -22,9 +22,9 @@
 // vrije naamveld zoals vroeger. Handig zolang je met collega's test.
 
 const KLASLIJST = [
-  "test TW (code1234),
-  "test SKW (code 1234),
-  "test LEU (code 1234),
+  "test TW (code1234)",
+  "test SKW (code 1234)",
+  "test LEU (code 1234)",
   "Zeger",
   "Mats",
   "Mai",
