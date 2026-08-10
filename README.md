@@ -87,13 +87,16 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   opdrachtenbundel van dit jaar vastligt (mag ook leeg blijven: de app
   onthoudt de namen die leerlingen zelf intikken).
 - **Nakijken door de leerkracht via Google Sheets (§10 van de
-  specificatie)** — bewust nog niet gebouwd. Deze versie werkt volledig
-  op zichzelf (autosave in de browser + export/import als JSON-bestand),
-  precies zoals de specificatie vraagt om dat eerst als kleine, apart
-  geteste proef te bouwen vóór de volledige koppeling erop komt. Zolang
-  die koppeling er niet is, kunnen leerlingen sowieso niet bij elkaars
-  werk of bij een gedeeld Google Sheet — elke leerling werkt in zijn/haar
-  eigen browser en eigen export-bestand.
+  specificatie)** — gebouwd, zie `HANDLEIDING-koppeling.md`. In het kort:
+  een Apps Script-web-app die onder het account van de leerkracht draait.
+  Leerlingen melden zich aan met hun naam uit `js/data-klas.js` en een
+  persoonlijke code die enkel in de Sheet staat; hun werk gaat op de
+  achtergrond naar een map in de Drive van de leerkracht, zodat ze op
+  eender welke computer verder kunnen. Ze kiezen zelf per categorie wat ze
+  indienen, en zien de feedback pas als de leerkracht ze vrijgeeft.
+  Zolang `webAppUrl` in `js/config-koppeling.js` leeg blijft, werkt de app
+  volledig op zichzelf zoals voordien (autosave in de browser +
+  export/import).
 - **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
   klant of leverancier zelf in bij de boeking. Omdat de namen handmatig
   ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld

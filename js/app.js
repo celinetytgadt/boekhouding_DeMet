@@ -190,12 +190,21 @@
 
   function saveState() {
     if (!state.student) return;
+    // Tijdstip van de laatste wijziging. De koppeling met Google Sheets
+    // gebruikt dit om te zien welke versie de jongste is als een leerling
+    // op twee computers gewerkt heeft.
+    state.gewijzigd = new Date().toISOString();
     try {
       localStorage.setItem(storageKeyVoor(state.student), JSON.stringify(state));
       localStorage.setItem(LAATSTE_LEERLING_KEY, state.student);
       laatstBewaardOm = new Date();
     } catch (e) {
       console.error("Kon niet bewaren:", e);
+    }
+    // Laat koppeling.js weten dat er iets te versturen is. Ontbreekt dat
+    // bestand (of is de koppeling uitgeschakeld), dan gebeurt er niets.
+    if (window.KOPPELING_HOOKS && window.KOPPELING_HOOKS.naWijziging) {
+      window.KOPPELING_HOOKS.naWijziging();
     }
     updateOpslaanStatus();
   }
@@ -654,6 +663,32 @@
      7. Pagina's
      ======================================================================== */
 
+  /* ---------- Feedback van de leerkracht ----------
+     Komt uit koppeling.js, die ze uit de Google Sheet haalt. Ze verschijnt
+     pas als de leerkracht ze in de Sheet vrijgegeven heeft. Zonder
+     koppeling bestaat window.feedbackVoor niet en blijft alles zoals het
+     was. */
+
+  function htmlFeedbackBlok(ref) {
+    if (typeof window.feedbackVoor !== "function") return "";
+    var f = window.feedbackVoor(ref);
+    if (!f) return "";
+
+    var soort = String(f.beoordeling || "").toLowerCase().replace(/[^a-z]+/g, "-").replace(/(^-|-$)/g, "");
+    var html = '<div class="feedback-blok feedback-' + (soort || "algemeen") + '">';
+    html += '<div class="feedback-kop"><strong>Feedback van je leerkracht</strong>';
+    if (f.beoordeling) html += '<span class="feedback-oordeel">' + escapeAttr(f.beoordeling) + "</span>";
+    html += "</div>";
+    if (f.feedback) html += "<p>" + escapeAttr(f.feedback) + "</p>";
+    if (f.ingediend) html += '<p class="feedback-datum">Op je inzending van ' + escapeAttr(f.ingediend) + ".</p>";
+    html += "</div>";
+    return html;
+  }
+
+  function heeftFeedback(ref) {
+    return typeof window.feedbackVoor === "function" && !!window.feedbackVoor(ref);
+  }
+
   function htmlBannerNaamOntbreekt() {
     if (state.student) return "";
     return '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
@@ -719,6 +754,7 @@
     var html = htmlBannerNaamOntbreekt();
     html += '<h1 class="pagina-titel">' + escapeAttr(def.titel) + "</h1>";
     html += '<p class="pagina-subtitel">' + escapeAttr(def.categorie) + "</p>";
+    html += htmlFeedbackBlok(ref);
     if (!def.geenDocument) {
       html += '<div class="paneel"><h2>Verantwoordingsstuk</h2>' + htmlDocumentAfbeelding(def.doc, false) + "</div>";
     }
@@ -1374,6 +1410,7 @@
     var ok = alleControlesOk();
     var html = '<h1 class="pagina-titel">Resultaatverwerking — BELASTING + RESULTAAT</h1>';
     html += '<p class="pagina-subtitel">Bouw eerst de resultatenrekening op, bereken daarna de winst en de vennootschapsbelasting, en boek BELASTING en RESULTAAT.</p>';
+    html += htmlFeedbackBlok("RESULTAATVERWERKING");
 
     if (!ok) {
       html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
@@ -1434,6 +1471,7 @@
 
     var html = '<h1 class="pagina-titel">Eindbalans</h1>';
     html += '<p class="pagina-subtitel">Zet elke rubriek op haar plaats in de eindbalans en de resultatenrekening, en rond af met de slotcontrole.</p>';
+    html += htmlFeedbackBlok("EINDBALANS");
 
     html += htmlBannerNaamOntbreekt();
 
@@ -1739,6 +1777,7 @@
         var actief = uiState.huidigePagina.type === "opdracht" && uiState.huidigePagina.ref === o.ref;
         html += '<div class="nav-link' + (actief ? " actief" : "") + '" data-page-type="opdracht" data-page-ref="' + escapeAttr(o.ref) + '">' +
           "<span>" + escapeAttr(o.navLabel || o.ref) + "</span>" +
+          (heeftFeedback(o.ref) ? '<span class="nav-feedback" title="Je leerkracht gaf hier feedback">✎</span>' : "") +
           '<span class="status-bolletje' + (geboekt ? " geboekt" : "") + '"></span></div>';
       });
     });
@@ -2283,6 +2322,31 @@
     initEvents();
     renderAlles();
   }
+
+  /* ========================================================================
+     13. Brug naar koppeling.js
+
+     app.js houdt alles voor zichzelf; dit is het enige luikje naar buiten.
+     koppeling.js gebruikt het om werk op te halen, te bewaren en in te
+     dienen. Ontbreekt koppeling.js, dan verandert er niets aan de app.
+     ======================================================================== */
+
+  window.APP = {
+    getState: function () { return state; },
+    setState: function (nieuw, naam) {
+      state = normaliseerState(nieuw, naam !== undefined ? naam : (nieuw && nieuw.student) || "");
+    },
+    laadStudent: function (naam) {
+      laadStudent(naam);
+      var veld = document.getElementById("leerling-naam-input");
+      if (veld) veld.value = naam || "";
+    },
+    saveState: saveState,
+    renderAlles: renderAlles,
+    marBij: marBij,
+    formatBedrag: formatBedrag,
+    slug: slug,
+  };
 
   document.addEventListener("DOMContentLoaded", init);
 })();

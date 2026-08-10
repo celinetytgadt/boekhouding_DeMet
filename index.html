@@ -17,12 +17,23 @@
   </div>
   <div id="topbar-leerling">
     <label for="leerling-naam-input">Naam:</label>
+    <!-- Twee manieren om je aan te melden. Staat er een klaslijst in
+         js/data-klas.js, dan toont koppeling.js de keuzelijst met het
+         codeveld en verbergt ze het vrije tekstveld. Is die lijst leeg
+         (bv. tijdens het testen met collega's), dan blijft het vrije veld
+         staan en werkt de app zoals vroeger. -->
     <input type="text" id="leerling-naam-input" placeholder="bv. Julie D.">
+    <select id="leerling-select" hidden></select>
+    <input type="text" id="leerling-code" hidden inputmode="numeric" maxlength="6" placeholder="code" autocomplete="off">
+    <button id="btn-aanmelden" type="button" hidden title="Aanmelden en je werk ophalen">Aanmelden</button>
     <span id="opslaan-status"></span>
+    <span id="koppeling-status" class="koppeling-status"></span>
     <!-- Testversie: de handleiding voor de leerkrachten die meetesten. De
          bestandsnaam moet exact overeenkomen — GitHub Pages is
          hoofdlettergevoelig. -->
     <a id="link-handleiding" class="topbar-link" href="Handleiding-testleerkrachten.pdf" target="_blank" rel="noopener" title="Handleiding voor testleerkrachten (pdf)">Handleiding</a>
+    <button id="btn-indienen" type="button" class="btn-primair-topbar" title="Stuur je werk door naar je leerkracht">Indienen</button>
+    <button id="btn-feedback" type="button" title="Kijk of er feedback klaarstaat">Feedback ophalen</button>
     <button id="btn-export" type="button" title="Bewaar je werk als bestand">Exporteren</button>
     <button id="btn-import" type="button" title="Laad een eerder bewaard bestand">Importeren</button>
     <button id="btn-wissen" type="button" class="btn-gevaar" title="Alles wissen en opnieuw beginnen">Alles wissen</button>
@@ -152,6 +163,10 @@
 <script src="js/data-controles.js"></script>
 <script src="js/data-balans.js"></script>
 <script src="js/data-info.js"></script>
+<script src="js/config-koppeling.js"></script>
+<script src="js/data-klas.js"></script>
 <script src="js/app.js"></script>
+<!-- Na app.js: koppeling.js gebruikt window.APP. -->
+<script src="js/koppeling.js"></script>
 </body>
 </html>
