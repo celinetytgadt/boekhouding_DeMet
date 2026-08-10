@@ -72,7 +72,7 @@ const INFO_TEKSTEN = {
       "Zolang je de resultaatverwerking (BELASTING en RESULTAAT) nog niet geboekt hebt, zit de winst nog in de resultatenrekening. Dan moet activa + kosten gelijk zijn aan passiva + opbrengsten.",
       "Heb je de resultaatverwerking wél geboekt, dan is de winst toegewezen aan het overgedragen resultaat. Dan moet totaal activa gelijk zijn aan totaal passiva, én totaal kosten aan totaal opbrengsten.",
       "Bovenaan zie je altijd welke van de twee regels op dit moment geldt.",
-      "De app telt enkel op wat jij erin legt. Ze zegt niet of een rubriek in het juiste vak ligt: dat kijkt je leerkracht na.",
+      "De app telt enkel op wat jij erin legt. Ze zegt niet of een rubriek in het juiste vak ligt: dat kijkt je vakexpert na.",
     ],
   },
 

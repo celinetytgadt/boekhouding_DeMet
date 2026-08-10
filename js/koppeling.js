@@ -12,7 +12,7 @@
  *                  leesbaar). Eenmaal goed, onthoudt de browser ze.
  *
  *   2. Bewaren     het volledige werk gaat op de achtergrond naar een map
- *                  in de Drive van de leerkracht. Leerlingen hebben daar
+ *                  in de Drive van de vakexpert. Leerlingen hebben daar
  *                  zelf geen toegang toe: het script draait onder haar
  *                  account en geeft alleen terug wat bij de aanmelding
  *                  hoort. Zo kan een leerling op eender welke computer
@@ -35,9 +35,15 @@
   var AANMELD_KEY = "boekhoudapp_aanmelding";
   var FEEDBACK_KEY_PREFIX = "boekhoudapp_feedback_";
 
+  // Wat de vakexpert als "in orde" aanduidt, gaat op slot: het wordt niet
+  // meer meegestuurd bij een volgende inzending. Deze tekst moet exact
+  // overeenkomen met BEOORDELINGEN in Code.gs en met IN_ORDE in app.js.
+  var IN_ORDE = "In orde";
+
   // Aanmelding van deze browser: { naam, code }
   var aanmelding = null;
-  // Feedback per ref: { REF: { beoordeling, feedback, ingediend } }
+  // Feedback per verrichting, nieuwste eerst:
+  // { REF: [ { beoordeling, feedback, ingediend }, … ] }
   var feedback = {};
   // Er is werk gewijzigd sinds de laatste keer bewaren naar de Drive.
   var teBewaren = false;
@@ -116,7 +122,7 @@
     if (!antwoord) return "geen antwoord van de server";
     if (antwoord.fout === "code") return "die code klopt niet";
     if (antwoord.fout === "naam onbekend") return "die naam staat niet in de klaslijst";
-    if (antwoord.fout === "sleutel") return "de app is niet juist ingesteld — verwittig je leerkracht";
+    if (antwoord.fout === "sleutel") return "de app is niet juist ingesteld — verwittig je vakexpert";
     return antwoord.fout || "onbekende fout";
   }
 
@@ -241,7 +247,7 @@
       '<button type="button" data-keuze="lokaal" class="btn-keuze">' +
       "<strong>Het werk op deze computer</strong><span>laatst bewaard op " + esc(datumTekst(lokaalGewijzigd)) + "</span></button>" +
       "</div>" +
-      "<p class=\"keuze-nota\">Twijfel je? Kies het recentste. De andere versie gaat niet verloren: je leerkracht kan ze terugzetten.</p>";
+      "<p class=\"keuze-nota\">Twijfel je? Kies het recentste. De andere versie gaat niet verloren: je vakexpert kan ze terugzetten.</p>";
 
     maakModal("Welke versie wil je?", html, function (venster, sluit) {
       venster.querySelectorAll("[data-keuze]").forEach(function (knop) {
@@ -317,52 +323,74 @@
      Indienen ter nakijking
      ====================================================================== */
 
-  var PSEUDO = [
-    { ref: "RESULTAATVERWERKING", categorie: "Resultaatverwerking" },
-    { ref: "EINDBALANS", categorie: "Eindbalans" },
-  ];
+  function maakCategorie(naam, refs, geboekt) {
+    // Verrichtingen die al in orde bevonden zijn, gaan niet meer mee. Zo
+    // hoeft de vakexpert niet telkens hetzelfde opnieuw na te kijken.
+    var teSturen = refs.filter(function (r) { return !isInOrde(r); });
+    return {
+      naam: naam,
+      totaal: refs.length,
+      geboekt: geboekt,
+      inOrde: refs.length - teSturen.length,
+      refs: teSturen,
+    };
+  }
 
   function categorieOverzicht() {
+    var st = APP.getState();
     var lijst = [];
+
     CATEGORIE_VOLGORDE.forEach(function (cat) {
       var items = OPDRACHTEN.filter(function (o) { return o.categorie === cat; });
       if (!items.length) return;
       var geboekt = items.filter(function (o) {
-        var b = APP.getState().boekingen[o.ref];
+        var b = st.boekingen[o.ref];
         return b && b.geboekt;
       }).length;
-      lijst.push({ naam: cat, totaal: items.length, geboekt: geboekt, refs: items.map(function (o) { return o.ref; }) });
+      lijst.push(maakCategorie(cat, items.map(function (o) { return o.ref; }), geboekt));
     });
 
-    var st = APP.getState();
+    var vragen = st.relatieVragen || {};
+    lijst.push(maakCategorie("Klanten & leveranciers", ["RELATIES"],
+      (vragen.klanten || vragen.leveranciers) ? 1 : 0));
+
     var resIngevuld = Object.keys(st.resultaat.stap || {}).some(function (k) { return st.resultaat.stap[k]; });
-    lijst.push({ naam: "Resultaatverwerking", totaal: 1, geboekt: resIngevuld ? 1 : 0, refs: ["RESULTAATVERWERKING"] });
-    lijst.push({ naam: "Eindbalans", totaal: 1, geboekt: Object.keys(st.eindbalans || {}).length ? 1 : 0, refs: ["EINDBALANS"] });
+    lijst.push(maakCategorie("Resultaatverwerking", ["RESULTAATVERWERKING"], resIngevuld ? 1 : 0));
+    lijst.push(maakCategorie("Eindbalans", ["EINDBALANS"], Object.keys(st.eindbalans || {}).length ? 1 : 0));
     return lijst;
   }
 
   function openIndienVenster() {
-    if (!actief()) { alert("De koppeling met Google Sheets is nog niet ingesteld."); return; }
-    if (!aanmelding) { status("Meld je eerst aan met je naam en je code.", "fout"); return; }
+    if (!actief()) { toonMelding("Indienen", "De koppeling met Google Sheets is nog niet ingesteld."); return; }
+    if (!aanmelding) {
+      toonMelding("Indienen", "Meld je eerst bovenaan aan met je naam en je code.");
+      return;
+    }
 
     var overzicht = categorieOverzicht();
     var html =
-      "<p>Vink aan wat je wil doorsturen. Wat je niet aanvinkt, blijft van jou — " +
-      "je leerkracht ziet dat dus ook niet.</p>" +
+      '<div class="modal-body">' +
+      "<p>Vink aan wat je wil doorsturen. Wat je niet aanvinkt, blijft van jou.</p>" +
       '<div class="indien-lijst">' +
       overzicht.map(function (c) {
+        var niets = c.refs.length === 0;
         var af = c.geboekt === c.totaal;
-        return '<label class="indien-rij">' +
-          '<input type="checkbox" data-cat="' + esc(c.naam) + '">' +
+        var telling = niets
+          ? "alles in orde"
+          : c.geboekt + "/" + c.totaal + " geboekt" + (c.inOrde ? " · " + c.inOrde + " in orde" : "");
+        return '<label class="indien-rij' + (niets ? " uit" : "") + '">' +
+          '<input type="checkbox" data-cat="' + esc(c.naam) + '"' + (niets ? " disabled" : "") + ">" +
           '<span class="indien-naam">' + esc(c.naam) + "</span>" +
-          '<span class="indien-telling' + (af ? " volledig" : "") + '">' + c.geboekt + "/" + c.totaal + " geboekt</span>" +
+          '<span class="indien-telling' + (niets || af ? " volledig" : "") + '">' + esc(telling) + "</span>" +
           "</label>";
       }).join("") +
       "</div>" +
-      '<p class="keuze-nota">Verrichtingen die je nog niet geboekt hebt, gaan mee met de vermelding ' +
-      "<em>onafgewerkt</em>. Zo ziet je leerkracht waar je vastloopt.</p>" +
-      '<div class="modal-acties"><button type="button" id="btn-indienen-bevestig" class="btn-primair" disabled>Indienen</button></div>' +
-      '<p id="indien-melding" class="indien-melding"></p>';
+      '<p class="keuze-nota">Wat je nog niet geboekt hebt, gaat mee als <em>onafgewerkt</em>: zo ziet je ' +
+      "vakexpert waar je vastloopt. Wat al in orde is, gaat niet meer mee.</p>" +
+      "</div>" +
+      '<div class="modal-voet">' +
+      '<button type="button" id="btn-indienen-bevestig" class="btn-primair" disabled>Indienen</button>' +
+      "</div>";
 
     maakModal("Indienen ter nakijking", html, function (venster, sluit) {
       var vinkjes = venster.querySelectorAll("[data-cat]");
@@ -375,14 +403,16 @@
       knop.addEventListener("click", function () {
         var gekozen = [];
         vinkjes.forEach(function (v) { if (v.checked) gekozen.push(v.dataset.cat); });
-        knop.disabled = true;
-        venster.querySelector("#indien-melding").textContent = "Bezig met verzenden…";
-        dienIn(gekozen, venster, sluit);
+        dienIn(gekozen, venster);
       });
     });
   }
 
-  function dienIn(categorieen, venster, sluit) {
+  // Tijdens het verzenden wordt de inhoud van het venster vervangen door een
+  // wachtboodschap, en daarna door een duidelijke bevestiging. De leerling
+  // moet zwart op wit zien dat het gelukt is — een klein regeltje bovenaan
+  // wordt te makkelijk gemist.
+  function dienIn(categorieen, venster) {
     var overzicht = categorieOverzicht();
     var items = [];
     categorieen.forEach(function (cat) {
@@ -391,32 +421,38 @@
       c.refs.forEach(function (ref) { items.push(maakItem(ref, cat)); });
     });
 
+    if (!items.length) {
+      zetModalInhoud(venster, htmlMelding("info", "Niets te versturen",
+        "In de categorieën die je aanvinkte staat niets meer dat nagekeken moet worden."));
+      return;
+    }
+
+    zetModalInhoud(venster, htmlBezig("Even geduld, je werk wordt verzonden…"));
+
     stuur(metAanmelding({ actie: "indienen", items: items }))
       .then(function (r) {
-        var melding = venster.querySelector("#indien-melding");
         if (r && r.ok) {
-          melding.textContent = "Verzonden — " + r.aantal + " verrichting(en). Je leerkracht kijkt na.";
-          melding.className = "indien-melding ok";
-          setTimeout(sluit, 1800);
+          zetModalInhoud(venster, htmlMelding("ok", "Ingediend",
+            "Je stuurde " + r.aantal + " verrichting(en) door. Je vakexpert kijkt ze na; " +
+            "klik later op <em>Feedback ophalen</em> om te zien wat ze ervan vond."));
+          status("Ingediend om " + datumTekst(new Date().toISOString()), "ok");
           bewaarNaarServer(true);
         } else {
-          melding.textContent = "Niet gelukt: " + foutTekst(r);
-          melding.className = "indien-melding fout";
-          venster.querySelector("#btn-indienen-bevestig").disabled = false;
+          zetModalInhoud(venster, htmlMelding("fout", "Niet gelukt", esc(foutTekst(r))));
         }
       })
       .catch(function (err) {
-        var melding = venster.querySelector("#indien-melding");
-        melding.textContent = "Geen verbinding met de server. Probeer het straks opnieuw.";
-        melding.className = "indien-melding fout";
-        venster.querySelector("#btn-indienen-bevestig").disabled = false;
         console.error(err);
+        zetModalInhoud(venster, htmlMelding("fout", "Geen verbinding",
+          "Je werk is niet verzonden. Controleer je internetverbinding en probeer het straks opnieuw. " +
+          "Je werk zelf is niet verloren: het staat bewaard."));
       });
   }
 
   function maakItem(ref, categorie) {
     if (ref === "RESULTAATVERWERKING") return maakResultaatItem(categorie);
     if (ref === "EINDBALANS") return maakBalansItem(categorie);
+    if (ref === "RELATIES") return maakRelatieItem(categorie);
 
     var def = OPDRACHTEN.filter(function (o) { return o.ref === ref; })[0] || {};
     var boeking = APP.getState().boekingen[ref];
@@ -457,6 +493,28 @@
       if (r.relatie) stuk += " [" + r.relatie + "]";
       return stuk;
     }).join("  ·  ");
+  }
+
+  // De twee open vragen over de openstaande facturen. Ze gaan samen door als
+  // één verrichting: opsplitsen zou het nakijken alleen maar omslachtiger
+  // maken.
+  function maakRelatieItem(categorie) {
+    var v = APP.getState().relatieVragen || {};
+    var stukken = [];
+    if (v.klanten) stukken.push("KLANTEN: " + v.klanten);
+    if (v.leveranciers) stukken.push("LEVERANCIERS: " + v.leveranciers);
+
+    return {
+      ref: "RELATIES",
+      categorie: categorie,
+      titel: "Klanten & leveranciers",
+      status: stukken.length === 2 ? "ingevuld" : (stukken.length ? "onafgewerkt" : "niet begonnen"),
+      boeking: stukken.join("  ·  "),
+      lijnen: [
+        { redenering: "Openstaande facturen van klanten", omschrijving: v.klanten || "" },
+        { redenering: "Openstaande facturen van leveranciers", omschrijving: v.leveranciers || "" },
+      ],
+    };
   }
 
   function maakResultaatItem(categorie) {
@@ -526,42 +584,88 @@
     feedback = {};
     try {
       var ruw = lees(feedbackKey());
-      if (ruw) feedback = JSON.parse(ruw) || {};
+      if (!ruw) return;
+      var bewaard = JSON.parse(ruw) || {};
+      // Vroeger stond er per verrichting één enkele beoordeling in plaats van
+      // een lijst met alle ronden. Oud bewaard werk mag daar niet op vastlopen.
+      Object.keys(bewaard).forEach(function (ref) {
+        feedback[ref] = Array.isArray(bewaard[ref]) ? bewaard[ref] : [bewaard[ref]];
+      });
     } catch (e) { feedback = {}; }
   }
 
   function haalFeedback(stil) {
     if (!actief() || !aanmelding) {
-      if (!stil) status("Meld je eerst aan met je naam en je code.", "fout");
+      if (!stil) toonMelding("Feedback ophalen", "Meld je eerst bovenaan aan met je naam en je code.");
       return;
     }
-    if (!stil) status("Feedback ophalen…");
+
+    var venster = null;
+    if (!stil) {
+      venster = maakModal("Feedback ophalen", htmlBezig("Even geduld, je feedback wordt opgehaald…"));
+    }
+    status("Feedback ophalen…");
 
     haal(metAanmeldParams({ actie: "feedback" }))
       .then(function (r) {
-        if (!r || !r.ok) { if (!stil) status(foutTekst(r), "fout"); return; }
+        if (!r || !r.ok) {
+          status(foutTekst(r), "fout");
+          if (venster) zetModalInhoud(venster.el, htmlMelding("fout", "Niet gelukt", esc(foutTekst(r))));
+          return;
+        }
+
+        var vorigAantal = tel(feedback);
         var nieuw = {};
-        (r.feedback || []).forEach(function (f) { nieuw[f.ref] = f; });
-        var aantal = Object.keys(nieuw).length;
-        var erbij = aantal - Object.keys(feedback).length;
+        (r.feedback || []).forEach(function (f) {
+          if (!nieuw[f.ref]) nieuw[f.ref] = [];
+          nieuw[f.ref].push(f);   // de server stuurt ze al nieuwste eerst
+        });
         feedback = nieuw;
         schrijf(feedbackKey(), JSON.stringify(feedback));
         APP.renderAlles();
 
-        if (stil && !aantal) return;
-        if (!aantal) status("Nog geen feedback klaar.", "ok");
-        else status(aantal + " verrichting(en) met feedback" + (erbij > 0 ? " — " + erbij + " nieuw" : "") + ".", "ok");
+        var aantal = Object.keys(nieuw).length;
+        var erbij = tel(nieuw) - vorigAantal;
+        status(aantal ? aantal + " verrichting(en) met feedback." : "Nog geen feedback klaar.", "ok");
+
+        if (!venster) return;
+        if (!aantal) {
+          zetModalInhoud(venster.el, htmlMelding("info", "Nog niets klaar",
+            "Je vakexpert heeft je werk nog niet nagekeken, of de feedback staat nog niet vrij. Probeer het later opnieuw."));
+        } else {
+          zetModalInhoud(venster.el, htmlMelding("ok", "Feedback opgehaald",
+            "Er staat feedback bij " + aantal + " verrichting(en)" +
+            (erbij > 0 ? ", waarvan " + erbij + " nieuw" : "") +
+            ". Je vindt ze bovenaan elke verrichting; in het menu links zie je aan de kleur hoe het ervoor staat."));
+        }
       })
       .catch(function (err) {
-        if (!stil) status("Geen verbinding met de server.", "fout");
         console.error(err);
+        status("Geen verbinding met de server.", "fout");
+        if (venster) zetModalInhoud(venster.el, htmlMelding("fout", "Geen verbinding",
+          "De feedback kon niet opgehaald worden. Controleer je internetverbinding en probeer het straks opnieuw."));
       });
   }
 
+  // Hoeveel feedbackronden er in totaal zijn (niet: hoeveel verrichtingen).
+  function tel(perRef) {
+    return Object.keys(perRef).reduce(function (n, ref) { return n + perRef[ref].length; }, 0);
+  }
+
   // app.js gebruikt dit om de feedback bij de juiste verrichting te tonen.
+  // Altijd een lijst, nieuwste eerst.
   window.feedbackVoor = function (ref) {
-    return feedback[ref] || null;
+    return feedback[ref] || [];
   };
+
+  function laatsteBeoordeling(ref) {
+    var lijst = feedback[ref];
+    return lijst && lijst.length ? String(lijst[0].beoordeling || "") : "";
+  }
+
+  function isInOrde(ref) {
+    return laatsteBeoordeling(ref) === IN_ORDE;
+  }
 
   /* ======================================================================
      Een venster in de stijl van de app
@@ -583,7 +687,40 @@
     overlay.querySelector('[data-role="sluit"]').addEventListener("click", sluit);
     overlay.addEventListener("click", function (e) { if (e.target === overlay) sluit(); });
     if (naOpbouw) naOpbouw(overlay, sluit);
-    return sluit;
+    return { el: overlay, sluit: sluit };
+  }
+
+  function zetModalInhoud(overlay, html) {
+    var vak = overlay.querySelector(".koppeling-modal-inhoud");
+    if (!vak) return;
+    vak.innerHTML = html;
+    var knop = vak.querySelector('[data-role="modal-sluit"]');
+    if (knop) {
+      knop.addEventListener("click", function () {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      });
+      knop.focus();
+    }
+  }
+
+  function htmlBezig(tekst) {
+    return '<div class="modal-body modal-bezig"><span class="spinner" aria-hidden="true"></span>' +
+      "<p>" + esc(tekst) + "</p>" +
+      '<p class="keuze-nota">Dat duurt meestal een paar seconden.</p></div>';
+  }
+
+  function htmlMelding(soort, titel, tekstHtml) {
+    var teken = soort === "ok" ? "✓" : (soort === "fout" ? "!" : "i");
+    return '<div class="modal-body modal-melding melding-' + soort + '">' +
+      '<div class="melding-teken" aria-hidden="true">' + teken + "</div>" +
+      "<h3>" + esc(titel) + "</h3><p>" + tekstHtml + "</p></div>" +
+      '<div class="modal-voet"><button type="button" class="btn-primair" data-role="modal-sluit">Sluiten</button></div>';
+  }
+
+  function toonMelding(titel, tekstHtml) {
+    var v = maakModal(titel, "");
+    zetModalInhoud(v.el, htmlMelding("info", titel, tekstHtml));
+    return v;
   }
 
   /* ======================================================================
@@ -595,26 +732,6 @@
   window.KOPPELING_HOOKS = {
     naWijziging: function () { teBewaren = true; },
 
-    // "Alles wissen" moet ook de kopie op de server en de opgehaalde
-    // feedback opruimen. Doen we dat niet, dan staat alles er weer zodra de
-    // leerling zich opnieuw aanmeldt — precies wat ze net wilde vermijden.
-    // Het oude werk blijft in de map "versies" staan, dus terugzetten kan.
-    naWissen: function (naam) {
-      feedback = {};
-      try {
-        localStorage.removeItem(FEEDBACK_KEY_PREFIX + normaliseerNaam(naam || (aanmelding && aanmelding.naam)));
-      } catch (e) { /* niets aan te doen */ }
-      if (!actief() || !aanmelding) return;
-      teBewaren = false;
-      stuur(metAanmelding({ actie: "bewaren", state: APP.getState() }))
-        .then(function (r) {
-          status(r && r.ok ? "Alles gewist, ook op de server." : "Gewist in deze browser; op de server lukte het niet.",
-            r && r.ok ? "ok" : "fout");
-        })
-        .catch(function () {
-          status("Gewist in deze browser. De server was niet bereikbaar.", "fout");
-        });
-    },
   };
 
   function init() {

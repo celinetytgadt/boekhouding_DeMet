@@ -28,16 +28,12 @@
     <button id="btn-aanmelden" type="button" hidden title="Aanmelden en je werk ophalen">Aanmelden</button>
     <span id="opslaan-status"></span>
     <span id="koppeling-status" class="koppeling-status"></span>
-    <!-- Testversie: de handleiding voor de leerkrachten die meetesten. De
+    <!-- Testversie: de handleiding voor de collega's die meetesten. De
          bestandsnaam moet exact overeenkomen — GitHub Pages is
          hoofdlettergevoelig. -->
-    <a id="link-handleiding" class="topbar-link" href="Handleiding-testleerkrachten.pdf" target="_blank" rel="noopener" title="Handleiding voor testleerkrachten (pdf)">Handleiding</a>
-    <button id="btn-indienen" type="button" class="btn-primair-topbar" title="Stuur je werk door naar je leerkracht">Indienen</button>
+    <a id="link-handleiding" class="topbar-link" href="Handleiding-testleerkrachten.pdf" target="_blank" rel="noopener" title="Handleiding voor de collega's die meetesten (pdf)">Handleiding</a>
+    <button id="btn-indienen" type="button" class="btn-primair-topbar" title="Stuur je werk door naar je vakexpert">Indienen</button>
     <button id="btn-feedback" type="button" title="Kijk of er feedback klaarstaat">Feedback ophalen</button>
-    <button id="btn-export" type="button" title="Bewaar je werk als bestand">Exporteren</button>
-    <button id="btn-import" type="button" title="Laad een eerder bewaard bestand">Importeren</button>
-    <button id="btn-wissen" type="button" class="btn-gevaar" title="Alles wissen en opnieuw beginnen">Alles wissen</button>
-    <input type="file" id="import-file" accept="application/json" style="display:none">
   </div>
   <button id="btn-nav-toggle" type="button" aria-label="Menu">☰</button>
   <button id="btn-tpanel-toggle" type="button" aria-label="T-rekeningen">T</button>
@@ -134,25 +130,6 @@
       <button type="button" id="info-modal-sluiten" title="Sluiten">✕</button>
     </div>
     <div id="info-modal-inhoud" class="info-modal-inhoud"></div>
-  </div>
-</div>
-
-<div id="wissen-modal-overlay" class="mar-modal-overlay" hidden>
-  <div class="mar-modal wissen-modal">
-    <div class="mar-modal-header">
-      <strong>Alles wissen</strong>
-      <button type="button" id="wissen-modal-sluiten" title="Sluiten">✕</button>
-    </div>
-    <div class="wissen-modal-inhoud">
-      <p><strong>Opgelet: dit kan je niet ongedaan maken.</strong> Al je boekingen, je controles en je eindbalans verdwijnen.</p>
-      <p>Wil je toch eerst een kopie bewaren? Sluit dit venster en klik op <em>Exporteren</em>.</p>
-      <p>Typ hieronder het woord <strong>wissen</strong> om te bevestigen.</p>
-      <input type="text" id="wissen-bevestig" placeholder="wissen" autocomplete="off">
-      <div class="wissen-modal-acties">
-        <button type="button" id="wissen-annuleer">Annuleren</button>
-        <button type="button" id="wissen-bevestig-knop" class="btn-gevaar-vol" disabled>Definitief wissen</button>
-      </div>
-    </div>
   </div>
 </div>
 

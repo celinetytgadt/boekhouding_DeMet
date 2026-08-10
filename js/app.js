@@ -127,6 +127,10 @@
         slotcontroleMelding: null,
       },
       eindbalans: {},
+      // De twee open vragen op het tabblad Klanten & leveranciers. De app
+      // controleert die niet: ze worden mee ingediend en door de vakexpert
+      // nagekeken.
+      relatieVragen: { klanten: "", leveranciers: "" },
       // Afpuntingen op het tabblad Klanten & leveranciers: de leerling
       // koppelt zelf een betaling of creditnota aan een factuur. Elke
       // koppeling is { van: "REF:rijnummer", naar: "REF:rijnummer" } —
@@ -139,7 +143,7 @@
   var laatstBewaardOm = null;
 
   // Vult ontbrekende onderdelen aan en zet oud werk om naar de huidige
-  // structuur. Zo blijft een export van vorige week gewoon werken.
+  // structuur. Zo blijft werk van vorige week gewoon werken.
   function normaliseerState(s, naam) {
     if (!s || typeof s !== "object") s = maakLegeState(naam);
     s.student = naam !== undefined ? naam : (s.student || "");
@@ -152,6 +156,9 @@
     });
     if (!s.resultaat) s.resultaat = maakLegeState("").resultaat;
     if (!s.resultaat.stap) s.resultaat.stap = maakLegeState("").resultaat.stap;
+    // De open vragen op het tabblad Klanten & leveranciers. Werk van vóór
+    // die vragen bestond, mag daar niet op stuklopen.
+    if (!s.relatieVragen) s.relatieVragen = { klanten: "", leveranciers: "" };
 
     // De referentie van de beginbalans heette vroeger BEGINBALANS en is nu
     // BB (te breed in de T-rekeningen). Werk van vóór die wijziging mag
@@ -248,6 +255,11 @@
     relatieKeuze: { klanten: "", leveranciers: "" },
     gekozenKaarten: [],        // eindbalans: aangetikte rubrieken
     afpuntSelectie: null,      // klanten & leveranciers: aangetikte betaling/creditnota
+    // Welke hulpdocumenten de leerling zelf open- of dichtklapte. De pagina
+    // wordt bij elke toetsaanslag opnieuw opgebouwd; zonder dit zou een
+    // ingeklapte tabel telkens terugspringen.
+    openDocumenten: {},
+    openFeedbackHistoriek: {}, // per verrichting: staat de oudere feedback open?
   };
   var docImgTeller = 0;
 
@@ -531,7 +543,9 @@
     '<path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4a1 1 0 1 1 0 2h-1v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7H4a1 1 0 0 1 0-2h4V4a1 1 0 0 1 1-1zm1 2h4V5h-4zM7 7v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7zm3 3a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1z"/>' +
     "</svg>";
 
-  function htmlRedeneerschemaRij(ref, row, idx, geboekt) {
+  // relatieBewerkbaar: de boeking is geboekt én in orde bevonden, maar de
+  // naam van de klant of leverancier mag nog aangepast worden.
+  function htmlRedeneerschemaRij(ref, row, idx, geboekt, relatieBewerkbaar) {
     var mar = marBij(row.rekening);
     var omschrijving = mar ? mar.naam : (row.rekening ? "— dit nummer staat niet in het MAR —" : "");
     var relatieSoort = relatieVeldVoorRekening(row.rekening);
@@ -548,11 +562,11 @@
         'placeholder="' + (relatieSoort === "klanten" ? "naam klant…" : "naam leverancier…") + '" ' +
         'title="Optioneel: bij wie hoort dit? Zo kan je later zien welke facturen nog openstaan." ' +
         'data-focus-id="' + focusId(ref, idx, "relatie") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="relatie" ' +
-        'value="' + escapeAttr(row.relatie) + '" ' + (geboekt ? "disabled" : "") + ">";
+        'value="' + escapeAttr(row.relatie) + '" ' + (geboekt && !relatieBewerkbaar ? "disabled" : "") + ">";
       // Bijna dezelfde naam als een eerdere boeking (enkel hoofdletters,
       // spaties of leestekens verschillen)? Waarschuw meteen, anders worden
       // het twee aparte relaties in het overzicht.
-      if (!geboekt && row.relatie) {
+      if ((!geboekt || relatieBewerkbaar) && row.relatie) {
         var lijktOp = lijktOpAndereNaam(relatieSoort, row.relatie);
         if (lijktOp) {
           relatieHtml += '<div class="relatie-waarschuwing">Lijkt op „' + escapeAttr(lijktOp) + "” — zelfde " +
@@ -603,6 +617,7 @@
     var totalen = berekenTotalen(boeking.rows);
     var gelijk = Math.abs(totalen.totaalDebet - totalen.totaalCredit) < 0.005 && totalen.totaalDebet > 0;
     var klaar = boekingKlaarOmTeBoeken(boeking.rows);
+    var inOrde = isInOrde(ref);
 
     var html = '<table class="redeneerschema">' +
       "<colgroup>" +
@@ -616,11 +631,11 @@
       '<th title="Denkhulp — niet verplicht">Stijgt/daalt</th>' +
       "<th>Rekeningnr.</th><th>Omschrijving</th><th>D/C</th><th></th>" +
       "</tr></thead><tbody>";
-    boeking.rows.forEach(function (row, idx) { html += htmlRedeneerschemaRij(ref, row, idx, geboekt); });
+    boeking.rows.forEach(function (row, idx) { html += htmlRedeneerschemaRij(ref, row, idx, geboekt, inOrde); });
     html += "</tbody></table>";
 
     html += '<div class="redeneerschema-acties">';
-    html += "<div>" + (geboekt ? "" : '<button type="button" class="btn-rij-toevoegen" data-scope="' + escapeAttr(ref) + '" data-role="rij-toevoegen">+ rij toevoegen</button>') + "</div>";
+    html += "<div>" + (geboekt || inOrde ? "" : '<button type="button" class="btn-rij-toevoegen" data-scope="' + escapeAttr(ref) + '" data-role="rij-toevoegen">+ rij toevoegen</button>') + "</div>";
     html += '<div class="totalen">' +
       "<span>Totaal debet: <strong>" + formatBedrag(totalen.totaalDebet) + "</strong></span>" +
       "<span>Totaal credit: <strong>" + formatBedrag(totalen.totaalCredit) + "</strong></span>" +
@@ -629,7 +644,17 @@
     html += "</div>";
 
     html += '<div class="boeken-blok">';
-    if (geboekt) {
+    if (inOrde) {
+      // Goedgekeurd werk gaat op slot: het hoeft niet meer gewijzigd te
+      // worden en het wordt ook niet meer meegestuurd bij een volgende
+      // inzending, zodat de vakexpert niet telkens hetzelfde hernakijkt.
+      // De naam van de klant of leverancier blijft wel aanpasbaar.
+      html += '<div class="boeking-vergrendeld">' +
+        '<span class="status-in-orde">In orde ✓</span>' +
+        "<p>Deze boeking is nagekeken en in orde bevonden. Ze staat op slot en gaat niet meer mee als je opnieuw indient.</p>" +
+        "<p class=\"vergrendeld-nota\">Merk je op het tabblad <em>Klanten &amp; leveranciers</em> dat een naam verkeerd geschreven staat? Die mag je hierboven nog verbeteren.</p>" +
+        "</div>";
+    } else if (geboekt) {
       html += '<span class="status-geboekt">Geboekt ✓</span> ';
       html += '<button type="button" class="btn-heropenen" data-scope="' + escapeAttr(ref) + '" data-role="heropenen">Heropenen om te wijzigen</button>';
     } else {
@@ -663,30 +688,75 @@
      7. Pagina's
      ======================================================================== */
 
-  /* ---------- Feedback van de leerkracht ----------
+  /* ---------- Feedback van de vakexpert ----------
      Komt uit koppeling.js, die ze uit de Google Sheet haalt. Ze verschijnt
-     pas als de leerkracht ze in de Sheet vrijgegeven heeft. Zonder
-     koppeling bestaat window.feedbackVoor niet en blijft alles zoals het
-     was. */
+     pas als de vakexpert ze in de Sheet vrijgegeven heeft. Zonder koppeling
+     bestaat window.feedbackVoor niet en blijft alles zoals het was.
 
-  function htmlFeedbackBlok(ref) {
-    if (typeof window.feedbackVoor !== "function") return "";
-    var f = window.feedbackVoor(ref);
-    if (!f) return "";
+     window.feedbackVoor(ref) geeft een lijst terug, nieuwste eerst: alle
+     ronden die al vrijgegeven zijn. De oudste rondes blijven leesbaar, zodat
+     de leerling ziet wat er al opgemerkt was. */
 
-    var soort = String(f.beoordeling || "").toLowerCase().replace(/[^a-z]+/g, "-").replace(/(^-|-$)/g, "");
-    var html = '<div class="feedback-blok feedback-' + (soort || "algemeen") + '">';
-    html += '<div class="feedback-kop"><strong>Feedback van je leerkracht</strong>';
+  var IN_ORDE = "In orde";
+
+  function feedbackLijst(ref) {
+    if (typeof window.feedbackVoor !== "function") return [];
+    var lijst = window.feedbackVoor(ref);
+    return Array.isArray(lijst) ? lijst : (lijst ? [lijst] : []);
+  }
+
+  function laatsteBeoordeling(ref) {
+    var lijst = feedbackLijst(ref);
+    return lijst.length ? String(lijst[0].beoordeling || "") : "";
+  }
+
+  // Een verrichting die in orde bevonden is, hoeft niet meer gewijzigd of
+  // opnieuw ingediend te worden. Enkel de naam van de klant of leverancier
+  // blijft aanpasbaar: die kijkt de vakexpert niet na, dat doet de leerling
+  // zelf op het tabblad Klanten & leveranciers.
+  function isInOrde(ref) {
+    return laatsteBeoordeling(ref) === IN_ORDE;
+  }
+
+  function beoordelingKlasse(beoordeling) {
+    return String(beoordeling || "").toLowerCase()
+      .replace(/[^a-z]+/g, "-").replace(/(^-|-$)/g, "") || "algemeen";
+  }
+
+  function htmlFeedbackRonde(f, oud) {
+    var html = '<div class="feedback-ronde' + (oud ? " oud" : "") + " feedback-" + beoordelingKlasse(f.beoordeling) + '">';
+    html += '<div class="feedback-kop">';
     if (f.beoordeling) html += '<span class="feedback-oordeel">' + escapeAttr(f.beoordeling) + "</span>";
+    if (f.ingediend) html += '<span class="feedback-datum">op je inzending van ' + escapeAttr(f.ingediend) + "</span>";
     html += "</div>";
     if (f.feedback) html += "<p>" + escapeAttr(f.feedback) + "</p>";
-    if (f.ingediend) html += '<p class="feedback-datum">Op je inzending van ' + escapeAttr(f.ingediend) + ".</p>";
+    html += "</div>";
+    return html;
+  }
+
+  function htmlFeedbackBlok(ref) {
+    var lijst = feedbackLijst(ref);
+    if (!lijst.length) return "";
+
+    var nieuwste = lijst[0];
+    var ouder = lijst.slice(1);
+    var open = !!uiState.openFeedbackHistoriek[ref];
+
+    var html = '<div class="feedback-blok feedback-' + beoordelingKlasse(nieuwste.beoordeling) + '">';
+    html += '<div class="feedback-titel"><strong>Feedback van je vakexpert</strong></div>';
+    html += htmlFeedbackRonde(nieuwste, false);
+
+    if (ouder.length) {
+      html += '<button type="button" class="feedback-historiek-knop" data-role="feedback-historiek" data-ref="' + escapeAttr(ref) + '">' +
+        (open ? "▾ " : "▸ ") + "Eerdere feedback (" + ouder.length + ")</button>";
+      if (open) html += '<div class="feedback-historiek">' + ouder.map(function (f) { return htmlFeedbackRonde(f, true); }).join("") + "</div>";
+    }
     html += "</div>";
     return html;
   }
 
   function heeftFeedback(ref) {
-    return typeof window.feedbackVoor === "function" && !!window.feedbackVoor(ref);
+    return feedbackLijst(ref).length > 0;
   }
 
   function htmlBannerNaamOntbreekt() {
@@ -759,23 +829,39 @@
     html += '<h1 class="pagina-titel">' + escapeAttr(def.titel) + "</h1>";
     html += '<p class="pagina-subtitel">' + escapeAttr(def.categorie) + "</p>";
     html += htmlFeedbackBlok(ref);
-    if (!def.geenDocument) {
-      html += '<div class="paneel"><h2>Verantwoordingsstuk</h2>' + htmlDocumentAfbeelding(def.doc, false) + "</div>";
-    }
-    if (def.hulpdoc) {
-      html += '<details class="paneel" open><summary class="hulpdoc-titel">' +
-        escapeAttr(def.hulpdocTitel || "Hulpdocument") +
-        "</summary>" + htmlDocumentAfbeelding(def.hulpdoc, false) + "</details>";
-    }
+
     if (def.instructie) {
       html += '<div class="paneel" style="border-color:var(--kleur-primair);background:#e9eaf7;"><h2>Uitleg</h2><p>' + escapeAttr(def.instructie) + "</p></div>";
     }
+
+    // Het redeneerschema staat boven het verantwoordingsstuk: dat is waar de
+    // leerling aan het werk is. De documenten staan eronder, zodat ze niet
+    // elke keer voorbij een grote afbeelding moet scrollen.
     html += '<div class="paneel"><h2>Redeneerschema ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>";
     // Een korte tip staat gewoon boven het schema, niet in een popup: zo
     // lezen ze ze ook echt (zie het veld "tip" in data-opdrachten.js).
     if (def.tip) html += '<p class="opdracht-tip">' + escapeAttr(def.tip) + "</p>";
     html += htmlRedeneerschema(ref) + "</div>";
+
+    if (!def.geenDocument) {
+      html += htmlUitklapbaarDocument("doc-" + ref, "Verantwoordingsstuk", def.doc, true);
+    }
+    if (def.hulpdoc) {
+      html += htmlUitklapbaarDocument("hulp-" + ref, def.hulpdocTitel || "Hulpdocument", def.hulpdoc, true);
+    }
     return html;
+  }
+
+  /* Een document in een inklapbaar paneel. Of het open of dicht staat, wordt
+     onthouden in uiState: de pagina wordt bij elke toetsaanslag opnieuw
+     opgebouwd, en zonder dat geheugen zou een ingeklapte tabel telkens
+     terugspringen zodra de leerling iets intikt. */
+  function htmlUitklapbaarDocument(sleutel, titel, doc, standaardOpen) {
+    var bewaard = uiState.openDocumenten[sleutel];
+    var open = bewaard === undefined ? !!standaardOpen : bewaard;
+    return '<details class="paneel" data-doc-sleutel="' + escapeAttr(sleutel) + '"' + (open ? " open" : "") + ">" +
+      '<summary class="hulpdoc-titel">' + escapeAttr(titel) + "</summary>" +
+      htmlDocumentAfbeelding(doc, false) + "</details>";
   }
 
   /* ---------- Controles ----------
@@ -1158,8 +1244,36 @@
     var html = '<h1 class="pagina-titel">Klanten &amp; leveranciers ' + htmlInfoKnop("klantenLeveranciers", "Hoe lees je dit?") + "</h1>";
     html += '<p class="pagina-subtitel">Wie moet er nog betalen, en wat staat er bij jou nog open?</p>';
     html += '<div class="paneel paneel-tip"><p>Dit overzicht is opgebouwd uit de namen die je zelf bij je boekingen op 400000 en 440000 invulde. Ontbreekt er een naam, ga dan terug naar die boeking en vul ze aan.</p></div>';
+    html += htmlFeedbackBlok("RELATIES");
     html += htmlRelatieBlok("klanten");
     html += htmlRelatieBlok("leveranciers");
+    html += htmlRelatieVragen();
+    return html;
+  }
+
+  /* De twee open vragen die samen met dit tabblad ingediend worden. De app
+     controleert er niets aan: het overzicht hierboven is een hulpmiddel, het
+     antwoord is wat de vakexpert nakijkt. */
+  function htmlRelatieVragen() {
+    var inOrde = isInOrde("RELATIES");
+    var html = '<div class="paneel relatie-vragen">';
+    html += "<h2>Wat staat er nog open? " + htmlInfoKnop("klantenLeveranciers", "Hoe lees je dit?") + "</h2>";
+    html += "<p>Beantwoord de twee vragen hieronder. Ze worden samen ingediend als <em>Klanten &amp; leveranciers</em>.</p>";
+
+    [
+      { veld: "klanten", vraag: "Welke facturen van welke klanten zijn nog openstaand?" },
+      { veld: "leveranciers", vraag: "Welke facturen van welke leveranciers zijn nog openstaand?" },
+    ].forEach(function (v) {
+      html += '<label class="relatie-vraag">' +
+        "<span>" + escapeAttr(v.vraag) + "</span>" +
+        '<textarea rows="4" data-role="relatie-vraag" data-veld="' + v.veld + '" ' +
+        'data-focus-id="relatievraag-' + v.veld + '" ' +
+        'placeholder="bv. Deleu bv — factuur VK03 van 1.210,00"' + (inOrde ? " disabled" : "") + ">" +
+        escapeAttr(state.relatieVragen[v.veld] || "") + "</textarea></label>";
+    });
+
+    if (inOrde) html += '<p class="vergrendeld-nota">Deze vraag is nagekeken en in orde bevonden; ze staat op slot.</p>';
+    html += "</div>";
     return html;
   }
 
@@ -1764,6 +1878,19 @@
     if (balk) balk.classList.toggle("voortgang-af", v.klaar === v.totaal && v.totaal > 0);
   }
 
+  /* Het bolletje rechts van een verrichting in het menu. Zolang er geen
+     feedback is, betekent het gewoon "geboekt of niet". Zodra de vakexpert
+     iets beoordeeld heeft, neemt die kleur het over — anders zou een
+     verrichting groen blijven staan terwijl ze niet in orde is. */
+  function htmlNavBolletje(ref, geboekt) {
+    var beoordeling = laatsteBeoordeling(ref);
+    if (beoordeling) {
+      return '<span class="status-bolletje oordeel-' + beoordelingKlasse(beoordeling) + '" title="' +
+        escapeAttr(beoordeling) + '"></span>';
+    }
+    return '<span class="status-bolletje' + (geboekt ? " geboekt" : "") + '"></span>';
+  }
+
   function renderNav() {
     var el = document.getElementById("nav-links");
     if (!el) return;
@@ -1781,16 +1908,22 @@
         var actief = uiState.huidigePagina.type === "opdracht" && uiState.huidigePagina.ref === o.ref;
         html += '<div class="nav-link' + (actief ? " actief" : "") + '" data-page-type="opdracht" data-page-ref="' + escapeAttr(o.ref) + '">' +
           "<span>" + escapeAttr(o.navLabel || o.ref) + "</span>" +
-          (heeftFeedback(o.ref) ? '<span class="nav-feedback" title="Je leerkracht gaf hier feedback">✎</span>' : "") +
-          '<span class="status-bolletje' + (geboekt ? " geboekt" : "") + '"></span></div>';
+          htmlNavBolletje(o.ref, geboekt) + "</div>";
       });
     });
 
     html += '<div class="nav-categorie">Afsluiten</div>';
-    html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "relaties" ? " actief" : "") + '" data-page-type="relaties">Klanten &amp; leveranciers</div>';
-    html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "controles" ? " actief" : "") + '" data-page-type="controles">Controles</div>';
-    html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "resultaat" ? " actief" : "") + '" data-page-type="resultaat">Resultaatverwerking</div>';
-    html += '<div class="nav-top-item' + (uiState.huidigePagina.type === "eindbalans" ? " actief" : "") + '" data-page-type="eindbalans">Eindbalans</div>';
+    var slot = [
+      { type: "relaties", label: "Klanten &amp; leveranciers", ref: "RELATIES" },
+      { type: "controles", label: "Controles", ref: null },
+      { type: "resultaat", label: "Resultaatverwerking", ref: "RESULTAATVERWERKING" },
+      { type: "eindbalans", label: "Eindbalans", ref: "EINDBALANS" },
+    ];
+    slot.forEach(function (s) {
+      html += '<div class="nav-top-item' + (uiState.huidigePagina.type === s.type ? " actief" : "") + '" data-page-type="' + s.type + '">' +
+        "<span>" + s.label + "</span>" +
+        (s.ref && laatsteBeoordeling(s.ref) ? htmlNavBolletje(s.ref, true) : "") + "</div>";
+    });
 
     el.innerHTML = html;
   }
@@ -1896,8 +2029,25 @@
         state.resultaat.stap[t.dataset.veld] = t.value;
         saveState();
         renderAlles();
+        return;
+      }
+      // De open vragen bij klanten & leveranciers. Bewust zonder renderAlles:
+      // er verandert niets aan het scherm, en opnieuw opbouwen zou de cursor
+      // in een lange tekst doen verspringen.
+      if (t.dataset && t.dataset.role === "relatie-vraag") {
+        state.relatieVragen[t.dataset.veld] = t.value;
+        saveState();
       }
     });
+
+    // <details> stuurt geen bubbelend event, vandaar de derde parameter.
+    // Zo onthouden we of de leerling een document open- of dichtklapte.
+    paginaEl.addEventListener("toggle", function (e) {
+      var d = e.target;
+      if (d && d.tagName === "DETAILS" && d.dataset && d.dataset.docSleutel) {
+        uiState.openDocumenten[d.dataset.docSleutel] = d.open;
+      }
+    }, true);
 
     paginaEl.addEventListener("change", function (e) {
       var t = e.target;
@@ -1960,7 +2110,11 @@
       if (!knop) return;
       var role = knop.dataset.role;
 
-      if (role === "rij-toevoegen") {
+      if (role === "feedback-historiek") {
+        var refF = knop.dataset.ref;
+        uiState.openFeedbackHistoriek[refF] = !uiState.openFeedbackHistoriek[refF];
+        renderAlles();
+      } else if (role === "rij-toevoegen") {
         boekingVoor(knop.dataset.scope).rows.push(maakLegeRij());
         saveState(); renderAlles();
       } else if (role === "verwijder-rij") {
@@ -2125,7 +2279,6 @@
       if (e.key !== "Escape") return;
       if (marModal.open) closeMarModal();
       sluitInfoModal();
-      sluitWissenModal();
     });
 
     document.getElementById("nav-links").addEventListener("click", function (e) {
@@ -2214,63 +2367,6 @@
       renderAlles();
     });
 
-    // Export / import
-    document.getElementById("btn-export").addEventListener("click", function () {
-      var data = JSON.stringify(state, null, 2);
-      var blob = new Blob([data], { type: "application/json" });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      var datum = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = "boekhoudapp_" + slug(state.student) + "_" + datum + ".json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-    document.getElementById("btn-import").addEventListener("click", function () {
-      document.getElementById("import-file").click();
-    });
-    document.getElementById("import-file").addEventListener("change", function (e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function () {
-        try {
-          var data = JSON.parse(reader.result);
-          if (!data || typeof data !== "object" || !("boekingen" in data)) {
-            alert("Dit lijkt geen geldig bewaarbestand van deze app te zijn.");
-            return;
-          }
-          state = normaliseerState(data, data.student || "");
-          document.getElementById("leerling-naam-input").value = state.student || "";
-          saveState();
-          renderAlles();
-          alert("Bestand geladen.");
-        } catch (err) {
-          alert("Kon dit bestand niet lezen: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = "";
-    });
-
-    // Alles wissen — pas na het intikken van het woord "wissen"
-    document.getElementById("btn-wissen").addEventListener("click", openWissenModal);
-    document.getElementById("wissen-modal-sluiten").addEventListener("click", sluitWissenModal);
-    document.getElementById("wissen-annuleer").addEventListener("click", sluitWissenModal);
-    document.getElementById("wissen-modal-overlay").addEventListener("click", function (e) {
-      if (e.target.id === "wissen-modal-overlay") sluitWissenModal();
-    });
-    document.getElementById("wissen-bevestig").addEventListener("input", function (e) {
-      var goed = e.target.value.trim().toLowerCase() === "wissen";
-      document.getElementById("wissen-bevestig-knop").disabled = !goed;
-    });
-    document.getElementById("wissen-bevestig-knop").addEventListener("click", function () {
-      if (document.getElementById("wissen-bevestig").value.trim().toLowerCase() !== "wissen") return;
-      wisAlles();
-    });
-
     // Mobiel: menu / T-panel toggles
     document.getElementById("btn-nav-toggle").addEventListener("click", function () {
       document.getElementById("layout").classList.toggle("sidebar-open");
@@ -2278,54 +2374,6 @@
     document.getElementById("btn-tpanel-toggle").addEventListener("click", function () {
       document.getElementById("layout").classList.toggle("tpanel-open");
     });
-  }
-
-  function openWissenModal() {
-    var veld = document.getElementById("wissen-bevestig");
-    veld.value = "";
-    document.getElementById("wissen-bevestig-knop").disabled = true;
-    document.getElementById("wissen-modal-overlay").hidden = false;
-    setTimeout(function () { veld.focus(); }, 0);
-  }
-
-  function sluitWissenModal() {
-    var overlay = document.getElementById("wissen-modal-overlay");
-    if (overlay) overlay.hidden = true;
-  }
-
-  function wisAlles() {
-    // Niet enkel de naam waaronder nu gewerkt wordt, maar ook de naam die
-    // bovenaan ingevuld staat. Anders wist de knop niets als iemand eerst
-    // haar naam uit het veld haalt, en komt het werk gewoon terug zodra ze
-    // die naam opnieuw kiest.
-    var naam = state.student || naamUitVeld();
-    try {
-      if (naam) localStorage.removeItem(storageKeyVoor(naam));
-    } catch (e) { console.error(e); }
-    state = maakLegeState(naam);
-    uiState.huidigePagina = { type: "start" };
-    uiState.gekozenKaarten = [];
-    uiState.relatieKeuze = { klanten: "", leveranciers: "" };
-    uiState.afpuntSelectie = null;
-    laatstBewaardOm = null;
-    if (naam) saveState();
-    // Ook de kopie op de server en de opgehaalde feedback moeten weg. Anders
-    // staat alles er weer zodra de leerling zich opnieuw aanmeldt.
-    if (window.KOPPELING_HOOKS && window.KOPPELING_HOOKS.naWissen) {
-      window.KOPPELING_HOOKS.naWissen(naam);
-    }
-    sluitWissenModal();
-    renderAlles();
-    window.scrollTo(0, 0);
-  }
-
-  // De naam zoals ze bovenaan ingevuld staat: uit de keuzelijst als er een
-  // klaslijst is, anders uit het vrije tekstveld.
-  function naamUitVeld() {
-    var select = document.getElementById("leerling-select");
-    if (select && !select.hidden && select.value) return select.value.trim();
-    var veld = document.getElementById("leerling-naam-input");
-    return veld ? veld.value.trim() : "";
   }
 
   /* ========================================================================

@@ -18,7 +18,12 @@ js/data-relaties.js       lijst klanten/leveranciers voor 400000/440000 — per 
 js/data-controles.js      controlevragen, laatste afschrift, afwijkende saldokanten
 js/data-balans.js         de vakken van de eindbalans en de resultatenrekening
 js/data-info.js           de teksten achter de i-icoontjes
+js/config-koppeling.js    web-app-URL en sleutelwoord van de Google Sheet
+js/data-klas.js           de namen in de keuzelijst (géén codes!)
 js/app.js                 alle logica — hoeft normaal niet aangepast te worden
+js/koppeling.js           alles wat met de Google Sheet praat
+apps-script/Code.gs       de serverkant, hoort in de Apps Script-editor van de Sheet
+test/                     automatische test van de koppeling (Node + jsdom)
 documenten/                afbeeldingen van de verantwoordingsstukken (zie documenten/README.md)
 ```
 
@@ -86,17 +91,26 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 - **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
   opdrachtenbundel van dit jaar vastligt (mag ook leeg blijven: de app
   onthoudt de namen die leerlingen zelf intikken).
-- **Nakijken door de leerkracht via Google Sheets (§10 van de
+- **Nakijken door de vakexpert via Google Sheets (§10 van de
   specificatie)** — gebouwd, zie `HANDLEIDING-koppeling.md`. In het kort:
-  een Apps Script-web-app die onder het account van de leerkracht draait.
+  een Apps Script-web-app die onder het account van de vakexpert draait.
   Leerlingen melden zich aan met hun naam uit `js/data-klas.js` en een
   persoonlijke code die enkel in de Sheet staat; hun werk gaat op de
-  achtergrond naar een map in de Drive van de leerkracht, zodat ze op
+  achtergrond naar een map in de Drive van de vakexpert, zodat ze op
   eender welke computer verder kunnen. Ze kiezen zelf per categorie wat ze
-  indienen, en zien de feedback pas als de leerkracht ze vrijgeeft.
+  indienen, en zien de feedback pas als de vakexpert ze vrijgeeft.
   Zolang `webAppUrl` in `js/config-koppeling.js` leeg blijft, werkt de app
-  volledig op zichzelf zoals voordien (autosave in de browser +
-  export/import).
+  volledig op zichzelf zoals voordien (autosave in de browser).
+
+  De vakexpert beoordeelt met *In orde*, *Te remediëren* of *Niet afgerond*.
+  Die kleur komt terug bij de verrichting én in het menu links. Wat *in orde*
+  is, gaat op slot en wordt niet meer meegestuurd bij een volgende inzending —
+  enkel het relatieveld blijft aanpasbaar, want dat kijkt de vakexpert niet na.
+  Eerdere feedbackronden blijven inklapbaar zichtbaar.
+
+- **Exporteren, importeren en Alles wissen** bestaan niet meer: overbodig nu
+  alles centraal bewaard wordt. Moet een leerling opnieuw beginnen, dan
+  verwijdert de vakexpert haar `werk_<naam>.json` uit de Drive-map.
 - **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
   klant of leverancier zelf in bij de boeking. Omdat de namen handmatig
   ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld
@@ -134,18 +148,22 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   zelfcontrole op het tabblad Controles. Wordt er méér betaald of
   gecrediteerd dan er gefactureerd is, dan zegt de app dat expliciet onder
   de tabel.
+- **Volgorde op een opdrachtpagina**: feedback, dan het redeneerschema, dan
+  het verantwoordingsstuk en het hulpdocument in inklapbare panelen. Of zo'n
+  paneel open of dicht staat, wordt onthouden in `uiState.openDocumenten`,
+  zodat het niet terugspringt bij elke toetsaanslag.
 - **Wat is verplicht in het redeneerschema?** Enkel het bedrag, het
   rekeningnummer en debet of credit. De kolommen *Redenering*, *A/P/K/O* en
   *Stijgt/daalt* staan er als denkhulp: de leerling mag ze invullen, maar de
   app controleert ze niet en de knop *Boeken* wacht er niet op. De vroegere
   controles daarop ("A die daalt kan geen debet zijn", "440000 is geen
   A-rekening") zijn bewust verwijderd — die beoordeling gebeurt door de
-  leerkracht.
+  vakexpert.
 - De regel voor "juist soort saldo" (automatische controle) werkt op basis
   van A/P/K/O **van de rekening in het MAR** (niet van wat de leerling
   invulde), rekeningen die op **9** eindigen (geboekte afschrijvingen) en
   de lijst `SALDO_UITZONDERINGEN` voor contrarekeningen. Andere uitzonderingen
-  worden niet herkend — de leerkracht kijkt dit sowieso nog na.
+  worden niet herkend — de vakexpert kijkt dit sowieso nog na.
 - **De eindbalans is een sleepoefening**: de app telt op wat de leerling in
   een vak legt en toont of activa en passiva gelijk zijn, maar zegt niet of
   een rekening in het juiste vak ligt. Dat blijft bewust nakijkwerk.

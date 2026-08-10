@@ -8,6 +8,17 @@ krijgen geen enkele toegang tot de Sheet of tot de map met werkbestanden.
 
 ---
 
+> **Al geïnstalleerd en er is een nieuwe versie van `Code.gs`?**
+> Doe dan drie dingen, in deze volgorde:
+> 1. Plak de nieuwe code in **Uitbreidingen → Apps Script** en bewaar.
+> 2. **Implementeren → Implementaties beheren → potlood → Versie: Nieuwe
+>    versie → Implementeren.** Zonder die stap blijft de oude code draaien.
+>    De URL verandert niet.
+> 3. Menu **Boekhoudapp → Eerste installatie** opnieuw uitvoeren. Je gegevens
+>    blijven staan; enkel de keuzelijst en de kleuren worden bijgewerkt.
+>    Rijen die er al stonden, houden hun oude keuzelijst — bij testwerk mag
+>    je die gewoon verwijderen.
+
 ## Deel 1 — Eenmalig installeren (ongeveer een kwartier)
 
 ### 1. Maak de Google Sheet
@@ -17,21 +28,36 @@ Maak in je Drive een nieuwe Google Sheet. Noem ze bijvoorbeeld
 
 ### 2. Plak het script
 
-In die Sheet: **Extensies → Apps Script**. Wis wat er staat en plak de
-volledige inhoud van `apps-script/Code.gs`. Bewaar (het diskettepictogram).
+Open je Sheet en ga naar **Uitbreidingen → Apps Script**. Er opent een nieuw
+tabblad met een code-editor. Wis wat daar staat en plak de volledige inhoud
+van `apps-script/Code.gs`. Bewaar (het diskettepictogram).
+
+> **Hoe hangt dat script aan mijn Sheet vast?**
+> Automatisch, en je hoeft daar niets voor in te vullen. Open je Apps Script
+> *vanuit* een Sheet, dan maakt Google een script dat aan díé Sheet
+> vastgeklonken zit: het staat niet los in je Drive, maar leeft in het
+> spreadsheet zelf. Daarom weet de code zonder adres of ID welke Sheet ze
+> moet gebruiken. Bij stap 3 zie je meteen of het gelukt is.
 
 Verander bovenaan `SLEUTEL` in een eigen woord, bijvoorbeeld:
 
 ```js
-var SLEUTEL = "metwear-boekhouden-2026";
+var SLEUTEL = "CELINET";
 ```
 
 Onthoud dat woord — je hebt het straks nog eens nodig.
 
 ### 3. Maak de tabbladen aan
 
-Ga terug naar de Sheet en herlaad de pagina. Bovenaan verschijnt een nieuw
-menu **Boekhoudapp**. Kies **Eerste installatie**.
+Ga terug naar het tabblad van je Sheet en **herlaad de pagina** (F5). Bovenaan,
+naast *Uitbreidingen* en *Hulp*, verschijnt een nieuw menu **Boekhoudapp**.
+
+Dat menu is meteen je bewijs dat de koppeling klopt. Zie je het niet, wacht dan
+even en herlaad nog eens; blijft het weg, dan is de code in een los script
+terechtgekomen — open dan je Sheet en ga opnieuw via **Uitbreidingen → Apps
+Script**.
+
+Kies **Boekhoudapp → Eerste installatie**.
 
 Google vraagt de eerste keer om toestemming. Klik door
 *Geavanceerd → Ga naar … (onveilig)*. Dat woord "onveilig" slaat er enkel op
@@ -49,7 +75,8 @@ alleen nodig op een computer waar ze nog niet eerder gewerkt hebben.
 
 ### 5. Publiceer het script als web-app
 
-In de Apps Script-editor: **Implementeren → Nieuwe implementatie**.
+Ga terug naar het tabblad met de code-editor (of opnieuw via **Uitbreidingen →
+Apps Script**) en klik rechtsboven op **Implementeren → Nieuwe implementatie**.
 
 - Type: **Web-app** (klik op het tandwiel naast *Type selecteren*)
 - Uitvoeren als: **Ik** (jouw adres)
@@ -68,8 +95,8 @@ Klik op *Implementeren* en kopieer de **web-app-URL**. Die eindigt op `/exec`.
 Open `js/config-koppeling.js` en vul in:
 
 ```js
-webAppUrl: "https://script.google.com/macros/s/AKfy…/exec",
-sleutel: "metwear-boekhouden-2026",
+webAppUrl: "https://script.google.com/macros/s/AKfycbw46aLZg4tSWTJiiyoAiT7U1zlJr0Byzt0XV9gtq39GovUj7PW8W9ewW7JmB7mjXLLEwQ/exec",
+sleutel: "CELINET",
 ```
 
 Het woord bij `sleutel` moet **exact** hetzelfde zijn als in `Code.gs`.
@@ -114,7 +141,12 @@ wel mee met de vermelding *onafgewerkt*, zodat jij ziet waar ze vastloopt.
 
 **Feedback.** Met de knop *Feedback ophalen* haalt ze op wat jij vrijgegeven
 hebt. Bij elke verrichting verschijnt een gekleurd kader met je oordeel en je
-tekst; in het menu links staat een pennetje bij alles waar feedback op staat.
+tekst, en in het menu links kleurt het bolletje mee. Eerdere ronden blijven
+bewaard: onder de nieuwste feedback staat een knopje *Eerdere feedback* dat de
+vorige opmerkingen weer toont.
+
+**Klanten en leveranciers.** Op dat tabblad staan twee open vragen over de
+openstaande facturen. Ze worden samen ingediend als één categorie.
 
 ---
 
@@ -138,10 +170,25 @@ Dat is je werklijst. Zonder die filter kijk je ook naar oude inzendingen.
 
 ### Wat je invult
 
-- **beoordeling** — keuzelijst: *juist*, *grotendeels juist*, *fout*,
-  *nog te bekijken*. De cel kleurt mee.
+- **beoordeling** — keuzelijst met drie mogelijkheden, gelijk aan de
+  afspraken met de collega's in Classroom. De cel kleurt mee, en die kleur
+  komt ook in het menu links in de app terecht:
+
+  | beoordeling | kleur | gevolg in de app |
+  |---|---|---|
+  | In orde | groen | de verrichting gaat op slot |
+  | Te remediëren | oranje | de leerling kan verder werken |
+  | Niet afgerond | rood | de leerling kan verder werken |
+
 - **feedback** — je tekst voor de leerling. Mag leeg blijven als het oordeel
   volstaat.
+
+> **"In orde" heeft gevolgen.** Zo'n verrichting kan de leerling niet meer
+> wijzigen en ze wordt niet meer meegestuurd bij een volgende inzending. Zo
+> kijk je nooit twee keer hetzelfde na. Eén uitzondering: de naam van de
+> klant of leverancier blijft aanpasbaar, want die kijk jij niet na — dat
+> doet de leerling zelf via de vragen op het tabblad Klanten &
+> leveranciers.
 
 ### Vrijgeven
 
@@ -188,8 +235,16 @@ vakjes**, en de naam ook in `js/data-klas.js` zetten.
 ### Wat als de wifi wegvalt
 
 De app blijft gewoon werken: alles wordt in de browser bewaard en gaat naar de
-server zodra er weer verbinding is. De leerling krijgt een korte melding
-rechtsboven. *Exporteren* en *Importeren* blijven bestaan als noodrem.
+server zodra er weer verbinding is. Bij het indienen en het ophalen van
+feedback krijgt de leerling een duidelijk venster te zien — eerst "even
+geduld", daarna of het gelukt is of niet.
+
+### Opnieuw beginnen
+
+De knoppen *Exporteren*, *Importeren* en *Alles wissen* bestaan niet meer: nu
+alles centraal bewaard wordt, hebben ze geen nut. Moet een leerling toch
+opnieuw beginnen, dan verwijder jij haar `werk_<naam>.json` uit de map
+**Boekhoudapp werkbestanden** en laat je haar zich opnieuw aanmelden.
 
 ### Hoe veilig is dit
 
@@ -215,7 +270,7 @@ de oude versie draaien. De URL blijft dan wel dezelfde.
 
 | Bestand | Waarvoor |
 |---|---|
-| `apps-script/Code.gs` | de serverkant, hoort in de Apps Script-editor van je Sheet |
+| `apps-script/Code.gs` | de serverkant, hoort in de Apps Script-editor die je opent via **Uitbreidingen → Apps Script** in je Sheet |
 | `js/config-koppeling.js` | de web-app-URL en het sleutelwoord |
 | `js/data-klas.js` | de namen in de keuzelijst (géén codes) |
 | `js/koppeling.js` | alles wat de app met de Sheet doet |
