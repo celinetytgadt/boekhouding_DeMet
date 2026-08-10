@@ -1377,7 +1377,7 @@
 
     if (!ok) {
       html += '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +
-        "Oops, ben je zeker dat je hier al verder kunt? Ga naar het tabblad Controles en check alles na. Zolang daar iets ontbreekt of nog niet aangevinkt is, kan je hier nog niet aan verder." +
+        "Oops, ben je zeker dat je hier al verder kunt? Zolang er controles nog niet zijn aangevinkt, kan het zijn dat dit nog niet de juiste cijfers zijn. Ga naar het tabblad Controles en check alles na. " +
         "</div>";
     }
 
