@@ -6,13 +6,13 @@ const KOPPELING = {
   // De URL die Google je geeft na "Implementeren → Nieuwe implementatie →
   // Web-app". Ze eindigt op /exec. Blijft dit leeg, dan werkt de app gewoon
   // verder zonder koppeling: alles blijft dan lokaal in de browser.
-  webAppUrl: "",
+  webAppUrl: "https://script.google.com/macros/s/AKfycbw46aLZg4tSWTJiiyoAiT7U1zlJr0Byzt0XV9gtq39GovUj7PW8W9ewW7JmB7mjXLLEwQ/exec",
 
   // Moet exact hetzelfde woord zijn als SLEUTEL bovenaan Code.gs.
   // Let op: dit staat in publiek leesbare code. Het is een drempel tegen
   // toevallige rommel, geen wachtwoord — de echte afscherming is dat enkel
   // jij bij de Sheet en bij de Drive-map kan.
-  sleutel: "VERVANG-DIT-DOOR-EEN-EIGEN-WOORD",
+  sleutel: "CELINET",
 
   // Om de hoeveel minuten het werk stilletjes naar jouw Drive gaat.
   bewaarIntervalMinuten: 2,
