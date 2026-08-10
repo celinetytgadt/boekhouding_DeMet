@@ -702,9 +702,13 @@
     html += '<div class="paneel">' +
       "<p>Hey collega's, fijn dat jullie deze app willen testen! </p>"
 +      
-      "<p>De app spreekt vrij goed voor zichzelf, een handleiding heb ik nog niet. Je loopt er best tab voor tab door, je krijgt telkens een verantwoordingsstuk en een redeneerschema. Op dit redeneerschema zitten wat controles, ik weet nog niet of ik die laat staan. </p>" 
+      "<p>De app spreekt vrij goed voor zichzelf, een handleiding heb ik nog niet. Je loopt er best tab voor tab door, je krijgt telkens een verantwoordingsstuk en een redeneerschema. </p>" 
 + 
-      "<p>Vooral aan het einde zitten nog wat lossen eindjes (zoals klanten/leveranciers om een zicht te hebben op de open facturen en de resultaatverwerking (te veel op 1 pagina, wat onduidelijk). Buiten dat, ben ik best wel al tevreden. Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
+      "<p>Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
++
+      "<p>Er zijn wat veel knoppen bovenaan, test ze gerust uit. 'handleiding' ontbreekt nog, 'indienen' geeft de antwoorden door naar een google sheet dat gebruikt kan worden om te verbeteren en feedback te geven. De feedback vind je in dit document: https://docs.google.com/spreadsheets/d/1Vsg3F9KfJngBxuHmJo9Jdy53A9klJF-tEfRkZurHaDc/edit?usp=sharing </p>"
++
+      "<p>Zodra de expert feedback heeft gegeven (via de google sheets - menubalk kiezen voor 'boekhoudapp'), kan de leerling op 'feedback ophalen' klikken om te zien wat de expert heeft nagekeken.  </p>"
 +
       "<p>_______________________________________________________ </p>"       
 +           
