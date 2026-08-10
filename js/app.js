@@ -2290,7 +2290,11 @@
   }
 
   function wisAlles() {
-    var naam = state.student;
+    // Niet enkel de naam waaronder nu gewerkt wordt, maar ook de naam die
+    // bovenaan ingevuld staat. Anders wist de knop niets als iemand eerst
+    // haar naam uit het veld haalt, en komt het werk gewoon terug zodra ze
+    // die naam opnieuw kiest.
+    var naam = state.student || naamUitVeld();
     try {
       if (naam) localStorage.removeItem(storageKeyVoor(naam));
     } catch (e) { console.error(e); }
@@ -2301,9 +2305,23 @@
     uiState.afpuntSelectie = null;
     laatstBewaardOm = null;
     if (naam) saveState();
+    // Ook de kopie op de server en de opgehaalde feedback moeten weg. Anders
+    // staat alles er weer zodra de leerling zich opnieuw aanmeldt.
+    if (window.KOPPELING_HOOKS && window.KOPPELING_HOOKS.naWissen) {
+      window.KOPPELING_HOOKS.naWissen(naam);
+    }
     sluitWissenModal();
     renderAlles();
     window.scrollTo(0, 0);
+  }
+
+  // De naam zoals ze bovenaan ingevuld staat: uit de keuzelijst als er een
+  // klaslijst is, anders uit het vrije tekstveld.
+  function naamUitVeld() {
+    var select = document.getElementById("leerling-select");
+    if (select && !select.hidden && select.value) return select.value.trim();
+    var veld = document.getElementById("leerling-naam-input");
+    return veld ? veld.value.trim() : "";
   }
 
   /* ========================================================================

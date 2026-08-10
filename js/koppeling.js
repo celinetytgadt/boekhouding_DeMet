@@ -594,6 +594,27 @@
   // valt. Zonder deze haak zouden we elke twee minuten hetzelfde versturen.
   window.KOPPELING_HOOKS = {
     naWijziging: function () { teBewaren = true; },
+
+    // "Alles wissen" moet ook de kopie op de server en de opgehaalde
+    // feedback opruimen. Doen we dat niet, dan staat alles er weer zodra de
+    // leerling zich opnieuw aanmeldt — precies wat ze net wilde vermijden.
+    // Het oude werk blijft in de map "versies" staan, dus terugzetten kan.
+    naWissen: function (naam) {
+      feedback = {};
+      try {
+        localStorage.removeItem(FEEDBACK_KEY_PREFIX + normaliseerNaam(naam || (aanmelding && aanmelding.naam)));
+      } catch (e) { /* niets aan te doen */ }
+      if (!actief() || !aanmelding) return;
+      teBewaren = false;
+      stuur(metAanmelding({ actie: "bewaren", state: APP.getState() }))
+        .then(function (r) {
+          status(r && r.ok ? "Alles gewist, ook op de server." : "Gewist in deze browser; op de server lukte het niet.",
+            r && r.ok ? "ok" : "fout");
+        })
+        .catch(function () {
+          status("Gewist in deze browser. De server was niet bereikbaar.", "fout");
+        });
+    },
   };
 
   function init() {
