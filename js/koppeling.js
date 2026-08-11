@@ -122,7 +122,10 @@
     if (!antwoord) return "geen antwoord van de server";
     if (antwoord.fout === "code") return "die code klopt niet";
     if (antwoord.fout === "naam onbekend") return "die naam staat niet in de klaslijst";
-    if (antwoord.fout === "sleutel") return "de app is niet juist ingesteld — verwittig je vakexpert";
+    if (antwoord.fout === "sleutel") {
+      return "het sleutelwoord van de app komt niet overeen met dat van het script — " +
+        "verwittig je vakexpert (SLEUTEL in Code.gs tegenover sleutel in config-koppeling.js)";
+    }
     return antwoord.fout || "onbekende fout";
   }
 
