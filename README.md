@@ -15,7 +15,7 @@ js/mar.js                 de rekeningen van het MAR (wijzigt zelden)
 js/data-mar-indeling.js   klassen en rubrieken van het MAR — voedt de filters
 js/data-opdrachten.js     lijst van opdrachten (AK01, VK03, …) — per jaar aan te passen
 js/data-relaties.js       lijst klanten/leveranciers voor 400000/440000 — per jaar aan te passen
-js/data-controles.js      controlevragen, laatste afschrift, afwijkende saldokanten
+js/data-controles.js      controlevragen per categorie, laatste afschrift, afwijkende saldokanten
 js/data-balans.js         de vakken van de eindbalans en de resultatenrekening
 js/data-info.js           de teksten achter de i-icoontjes
 js/config-koppeling.js    web-app-URL en sleutelwoord van de Google Sheet
@@ -30,9 +30,17 @@ documenten/                afbeeldingen van de verantwoordingsstukken (zie docum
 ### Waar pas je wat aan?
 
 - **Een controlevraag anders formuleren of toevoegen** → `js/data-controles.js`.
-  Bij elke controle kan je `toelichting`, `uitleg` (i-icoontje), `filterTip`
-  en `relatieSoort` invullen; dat laatste toont een tabelletje met per
-  klant/leverancier wat er nog openstaat.
+  Elke controle heeft een veld `categorie`: de app zet ze dan automatisch op
+  de controlepagina van die categorie in het menu. Een controle hoort bij de
+  categorie waar ze voor het eerst beantwoord kan worden — "zijn de lonen
+  uitbetaald?" staat dus bij de financiële verrichtingen en niet bij de
+  loonverwerking. Verder kan je `toelichting`, `uitleg` (i-icoontje),
+  `filterTip`, `docConfig` en `relatieSoort` invullen; dat laatste toont een
+  tabelletje met per klant/leverancier wat er nog openstaat.
+- **De inleiding boven een controlepagina, of de invulbalans bij de
+  beginbalans** → `CATEGORIE_CONTROLES` in `js/data-controles.js`.
+- **Waar de pagina Klanten & leveranciers in het menu staat** →
+  `CATEGORIE_RELATIES` in `js/data-opdrachten.js`.
 - **Een contrarekening die aan de "verkeerde" kant hoort te staan**
   (retours, handelskortingen, voorraadwijziging) → `SALDO_UITZONDERINGEN` in
   `js/data-controles.js`.
@@ -59,9 +67,9 @@ ander stuk van `BALANS_STRUCTUUR`:
   evenwichtsregel bovenaan en de slotcontrole onderaan.
 
 Op beide tabbladen krijgt de leerling **alle** rubrieken met een saldo in de
-lijst *Nog te plaatsen*, ook die van de balans: ze kiest zelf wat ze waar
-nodig heeft. De plaatsingen zitten in één en dezelfde `state.eindbalans` —
-wat ze op het ene tabblad in een vak legt, staat op het andere meteen mee.
+lijst *Nog te plaatsen*, ook die van de balans: de leerling kiest zelf wat
+waar nodig is. De plaatsingen zitten in één en dezelfde `state.eindbalans` —
+wat op het ene tabblad in een vak gelegd wordt, staat op het andere meteen mee.
 
 Beide tabbladen roepen dezelfde functie `renderEindbalans(opties)` aan; de
 opties bepalen welke delen getoond worden, welke titel erboven staat, welke
@@ -110,7 +118,7 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 
 - **Exporteren, importeren en Alles wissen** bestaan niet meer: overbodig nu
   alles centraal bewaard wordt. Moet een leerling opnieuw beginnen, dan
-  verwijdert de vakexpert haar `werk_<naam>.json` uit de Drive-map.
+  verwijdert de vakexpert het bestand `werk_<naam>.json` uit de Drive-map.
 - **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
   klant of leverancier zelf in bij de boeking. Omdat de namen handmatig
   ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld
@@ -136,8 +144,8 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   `CATEGORIE_BETALINGEN`.
 
   Het **afpunten doet de leerling zelf** (bewust — dat is een leerdoel): in
-  het detail van een relatie klikt ze een betaling of creditnota aan en
-  daarna de factuur waar die bij hoort. De app wijst het bedrag automatisch
+  het detail van een relatie klikt de leerling een betaling of creditnota aan
+  en daarna de factuur waar die bij hoort. De app wijst het bedrag automatisch
   toe (het maximum dat op beide nog openstaat), zodat één betaling over
   meerdere facturen gespreid kan worden door ze meermaals te koppelen. Met
   het kruisje gaat een koppeling weer los. De koppelingen staan in

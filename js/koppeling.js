@@ -6,20 +6,20 @@
  *
  * Drie dingen gebeuren hier:
  *
- *   1. Aanmelden   de leerling kiest haar naam uit de lijst en tikt haar
- *                  persoonlijke code. De code wordt op de server gecheckt,
+ *   1. Aanmelden   de leerling kiest de eigen naam uit de lijst en tikt de
+ *                  persoonlijke code. Die code wordt op de server gecheckt,
  *                  want in dit bestand mag ze niet staan (het is publiek
  *                  leesbaar). Eenmaal goed, onthoudt de browser ze.
  *
  *   2. Bewaren     het volledige werk gaat op de achtergrond naar een map
  *                  in de Drive van de vakexpert. Leerlingen hebben daar
- *                  zelf geen toegang toe: het script draait onder haar
- *                  account en geeft alleen terug wat bij de aanmelding
- *                  hoort. Zo kan een leerling op eender welke computer
- *                  verder werken.
+ *                  zelf geen toegang toe: het script draait onder het account
+ *                  van de vakexpert en geeft alleen terug wat bij de
+ *                  aanmelding hoort. Zo kan een leerling op eender welke
+ *                  computer verder werken.
  *
- *   3. Indienen    de leerling kiest zelf welke categorieën ze doorstuurt
- *                  ter nakijking, en haalt achteraf de feedback op.
+ *   3. Indienen    de leerling kiest zelf welke categorieën doorgestuurd
+ *                  worden ter nakijking, en haalt achteraf de feedback op.
  *
  * app.js roept hier twee dingen aan, meer niet:
  *   window.KOPPELING_HOOKS.naWijziging()   telkens er bewaard wordt
@@ -250,7 +250,7 @@
       '<button type="button" data-keuze="lokaal" class="btn-keuze">' +
       "<strong>Het werk op deze computer</strong><span>laatst bewaard op " + esc(datumTekst(lokaalGewijzigd)) + "</span></button>" +
       "</div>" +
-      "<p class=\"keuze-nota\">Twijfel je? Kies het recentste. De andere versie gaat niet verloren: je vakexpert kan ze terugzetten.</p>";
+      "<p class=\"keuze-nota\">Twijfel je? Kies het recentste. De andere versie gaat niet verloren: je vakexpert kan die terugzetten.</p>";
 
     maakModal("Welke versie wil je?", html, function (venster, sluit) {
       venster.querySelectorAll("[data-keuze]").forEach(function (knop) {
@@ -326,16 +326,20 @@
      Indienen ter nakijking
      ====================================================================== */
 
-  function maakCategorie(naam, refs, geboekt) {
+  function maakCategorie(naam, refs, geboekt, totaalStukken) {
     // Verrichtingen die al in orde bevonden zijn, gaan niet meer mee. Zo
     // hoeft de vakexpert niet telkens hetzelfde opnieuw na te kijken.
     var teSturen = refs.filter(function (r) { return !isInOrde(r); });
+    var stand = typeof window.controleStandVoor === "function"
+      ? window.controleStandVoor(naam)
+      : { totaal: 0, af: 0, ok: true };
     return {
       naam: naam,
-      totaal: refs.length,
+      totaal: totaalStukken === undefined ? refs.length : totaalStukken,
       geboekt: geboekt,
       inOrde: refs.length - teSturen.length,
       refs: teSturen,
+      controles: stand,
     };
   }
 
@@ -350,12 +354,20 @@
         var b = st.boekingen[o.ref];
         return b && b.geboekt;
       }).length;
-      lijst.push(maakCategorie(cat, items.map(function (o) { return o.ref; }), geboekt));
-    });
+      var refs = items.map(function (o) { return o.ref; });
 
-    var vragen = st.relatieVragen || {};
-    lijst.push(maakCategorie("Klanten & leveranciers", ["RELATIES"],
-      (vragen.klanten || vragen.leveranciers) ? 1 : 0));
+      // De pagina Klanten & leveranciers hoort bij één categorie en gaat
+      // daar dus in één keer mee, met de twee open vragen erbij.
+      if (cat === CATEGORIE_RELATIES) refs.push("RELATIES");
+      // De afvinkjes van de controles gaan mee als één extra regel, zodat
+      // in de Sheet te zien is of er zelf nagekeken werd vóór het indienen.
+      if (typeof CATEGORIE_CONTROLES !== "undefined" &&
+          (CATEGORIE_CONTROLES[cat] || HANDMATIGE_CONTROLES.some(function (c) { return c.categorie === cat; }))) {
+        refs.push("CONTROLE:" + cat);
+      }
+
+      lijst.push(maakCategorie(cat, refs, geboekt, items.length));
+    });
 
     var resIngevuld = Object.keys(st.resultaat.stap || {}).some(function (k) { return st.resultaat.stap[k]; });
     lijst.push(maakCategorie("Resultaatverwerking", ["RESULTAATVERWERKING"], resIngevuld ? 1 : 0));
@@ -381,9 +393,14 @@
         var telling = niets
           ? "alles in orde"
           : c.geboekt + "/" + c.totaal + " geboekt" + (c.inOrde ? " · " + c.inOrde + " in orde" : "");
+        var ctrl = c.controles.totaal
+          ? '<span class="indien-controles' + (c.controles.ok ? " af" : "") + '">' +
+            (c.controles.ok ? "✓ nagekeken" : c.controles.af + "/" + c.controles.totaal + " nagekeken") + "</span>"
+          : "";
         return '<label class="indien-rij' + (niets ? " uit" : "") + '">' +
           '<input type="checkbox" data-cat="' + esc(c.naam) + '"' + (niets ? " disabled" : "") + ">" +
           '<span class="indien-naam">' + esc(c.naam) + "</span>" +
+          ctrl +
           '<span class="indien-telling' + (niets || af ? " volledig" : "") + '">' + esc(telling) + "</span>" +
           "</label>";
       }).join("") +
@@ -406,8 +423,56 @@
       knop.addEventListener("click", function () {
         var gekozen = [];
         vinkjes.forEach(function (v) { if (v.checked) gekozen.push(v.dataset.cat); });
-        dienIn(gekozen, venster);
+        toonBevestiging(gekozen, venster);
       });
+    });
+  }
+
+  /* Eén tussenstap vóór het verzenden. Bewust geen blokkade: wie wil
+     indienen zonder na te kijken, kan dat. Maar het moet wel een bewuste
+     keuze zijn, en niet iets dat per ongeluk gebeurt. */
+  function toonBevestiging(categorieen, venster) {
+    var overzicht = categorieOverzicht();
+    var gekozen = overzicht.filter(function (c) { return categorieen.indexOf(c.naam) !== -1; });
+    var open = gekozen.filter(function (c) { return c.controles.totaal && !c.controles.ok; });
+
+    var html = '<div class="modal-body">';
+    html += "<p>Je dient in: <strong>" + gekozen.map(function (c) { return esc(c.naam); }).join(", ") + "</strong>.</p>";
+
+    if (open.length) {
+      html += '<div class="bevestig-waarschuwing">';
+      html += "<p><strong>Je hebt nog niet alles nagekeken.</strong></p><ul>";
+      open.forEach(function (c) {
+        html += "<li>" + esc(c.naam) + ": " + (c.controles.totaal - c.controles.af) +
+          " van de " + c.controles.totaal + " controles nog niet afgevinkt</li>";
+      });
+      html += "</ul><p>Ga eerst naar de controlepagina van die categorie — daar vind je vaak zelf nog wat er misloopt.</p></div>";
+    } else if (gekozen.some(function (c) { return c.controles.totaal; })) {
+      html += '<p class="bevestig-ok">✓ Je controles zijn nagekeken.</p>';
+    }
+
+    html += '<p class="keuze-nota">Na het indienen kan je gewoon verder werken. Wat je vakexpert daarna "in orde" noemt, gaat op slot.</p>';
+    html += "</div>";
+    html += '<div class="modal-voet">' +
+      '<button type="button" class="btn-secundair" data-role="bevestig-terug">Terug</button>' +
+      '<button type="button" class="btn-primair" data-role="bevestig-ja">' +
+      (open.length ? "Toch indienen" : "Ja, indienen") + "</button></div>";
+
+    zetModalInhoud(venster, html);
+    venster.querySelector('[data-role="bevestig-terug"]').addEventListener("click", function () {
+      // Opnieuw opbouwen met dezelfde keuzes al aangevinkt.
+      var sluit = function () { if (venster.parentNode) venster.parentNode.removeChild(venster); };
+      sluit();
+      openIndienVenster();
+      var nieuw = document.querySelector(".koppeling-overlay");
+      if (!nieuw) return;
+      categorieen.forEach(function (naam) {
+        var v = nieuw.querySelector('[data-cat="' + naam.replace(/"/g, '\\"') + '"]');
+        if (v && !v.disabled) { v.checked = true; v.dispatchEvent(new Event("change")); }
+      });
+    });
+    venster.querySelector('[data-role="bevestig-ja"]').addEventListener("click", function () {
+      dienIn(categorieen, venster);
     });
   }
 
@@ -437,7 +502,7 @@
         if (r && r.ok) {
           zetModalInhoud(venster, htmlMelding("ok", "Ingediend",
             "Je stuurde " + r.aantal + " verrichting(en) door. Je vakexpert kijkt ze na; " +
-            "klik later op <em>Feedback ophalen</em> om te zien wat ze ervan vond."));
+            "klik later op <em>Feedback ophalen</em> om de reactie te lezen."));
           status("Ingediend om " + datumTekst(new Date().toISOString()), "ok");
           bewaarNaarServer(true);
         } else {
@@ -456,6 +521,7 @@
     if (ref === "RESULTAATVERWERKING") return maakResultaatItem(categorie);
     if (ref === "EINDBALANS") return maakBalansItem(categorie);
     if (ref === "RELATIES") return maakRelatieItem(categorie);
+    if (ref.indexOf("CONTROLE:") === 0) return maakControleItem(categorie);
 
     var def = OPDRACHTEN.filter(function (o) { return o.ref === ref; })[0] || {};
     var boeking = APP.getState().boekingen[ref];
@@ -517,6 +583,27 @@
         { redenering: "Openstaande facturen van klanten", omschrijving: v.klanten || "" },
         { redenering: "Openstaande facturen van leveranciers", omschrijving: v.leveranciers || "" },
       ],
+    };
+  }
+
+  // De afvinkjes van de controles bij deze categorie, als één regel. Zo zie
+  // je in de Sheet meteen of er zelf nagekeken werd vóór het indienen.
+  function maakControleItem(categorie) {
+    var st = APP.getState();
+    var lijst = HANDMATIGE_CONTROLES.filter(function (c) { return c.categorie === categorie; });
+    var af = lijst.filter(function (c) { return !!st.controles[c.id]; });
+
+    return {
+      ref: "CONTROLE:" + categorie,
+      categorie: categorie,
+      titel: "Controles " + categorie,
+      status: lijst.length && af.length === lijst.length ? "nagekeken" : af.length + " van " + lijst.length + " nagekeken",
+      boeking: lijst.map(function (c) {
+        return (st.controles[c.id] ? "✓ " : "✗ ") + c.vraag;
+      }).join("  ·  "),
+      lijnen: lijst.map(function (c) {
+        return { redenering: c.vraag, omschrijving: st.controles[c.id] ? "afgevinkt" : "niet afgevinkt" };
+      }),
     };
   }
 

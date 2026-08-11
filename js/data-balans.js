@@ -3,8 +3,8 @@
 // sleepoefening op het tabblad Resultaatverwerking.
 //
 // De leerling krijgt alle rekeningen met een saldo als losse kaartjes en
-// tikt ze naar het juiste vakje. De app zegt niet of een kaartje
-// juist ligt — ze telt enkel op wat de leerling erin legt en toont of de
+// tikt die naar het juiste vakje. De app zegt niet of een kaartje
+// juist ligt — ze telt enkel op wat erin gelegd wordt en toont of de
 // balans in evenwicht is. Nakijken blijft dus werk van de vakexpert.
 //
 // Elk vak heeft:

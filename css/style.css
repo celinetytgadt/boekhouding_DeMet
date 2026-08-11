@@ -1402,7 +1402,7 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 #topbar-leerling button.btn-primair-topbar:hover { background: #eef0ff; }
 
 /* Korte meldingen ("Bewaard op de server om 14:03"). Bewust klein en
-   rustig: het mag de leerling niet uit haar werk halen. */
+   rustig: het mag de leerling niet uit het werk halen. */
 .koppeling-status {
   font-size: 11px;
   opacity: 0.9;
@@ -1679,4 +1679,77 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 @media (max-width: 900px) {
   #leerling-select { max-width: 30vw; }
   .koppeling-status { display: none; }
+}
+
+/* ==========================================================================
+   Controles per categorie
+   ========================================================================== */
+
+/* De extra items onder een categorie in het menu: Klanten & leveranciers en
+   de controlepagina. Iets ingesprongen, zodat het duidelijk bij de
+   verrichtingen erboven hoort. */
+.nav-link.nav-extra,
+.nav-link.nav-controle {
+  font-size: 13px;
+  color: var(--kleur-tekst-zacht);
+}
+.nav-link.nav-extra:hover,
+.nav-link.nav-controle:hover { color: var(--kleur-tekst); }
+.nav-link.nav-controle.actief,
+.nav-link.nav-extra.actief { color: var(--kleur-tekst); }
+
+.nav-controle-stand {
+  font-size: 11px;
+  border-radius: 9px;
+  padding: 0 6px;
+  background: var(--kleur-achtergrond);
+  border: 1px solid var(--kleur-rand);
+  white-space: nowrap;
+  margin-left: 6px;
+}
+.nav-controle-stand.af {
+  background: #ddfff2;
+  border-color: var(--kleur-goed);
+  color: #00875a;
+  font-weight: 600;
+}
+
+/* In het indienvenster: hoeveel controles al nagekeken zijn. */
+.indien-controles {
+  font-size: 11px;
+  border-radius: 9px;
+  padding: 0 6px;
+  background: #fff4e5;
+  border: 1px solid #e8890c;
+  color: #a35d00;
+  white-space: nowrap;
+}
+.indien-controles.af {
+  background: #ddfff2;
+  border-color: var(--kleur-goed);
+  color: #00875a;
+}
+
+/* De bevestigingsstap vóór het verzenden. */
+.bevestig-waarschuwing {
+  border: 1px solid #e8890c;
+  border-left: 5px solid #e8890c;
+  background: #fff8ef;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 12px 0;
+}
+.bevestig-waarschuwing p { margin: 0 0 6px 0; }
+.bevestig-waarschuwing ul { margin: 0 0 6px 0; padding-left: 20px; }
+.bevestig-waarschuwing li { margin-bottom: 2px; }
+
+.bevestig-ok {
+  color: #00875a;
+  font-weight: 600;
+}
+
+.modal-voet .btn-secundair {
+  border-radius: 5px;
+  padding: 8px 16px;
+  font-size: 13px;
 }

@@ -47,7 +47,9 @@ const OPDRACHTEN = [
   { ref: "VK07", categorie: "Verkopen", titel: "Verkoop VK07", doc: "VK07" },
   { ref: "VK08", categorie: "Verkopen", titel: "Verkoop VK08", doc: "VK08" },
 
-  { ref: "ONTV01", categorie: "Dagontvangsten", titel: "Dagontvangsten ONTV01", doc: "ONTV01" },
+  // De dagontvangsten horen didactisch bij de verkopen: het is dezelfde
+  // beweging, alleen contant in plaats van op rekening.
+  { ref: "ONTV01", categorie: "Verkopen", titel: "Dagontvangsten ONTV01", doc: "ONTV01" },
 
   { ref: "LOON", categorie: "Loonverwerking", titel: "Loonstaat LOON", doc: "LOON" },
   // AK11 en AK12 zijn aankoopfacturen die bij de loonverwerking horen. Ze
@@ -82,7 +84,10 @@ const OPDRACHTEN = [
   },
 
   { ref: "AFSCHR1", categorie: "Eindejaarsverrichtingen", titel: "Afschrijvingen AFSCHR1", doc: "AFSCHR1" },
-  { ref: "LENING2", categorie: "Eindejaarsverrichtingen", titel: "Lening LENING2 — overboeking lange naar korte termijn", doc: "LENING2" },
+  // De overboeking lange → korte termijn (LENING2) is bewust geschrapt: de
+  // lening start in januari, dus die herverdeling hoort al bij het
+  // verkrijgen van de lening en niet op het einde van het kwartaal. Er is
+  // wel een controlevraag over bij de financiële verrichtingen.
   { ref: "VR", categorie: "Eindejaarsverrichtingen", titel: "Voorraad VR", doc: "VR" },
 
   // BELASTING en RESULTAAT worden NIET via de generieke lijst getoond (ze
@@ -97,12 +102,16 @@ const CATEGORIE_VOLGORDE = [
   "Beginbalans",
   "Aankopen",
   "Verkopen",
-  "Dagontvangsten",
   "Loonverwerking",
   "Financiële verrichtingen",
   "BTW-verwerking",
   "Eindejaarsverrichtingen",
 ];
+
+// Onder welke categorie staat de pagina "Klanten & leveranciers" in het
+// menu? Ze hoort na de betaalstukken: pas dan valt er af te punten, en de
+// controles erover staan in dezelfde categorie.
+const CATEGORIE_RELATIES = "Financiële verrichtingen";
 
 // Welke categorieën bevatten BETALINGEN? Op het tabblad Klanten &
 // leveranciers bepaalt dit of een verrichting op 400000/440000 rechts komt
