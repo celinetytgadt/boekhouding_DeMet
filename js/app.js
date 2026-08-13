@@ -809,7 +809,9 @@
     html += '<div class="paneel">' +
       "<p>Hey collega's, fijn dat jullie deze app willen testen! </p>"
 +      
-      "<p>De app spreekt vrij goed voor zichzelf, een handleiding heb ik nog niet. Je loopt er best tab voor tab door, je krijgt telkens een verantwoordingsstuk en een redeneerschema. </p>" 
+      "<p>De app spreekt vrij goed voor zichzelf, een handleiding vind je <a href='https://docs.google.com/document/d/1X7m9_qPoTeqay_f0Xp-gqbDpYGRryGkBAMWi6GZoL3k/edit' target='_blank' rel='noopener'>in dit document</a> </p>" 
++ 
+      "<p>Je loopt er best tab voor tab door, je krijgt telkens een verantwoordingsstuk en een redeneerschema. </p>" 
 + 
       "<p>Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
 +
