@@ -70,8 +70,8 @@ Je krijgt nu drie tabbladen: **Klas**, **Inzendingen** en **Detail**.
 In het tabblad **Klas**, kolom A: de namen van je leerlingen, één per rij.
 
 Daarna: menu **Boekhoudapp → Codes genereren voor lege vakjes**. Elke leerling
-krijgt een unieke viercijferige code. Die deel je één keer uit; ze hebben ze
-alleen nodig op een computer waar ze nog niet eerder gewerkt hebben.
+krijgt een unieke viercijferige code. Die deel je één keer uit; leerlingen
+hebben ze alleen nodig op een computer waar ze nog niet eerder werkten.
 
 ### 5. Publiceer het script als web-app
 
@@ -125,28 +125,39 @@ Zet daarna alles op GitHub zoals gewoonlijk. Klaar.
 
 ## Deel 2 — Hoe het werkt voor de leerling
 
-**Aanmelden.** Ze kiest haar naam uit de lijst en tikt haar code. Dat hoeft
-maar één keer per computer: de browser onthoudt het.
+**Aanmelden.** De leerling kiest de eigen naam uit de lijst en tikt de
+persoonlijke code. Dat hoeft maar één keer per computer: de browser onthoudt
+het.
 
-**Bewaren.** Haar werk blijft in de browser staan én gaat elke twee minuten
-stilletjes naar een map in jouw Drive. Meldt ze zich later op een andere
-computer aan, dan staat alles er weer. Verschilt wat er lokaal staat van wat
-op de server staat, dan kiest zij zelf welke versie ze verder gebruikt — er
-wordt nooit zomaar overschreven.
+**Bewaren.** Het werk blijft in de browser staan én gaat elke twee minuten
+stilletjes naar een map in jouw Drive. Meldt een leerling zich later op een
+andere computer aan, dan staat alles er weer. Verschilt wat er lokaal staat
+van wat op de server staat, dan kiest de leerling zelf welke versie het wordt
+— er wordt nooit zomaar overschreven.
 
-**Indienen.** Met de knop *Indienen* kiest ze per categorie (Aankopen,
-Verkopen, Financiële verrichtingen …) wat ze wil laten nakijken. Wat ze niet
-aanvinkt, blijft van haar. Verrichtingen die ze nog niet geboekt heeft, gaan
-wel mee met de vermelding *onafgewerkt*, zodat jij ziet waar ze vastloopt.
+**Indienen.** Met de knop *Indienen* kiest de leerling per categorie
+(Aankopen, Verkopen, Financiële verrichtingen …) wat er nagekeken mag worden.
+Wat niet aangevinkt is, blijft privé. Verrichtingen die nog niet geboekt zijn,
+gaan wel mee met de vermelding *onafgewerkt*, zodat jij ziet waar iemand
+vastloopt.
 
-**Feedback.** Met de knop *Feedback ophalen* haalt ze op wat jij vrijgegeven
+**Feedback.** Met de knop *Feedback ophalen* komt binnen wat jij vrijgegeven
 hebt. Bij elke verrichting verschijnt een gekleurd kader met je oordeel en je
 tekst, en in het menu links kleurt het bolletje mee. Eerdere ronden blijven
 bewaard: onder de nieuwste feedback staat een knopje *Eerdere feedback* dat de
 vorige opmerkingen weer toont.
 
-**Klanten en leveranciers.** Op dat tabblad staan twee open vragen over de
-openstaande facturen. Ze worden samen ingediend als één categorie.
+**Controles per categorie.** Onder elke categorie staat in het menu een
+pagina *Controle*. Daar vinken leerlingen zelf af wat ze nagekeken hebben,
+vóór ze indienen. Klikken ze op *Indienen* terwijl er nog controles openstaan,
+dan komt er een bevestigingsvenster dat dat zegt — maar het blokkeert niets.
+
+Die afvinkjes komen mee in je Sheet, als een aparte regel per categorie
+(`CONTROLE: Aankopen`). Zo zie je meteen of er zelf nagekeken werd.
+
+**Klanten en leveranciers.** Die pagina staat in het menu bij de financiële
+verrichtingen en gaat daar ook mee in bij het indienen. Er staan twee open
+vragen op over de openstaande facturen.
 
 ---
 
@@ -184,7 +195,7 @@ Dat is je werklijst. Zonder die filter kijk je ook naar oude inzendingen.
   volstaat.
 
 > **"In orde" heeft gevolgen.** Zo'n verrichting kan de leerling niet meer
-> wijzigen en ze wordt niet meer meegestuurd bij een volgende inzending. Zo
+> wijzigen, en ze wordt niet meer meegestuurd bij een volgende inzending. Zo
 > kijk je nooit twee keer hetzelfde na. Eén uitzondering: de naam van de
 > klant of leverancier blijft aanpasbaar, want die kijk jij niet na — dat
 > doet de leerling zelf via de vragen op het tabblad Klanten &
@@ -221,9 +232,10 @@ als `werk_<naam>.json`. In de submap **versies** staan de vijf vorige versies
 per leerling (hoogstens één kopie per uur).
 
 Heeft een leerling iets kapotgeklikt: open het versiebestand, kopieer de
-inhoud naar het gewone `werk_<naam>.json`, en laat haar opnieuw aanmelden.
+inhoud naar het gewone `werk_<naam>.json`, en laat de leerling zich opnieuw
+aanmelden.
 
-### Een leerling is haar code kwijt
+### Een leerling is de code kwijt
 
 Kijk in het tabblad Klas. Je mag de code daar ook gewoon aanpassen.
 
@@ -243,8 +255,8 @@ geduld", daarna of het gelukt is of niet.
 
 De knoppen *Exporteren*, *Importeren* en *Alles wissen* bestaan niet meer: nu
 alles centraal bewaard wordt, hebben ze geen nut. Moet een leerling toch
-opnieuw beginnen, dan verwijder jij haar `werk_<naam>.json` uit de map
-**Boekhoudapp werkbestanden** en laat je haar zich opnieuw aanmelden.
+opnieuw beginnen, dan verwijder jij het bestand `werk_<naam>.json` uit de map
+**Boekhoudapp werkbestanden** en laat je die leerling zich opnieuw aanmelden.
 
 ### Hoe veilig is dit
 
@@ -254,8 +266,8 @@ opnieuw beginnen, dan verwijder jij haar `werk_<naam>.json` uit de map
 - Het woord bij `sleutel` staat in publiek leesbare code. Het is een drempel
   tegen toevallige rommel, geen wachtwoord. De echte afscherming zijn de
   persoonlijke codes en het feit dat de Sheet van jou alleen is.
-- Wie de code van een klasgenoot kent, kan haar werk openen. Dat is het
-  niveau van "iemand vertelt haar wachtwoord door" — de codes zijn niet
+- Wie de code van een klasgenoot kent, kan dat werk openen. Dat is het
+  niveau van "iemand vertelt een wachtwoord door" — de codes zijn niet
   bedoeld om examenfraude tegen te houden.
 
 ### Als je iets aan de code wijzigt

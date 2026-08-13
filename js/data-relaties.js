@@ -1,8 +1,7 @@
 // data-relaties.js
 // OPTIONEEL startlijstje van leveranciers en klanten voor het extra veld
 // bij boekingen op 400000 (Handelsdebiteuren) en 440000 (Leveranciers) —
-// zie §7, optie 1 van de specificatie: een subadministratie zodat
-// leerlingen kunnen nakijken welke facturen nog openstaan.
+// een subadministratie zodat leerlingen kunnen nakijken welke facturen nog openstaan.
 //
 // Dit hoeft NIET bijgehouden te worden: het relatieveld in de app is een
 // gewoon tekstveld. Zodra een leerling ergens een naam intikt, verschijnt
@@ -14,10 +13,10 @@
 // gerust.
 
 const RELATIES = {
-  klanten: [
+  klanten: [ "klanten 2025",
     // bv. "Klant A", "Bakkerij Janssens", ...
   ],
-  leveranciers: [
+  leveranciers: [ "leveranciers 2025",
     // bv. "Leverancier X", "Groothandel Peeters", ...
   ],
 };

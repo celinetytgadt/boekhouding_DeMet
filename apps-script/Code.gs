@@ -33,7 +33,12 @@
 // Moet exact overeenkomen met SLEUTEL in js/config-koppeling.js.
 // Dit is een drempel, geen slot: de app-code is publiek leesbaar. Ze houdt
 // toevallige of geautomatiseerde rommel tegen, niet iemand die het meent.
-var SLEUTEL = "VERVANG-DIT-DOOR-EEN-EIGEN-WOORD";
+//
+// LET OP bij een update: plak je een nieuwe versie van dit bestand in de
+// Apps Script-editor, kijk dan altijd of dit woord nog klopt. Staat hier
+// iets anders dan in js/config-koppeling.js, dan weigert het script alles
+// met de melding "de app is niet juist ingesteld".
+var SLEUTEL = "CELINET";
 
 var BLAD_KLAS = "Klas";
 var BLAD_INZENDINGEN = "Inzendingen";
@@ -62,7 +67,18 @@ var K_TIJDSTIP = 1, K_LEERLING = 2, K_CATEGORIE = 3, K_REF = 4, K_BOEKING = 5,
     K_STATUS_LEERLING = 6, K_BEOORDELING = 7, K_FEEDBACK = 8, K_KLAAR = 9,
     K_IS_LAATSTE = 10, K_INZENDING = 11;
 
-var BEOORDELINGEN = ["juist", "grotendeels juist", "fout", "nog te bekijken"];
+// De drie beoordelingen, gelijk aan de afspraken met de collega's in
+// Classroom. "In orde" heeft een bijzondere betekenis in de app: zo'n
+// verrichting gaat op slot en wordt niet meer meegestuurd bij een volgende
+// inzending. Wijzig die schrijfwijze dus niet zonder IN_ORDE in js/app.js
+// mee aan te passen.
+var BEOORDELINGEN = ["In orde", "Te remediëren", "Niet afgerond"];
+
+var BEOORDELING_KLEUREN = {
+  "In orde": "#d9ead3",        // groen
+  "Te remediëren": "#fce5cd",  // oranje
+  "Niet afgerond": "#f4cccc",  // rood
+};
 
 /* ==========================================================================
    Binnenkomende verzoeken
@@ -148,7 +164,7 @@ function antwoord(obj) {
 /**
  * Vergelijkt naam en code met het tabblad Klas. De naam wordt vergeleken
  * zonder hoofdletters, spaties en leestekens: "Lotte V." en "lotte v" zijn
- * dezelfde leerling. Zo kost een tikfout niemand haar werk.
+ * dezelfde leerling. Zo raakt niemand werk kwijt door een tikfout.
  */
 function controleerAanmelding(naam, code) {
   if (!naam) return { ok: false, fout: "geen naam" };
@@ -362,16 +378,22 @@ function schrijfDetail_(data, inzendingId, nu) {
    ========================================================================== */
 
 /**
- * Geeft enkel de rijen terug die jij vrijgegeven hebt (vinkje "klaar") én
- * die de nieuwste zijn voor die verrichting. Zolang het vinkje uit staat,
- * ziet de leerling niets — je kan dus gerust over meerdere dagen nakijken.
+ * Geeft alle rijen terug die jij vrijgegeven hebt (vinkje "klaar"). Zolang
+ * dat vinkje uit staat, ziet de leerling niets — je kan dus gerust over
+ * meerdere dagen nakijken.
+ *
+ * Bewust álle vrijgegeven ronden en niet enkel de laatste: de leerling moet
+ * kunnen terugkijken wat er de vorige keer opgemerkt was. De app toont de
+ * nieuwste bovenaan en klapt de oudere ronden in. Lang worden die lijstjes
+ * niet: zodra een verrichting "In orde" is, gaat ze op slot en wordt ze niet
+ * meer opnieuw ingediend.
  */
 function haalFeedbackOp(naam) {
   var blad = blad_(BLAD_INZENDINGEN);
   if (blad.getLastRow() < 2) return [];
   var waarden = blad.getRange(2, 1, blad.getLastRow() - 1, KOP_INZENDINGEN.length).getValues();
   var gezocht = normaliseerNaam_(naam);
-  var perRef = {};
+  var uit = [];
 
   waarden.forEach(function (rij) {
     if (normaliseerNaam_(rij[K_LEERLING - 1]) !== gezocht) return;
@@ -380,24 +402,19 @@ function haalFeedbackOp(naam) {
     var tekst = String(rij[K_FEEDBACK - 1] || "").trim();
     if (!beoordeling && !tekst) return;
 
-    var ref = String(rij[K_REF - 1]);
     var tijdstip = rij[K_TIJDSTIP - 1];
-    // Meerdere vrijgegeven versies van dezelfde verrichting: de nieuwste wint.
-    if (perRef[ref] && perRef[ref]._t >= tijdstip) return;
-    perRef[ref] = {
-      ref: ref,
+    uit.push({
+      ref: String(rij[K_REF - 1]),
       beoordeling: beoordeling,
       feedback: tekst,
       ingediend: tijdstip ? Utilities.formatDate(new Date(tijdstip), Session.getScriptTimeZone(), "d/MM/yyyy") : "",
-      _t: tijdstip,
-    };
+      tijdstip: tijdstip ? new Date(tijdstip).getTime() : 0,
+    });
   });
 
-  return Object.keys(perRef).map(function (ref) {
-    var f = perRef[ref];
-    delete f._t;
-    return f;
-  });
+  // Nieuwste eerst; de app groepeert ze per verrichting.
+  uit.sort(function (a, b) { return b.tijdstip - a.tijdstip; });
+  return uit;
 }
 
 /* ==========================================================================
@@ -455,7 +472,7 @@ function zetKlaarVoorLeerling_(waarde) {
   }
 
   ui.alert(waarde
-    ? aantal + " verrichting(en) van " + leerling + " staan nu klaar. Ze ziet ze zodra ze in de app op Feedback ophalen klikt."
+    ? aantal + " verrichting(en) van " + leerling + " staan nu klaar. Ze zijn zichtbaar zodra de leerling in de app op Feedback ophalen klikt."
     : aantal + " verrichting(en) van " + leerling + " zijn weer verborgen voor de leerling.");
 }
 
@@ -500,39 +517,69 @@ function genereerCodes() {
  */
 function installeer() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var opmerkingen = [];
+
+  // Elke stap apart: gaat er één mis (bv. omdat er al een filter staat),
+  // dan mag de rest niet stilvallen. Bij de eerste versie stopte de
+  // installatie halverwege en bleven de kleuren op de oude instelling.
+  var stap = function (wat, fn) {
+    try { fn(); } catch (err) { opmerkingen.push("• " + wat + ": " + err.message); }
+  };
 
   var klas = maakBlad_(ss, BLAD_KLAS, KOP_KLAS);
-  klas.setColumnWidth(1, 200).setColumnWidth(2, 80).setColumnWidth(3, 300);
-  klas.getRange("B:B").setNumberFormat("@");
+  stap("breedtes tabblad Klas", function () {
+    klas.setColumnWidth(1, 200).setColumnWidth(2, 80).setColumnWidth(3, 300);
+    klas.getRange("B:B").setNumberFormat("@");
+  });
 
   var inz = maakBlad_(ss, BLAD_INZENDINGEN, KOP_INZENDINGEN);
-  inz.setColumnWidth(K_TIJDSTIP, 130);
-  inz.setColumnWidth(K_LEERLING, 140);
-  inz.setColumnWidth(K_CATEGORIE, 150);
-  inz.setColumnWidth(K_REF, 80);
-  inz.setColumnWidth(K_BOEKING, 420);
-  inz.setColumnWidth(K_STATUS_LEERLING, 110);
-  inz.setColumnWidth(K_BEOORDELING, 130);
-  inz.setColumnWidth(K_FEEDBACK, 380);
-  inz.getRange(2, K_BOEKING, inz.getMaxRows() - 1, 1).setWrap(true);
-  inz.getRange(2, K_FEEDBACK, inz.getMaxRows() - 1, 1).setWrap(true);
-  inz.getRange(1, 1, 1, KOP_INZENDINGEN.length).createFilter();
-  kleurBeoordelingen_(inz);
+  stap("breedtes tabblad Inzendingen", function () {
+    inz.setColumnWidth(K_TIJDSTIP, 130);
+    inz.setColumnWidth(K_LEERLING, 140);
+    inz.setColumnWidth(K_CATEGORIE, 150);
+    inz.setColumnWidth(K_REF, 80);
+    inz.setColumnWidth(K_BOEKING, 420);
+    inz.setColumnWidth(K_STATUS_LEERLING, 110);
+    inz.setColumnWidth(K_BEOORDELING, 130);
+    inz.setColumnWidth(K_FEEDBACK, 380);
+    inz.getRange(2, K_BOEKING, inz.getMaxRows() - 1, 1).setWrap(true);
+    inz.getRange(2, K_FEEDBACK, inz.getMaxRows() - 1, 1).setWrap(true);
+  });
+
+  // Staat er al een filter, dan blijft die gewoon staan: createFilter()
+  // gooit anders een fout en dat is het niet waard.
+  stap("filter", function () {
+    if (!inz.getFilter()) inz.getRange(1, 1, 1, KOP_INZENDINGEN.length).createFilter();
+  });
+
+  stap("kleuren van de beoordelingen", function () { kleurBeoordelingen_(inz); });
+
+  // De keuzelijst op alle bestaande rijen bijwerken, zodat oude rijen na een
+  // update van de beoordelingen niet met de vorige lijst blijven zitten.
+  stap("keuzelijst van de beoordelingen", function () {
+    if (inz.getLastRow() > 1) {
+      inz.getRange(2, K_BEOORDELING, inz.getLastRow() - 1, 1).setDataValidation(beoordelingValidatie_());
+    }
+  });
 
   var det = maakBlad_(ss, BLAD_DETAIL, KOP_DETAIL);
-  det.setColumnWidth(1, 130).setColumnWidth(2, 140).setColumnWidth(3, 170);
+  stap("breedtes tabblad Detail", function () {
+    det.setColumnWidth(1, 130).setColumnWidth(2, 140).setColumnWidth(3, 170);
+  });
 
   // De mappen meteen aanmaken, zodat de eerste leerling niet moet wachten.
-  werkMap_();
-  versieMap_();
+  stap("map in Drive", function () { werkMap_(); versieMap_(); });
 
   SpreadsheetApp.getUi().alert(
     "Klaar.\n\n" +
+    "Sleutelwoord van dit script: " + SLEUTEL + "\n" +
+    "Dat moet exact hetzelfde zijn als 'sleutel' in js/config-koppeling.js.\n\n" +
     "1. Vul in het tabblad Klas de namen van je leerlingen in kolom A in.\n" +
     "2. Menu Boekhoudapp → Codes genereren voor lege vakjes.\n" +
     "3. Publiceer het script (Implementeren → Nieuwe implementatie → Web-app) " +
     "en zet de URL in js/config-koppeling.js.\n\n" +
-    "Nakijken doe je in het tabblad Inzendingen: filter op 'is laatste' = JA."
+    "Nakijken doe je in het tabblad Inzendingen: filter op 'is laatste' = JA." +
+    (opmerkingen.length ? "\n\nNiet alles lukte, maar de installatie is wel doorgelopen:\n" + opmerkingen.join("\n") : "")
   );
 }
 
@@ -553,11 +600,10 @@ function beoordelingValidatie_() {
 
 function kleurBeoordelingen_(blad) {
   var bereik = blad.getRange(2, K_BEOORDELING, blad.getMaxRows() - 1, 1);
-  var kleuren = { "juist": "#d9ead3", "grotendeels juist": "#fff2cc", "fout": "#f4cccc", "nog te bekijken": "#efefef" };
-  var regels = Object.keys(kleuren).map(function (waarde) {
+  var regels = Object.keys(BEOORDELING_KLEUREN).map(function (waarde) {
     return SpreadsheetApp.newConditionalFormatRule()
       .whenTextEqualTo(waarde)
-      .setBackground(kleuren[waarde])
+      .setBackground(BEOORDELING_KLEUREN[waarde])
       .setRanges([bereik])
       .build();
   });

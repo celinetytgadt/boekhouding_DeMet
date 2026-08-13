@@ -1,5 +1,5 @@
 // data-controles.js
-// Alles wat bij de controles hoort (§7 van de specificatie).
+// Alles wat bij de controles hoort.
 // Wijzigt dit per jaar/bundel? Pas het hier aan, niet in app.js.
 //
 // ---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ const CONTROLE_CONFIG = {
   beginbalansRef: "BB",
   // De aflossingstabel is geen opdracht maar een hulpdocument, dus hier
   // staat rechtstreeks de bestandsnaam uit de map documenten/.
-  leningRef: "LENING1",
+  leningRef: "LENING2",
 };
 
 // Rekeningen waarvan de verwachte saldokant afwijkt van de gewone regel
@@ -72,26 +72,26 @@ const SALDO_GEEN_CONTROLE = [
 //                     Eindbalans: wat hier gelegd wordt, ligt daar al goed.
 const CATEGORIE_CONTROLES = {
   "Beginbalans": {
-    inleiding: "Zet de rubrieken van je openingsboeking op hun plaats in de balans. Zo zie je in één oogopslag of je beginbalans klopt met het document — en je hebt dit werk straks bij de eindbalans al gedaan.",
+    inleiding: "Zet de rubrieken van je openingsboeking op hun plaats in de balans. Zo zie je in één oogopslag of je beginbalans klopt met het document. Je toewijzing wordt trouwens bewaard, zo bespaar je alvast wat werk voor de eindbalans.",
     invulbalansVoorRef: "BB",
   },
   "Aankopen": {
-    inleiding: "Kijk je aankopen na vóór je ze indient.",
+    inleiding: "Hieronder vind je één of meerdere controles die je zelf kunt overlopen voor je indient. Bekijk elke controle en check of je er aan voldoet. ",
   },
   "Verkopen": {
-    inleiding: "Kijk je verkopen en je dagontvangsten na vóór je ze indient.",
+    inleiding: "Hieronder vind je één of meerdere controles die je zelf kunt overlopen voor je indient. Bekijk elke controle en check of je er aan voldoet.",
   },
   "Loonverwerking": {
-    inleiding: "Kijk de loonstaat en de bijhorende facturen na vóór je ze indient.",
+    inleiding: "Hieronder vind je één of meerdere controles die je zelf kunt overlopen voor je indient. Bekijk elke controle en check of je er aan voldoet.",
   },
   "Financiële verrichtingen": {
-    inleiding: "Dit is de grootste controle van de bundel: hier komen kas, bank, de lonen en je klanten en leveranciers samen. Neem er de tijd voor vóór je indient.",
+    inleiding: "Hieronder vind je één of meerdere controles die je zelf kunt overlopen voor je indient. Bekijk elke controle en check of je er aan voldoet. Dit is de grootste controle van de bundel: hier komen kas, bank, de lonen en je klanten en leveranciers samen. Neem er de tijd voor vóór je indient.",
   },
   "BTW-verwerking": {
-    inleiding: "Kijk de btw-verwerking na vóór je ze indient.",
+    inleiding: "Hieronder vind je één of meerdere controles die je zelf kunt overlopen voor je indient. Bekijk elke controle en check of je er aan voldoet.",
   },
   "Eindejaarsverrichtingen": {
-    inleiding: "Kijk de eindejaarsverrichtingen na vóór je ze indient.",
+    inleiding: "Hieronder vind je één of meerdere controles die je zelf kunt overlopen voor je indient. Bekijk elke controle en check of je er aan voldoet.",
   },
 };
 
@@ -145,7 +145,7 @@ const HANDMATIGE_CONTROLES = [
     categorie: "Verkopen",
     type: "check",
     vraag: "Vind je op 400000 elke verkoopfactuur terug?",
-    toelichting: "Open de T-rekening van de klanten. Je hoort er de beginbalans en al je verkopen te zien staan: BB, VK01 tot en met VK08. De dagontvangsten staan er niet bij — die worden meteen contant betaald.",
+    toelichting: "Open de T-rekening van de klanten. Je hoort er de beginbalans en al je verkopen te zien staan: BB, VK01 tot en met VK08 en ONTV01. ",
     filterTip: "Filter in het T-paneel op 400000.",
   },
 
@@ -196,9 +196,9 @@ const HANDMATIGE_CONTROLES = [
     categorie: "Financiële verrichtingen",
     type: "check-met-document",
     vraag: "Is de lening bij het verkrijgen juist verdeeld over lange en korte termijn?",
-    toelichting: "Kijk in de aflossingstabel hoeveel je in 2026 nog moet aflossen. Dat deel hoort bij de schulden op ten hoogste één jaar (rubriek 42), de rest bij de schulden op meer dan één jaar (rubriek 17). Die verdeling maak je meteen bij het verkrijgen van de lening — niet op het einde van het kwartaal.",
+    toelichting: "Kijk in de aflossingstabel hoeveel je in 2026 nog moet aflossen. Dat deel hoort bij de schulden op ten hoogste één jaar, de rest bij de schulden op meer dan één jaar. Die verdeling maak je meteen bij het verkrijgen van de lening — niet op het einde van het kwartaal.",
     docConfig: "leningRef",
-    filterTip: "Filter in het T-paneel op rubriek 17 en rubriek 42.",
+    filterTip: "Filter in het T-paneel op kredietinstellingen.",
   },
   {
     id: "lonen-uitbetaald",

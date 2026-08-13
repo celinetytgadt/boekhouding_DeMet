@@ -62,21 +62,21 @@ const OPDRACHTEN = [
   // overboekingen) duidelijker.
   { ref: "KAS01", categorie: "Financiële verrichtingen", titel: "Kasblad KAS01", doc: "KAS01" },
 
-  { ref: "BANK01", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK01", doc: "BANK01" },
+  { ref: "BANK01", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK01", doc: "BANK01", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening p1", hulpdoc: "LENING2", hulpdocTitel: "Aflossingstabel lening p2" },
   { ref: "BANK02", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK02", doc: "BANK02" },
   { ref: "BANK03", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK03", doc: "BANK03" },
   { ref: "BANK04", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK04", doc: "BANK04" },
   { ref: "BANK05", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK05", doc: "BANK05" },
   // Op de afschriften met een aflossing staat de maandelijkse aflossingstabel
   // (LENING1) als hulpdocument bij de boeking.
-  { ref: "BANK06", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK06", doc: "BANK06", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
+  { ref: "BANK06", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK06", doc: "BANK06", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening" },
   { ref: "BANK07", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK07", doc: "BANK07" },
   { ref: "BANK08", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK08", doc: "BANK08" },
   { ref: "BANK09", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK09", doc: "BANK09" },
-  { ref: "BANK10", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK10", doc: "BANK10", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
+  { ref: "BANK10", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK10", doc: "BANK10", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening" },
   { ref: "BANK11", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK11", doc: "BANK11" },
   { ref: "BANK12", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK12", doc: "BANK12" },
-  { ref: "BANK13", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK13", doc: "BANK13", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening 2026/4471 — maandelijks" },
+  { ref: "BANK13", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK13", doc: "BANK13", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening" },
 
   {
     ref: "BTW", categorie: "BTW-verwerking", titel: "Btw-verwerking BTW", geenDocument: true,
@@ -84,17 +84,14 @@ const OPDRACHTEN = [
   },
 
   { ref: "AFSCHR1", categorie: "Eindejaarsverrichtingen", titel: "Afschrijvingen AFSCHR1", doc: "AFSCHR1" },
-  // De overboeking lange → korte termijn (LENING2) is bewust geschrapt: de
-  // lening start in januari, dus die herverdeling hoort al bij het
-  // verkrijgen van de lening en niet op het einde van het kwartaal. Er is
-  // wel een controlevraag over bij de financiële verrichtingen.
   { ref: "VR", categorie: "Eindejaarsverrichtingen", titel: "Voorraad VR", doc: "VR" },
 
   // BELASTING en RESULTAAT worden NIET via de generieke lijst getoond (ze
-  // staan samen op één speciale pagina, zie §8 van de specificatie), maar ze
+  // staan samen op één speciale pagina), maar ze
   // moeten wel meetellen in de referentiecontrole en in de T-rekeningen.
-  { ref: "BELASTING", categorie: "Resultaatverwerking", titel: "Vennootschapsbelasting BELASTING", geenDocument: true, verborgenInNav: true },
-  { ref: "RESULTAAT", categorie: "Resultaatverwerking", titel: "Overgedragen winst RESULTAAT", geenDocument: true, verborgenInNav: true },
+  { ref: "BELASTING", categorie: "Resultaatverwerking", titel: "Vennootschapsbelasting", geenDocument: true, verborgenInNav: true },
+  { ref: "RESULTAAT", categorie: "Resultaatverwerking", titel: "Resultaatverwerking", geenDocument: true, verborgenInNav: true,
+    instructie: "Controleer of de reserves voldoende hoog zijn. Indien dit niet het geval is, wijs dan eerst het nodige deel aan de reserves toe. De rest is over te dragen naar volgend jaar." },
 ];
 
 // Volgorde van categorieën in de navigatie (§4 van de specificatie).

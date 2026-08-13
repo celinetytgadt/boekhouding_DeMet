@@ -17,7 +17,7 @@
 
 const BALANS_STRUCTUUR = {
   balans: {
-    titel: "Eindbalans",
+    titel: "Balans",
     kolommen: [
       {
         id: "activa",

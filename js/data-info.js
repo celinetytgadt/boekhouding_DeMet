@@ -26,24 +26,12 @@ const INFO_TEKSTEN = {
     ],
   },
 
-  rekeningZoeken: {
-    titel: "Een rekeningnummer zoeken",
-    regels: [
-      "Klik op het vergrootglas naast het veld Rekeningnr.",
-      { kop: "Drie manieren om te zoeken" },
-      { stap: "Typ een stuk van het nummer, bijvoorbeeld 604." },
-      { stap: "Typ een stuk van de naam, bijvoorbeeld btw" },
-      { stap: "Gebruik de filters: A/P/K/O, klasse of rubriek." },
-      "Klik op de rekening in de lijst om ze over te nemen in je schema.",
-    ],
-  },
-
   controles: {
     titel: "Wat wordt er bij de controles gevraagd?",
     regels: [
       "Deze controles halen er de fouten uit die bijna iedereen wel eens maakt.",
       { kop: "Automatisch nagekeken" },
-      "De app kijkt na of je elk verantwoordingsstuk geboekt hebt, en of elke rekening aan de kant staat waar ze hoort. Een voorraad kan niet credit staan, een leverancier niet debet.",
+      "De app kijkt na of elke rekening aan de kant staat waar ze hoort. Een voorraad kan niet credit staan, een leverancier niet debet.",
       { kop: "Zelf nakijken" },
       "Bij elke vraag zie je hoe je de filter kunt instellen bij de T-rekeningen. Zo vind je makkelijk de juiste informatie.",
     ],
@@ -62,16 +50,18 @@ const INFO_TEKSTEN = {
   },
 
   eindbalans: {
-    titel: "De eindbalans opstellen",
+    titel: "De balans opstellen",
     regels: [
-      "Je vindt hier alle rubrieken waarop je geboekt hebt en die een saldo overhouden. Klik op één of meerdere rubrieken en klik dan op het vak van de balans of resultatenrekening waar ze thuishoren. Slepen mag ook.",
+      "Je vindt hier alle rubrieken waarop je geboekt hebt en die een saldo overhouden. Klik op één of meerdere rubrieken en klik dan op het vak van de balans of resultatenrekening waar ze thuishoren. Slepen mag ook. (Bij de beginbalans is er nog geen resultatenrekening)",
       "Het bedrag op een kaartje is het saldo van de hele rubriek samen. Bij rubriek 23 is dat dus de aanschafwaarde min de geboekte afschrijvingen.",
       { kop: "Waar hoort wat?" },
       "De rubriek is de eerste twee cijfers van een rekeningnummer, en die zegt bijna altijd waar ze op de balans staat.",
-      { kop: "Wanneer klopt het?" },
-      "Zolang je de resultaatverwerking (BELASTING en RESULTAAT) nog niet geboekt hebt, zit de winst nog in de resultatenrekening. Dan moet activa + kosten gelijk zijn aan passiva + opbrengsten.",
+      { kop: "Wanneer klopt de beginbalans?" },
+      "Als activa = passiva en dat stemt overeen met de beginbalans uit de opdracht.",
+      "De app telt enkel op wat jij erin legt. Ze zegt niet of een rubriek in het juiste vak ligt: dat kijkt je vakexpert na.",
+      { kop: "Wanneer klopt de eindbalans?" },
+      "Zolang je de resultaatverwerking nog niet geboekt hebt, zit de winst nog in de resultatenrekening. Dan moet activa + kosten gelijk zijn aan passiva + opbrengsten.",
       "Heb je de resultaatverwerking wél geboekt, dan is de winst toegewezen aan het overgedragen resultaat. Dan moet totaal activa gelijk zijn aan totaal passiva, én totaal kosten aan totaal opbrengsten.",
-      "Bovenaan zie je altijd welke van de twee regels op dit moment geldt.",
       "De app telt enkel op wat jij erin legt. Ze zegt niet of een rubriek in het juiste vak ligt: dat kijkt je vakexpert na.",
     ],
   },
@@ -86,15 +76,11 @@ const INFO_TEKSTEN = {
       { stap: "Verkeerd gekoppeld? Klik op het kruisje bij de koppeling om ze weer los te maken." },
       "Is een betaling groter dan de factuur, dan blijft de rest bij Nog af te punten staan — koppel die aan de volgende factuur.",
       { kop: "Een creditnota" },
-      "Een creditnota is geen betaling maar een verkoop- of aankoopdocument dat een factuur vermindert. Punt ze dus af op de factuur waar ze bij hoort.",
-      { kop: "Een klant" },
-      "Een verkoopfactuur zet je debet op 400000: de klant moet je nog betalen. Bij ontvangst van het geld boek je credit. Staat de factuur nog open, dan is er (nog) geen ontvangst tegenover geboekt.",
-      { kop: "Een leverancier" },
-      "Een aankoopfactuur zet je credit op 440000: jij moet nog betalen. Bij de betaling boek je debet.",
+      "Een creditnota punt je af op de factuur waar ze bij hoort.",
       { kop: "Blijft er een klein bedrag openstaan?" },
       "Dan klopt er iets niet aan je boeking van die factuur of van de betaling. Zoek zelf op in je cursus wat er bij een betaling nog kan meespelen.",
       { kop: "Let op de schrijfwijze" },
-      "De namen typ je zelf. Schrijf je één keer Bloomwear en een andere keer Bloomwear Retail, dan krijg je twee aparte relaties. Gebruik de suggesties die verschijnen.",
+      "De namen typ je zelf. Schrijf je één keer Bloomwear en een andere keer Bloomwear Retail, dan krijg je twee aparte relaties. Gebruik de suggesties die verschijnen. Je kan het altijd nog corrigeren in de voorbije redeneerschema's (ook als die boekingen in orde waren)",
     ],
   },
 };

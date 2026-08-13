@@ -2,7 +2,7 @@
 // Alle logica van de app. Inhoud die per jaar/bundel wijzigt staat NIET
 // hier, maar in js/data-opdrachten.js, js/data-relaties.js,
 // js/data-controles.js, js/data-balans.js, js/data-info.js,
-// js/data-mar-indeling.js en js/mar.js (zie §9 van de specificatie).
+// js/data-mar-indeling.js en js/mar.js.
 //
 // De app kent zelf geen enkel bedrag: alles wat een leerling ziet komt uit
 // wat de leerling zelf intikt of uit de documentafbeeldingen.
@@ -809,9 +809,7 @@
     html += '<div class="paneel">' +
       "<p>Hey collega's, fijn dat jullie deze app willen testen! </p>"
 +      
-      "<p>De app spreekt vrij goed voor zichzelf, een handleiding vind je <a href='https://docs.google.com/document/d/1X7m9_qPoTeqay_f0Xp-gqbDpYGRryGkBAMWi6GZoL3k/edit' target='_blank' rel='noopener'>in dit document</a> </p>" 
-+ 
-      "<p>Je loopt er best tab voor tab door, je krijgt telkens een verantwoordingsstuk en een redeneerschema. </p>" 
+      "<p>De app spreekt vrij goed voor zichzelf, een handleiding vind je <a href='https://docs.google.com/document/d/1X7m9_qPoTeqay_f0Xp-gqbDpYGRryGkBAMWi6GZoL3k/edit' target='_blank' rel='noopener'>in dit document</a> </p>"
 + 
       "<p>Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
 +
