@@ -1662,7 +1662,7 @@
     html += "</div>";
 
     html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema("BELASTING") + "</div>";
-    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing van het resultaat ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>Het resultaat wordt, na eventuele allocatie aan de reserves, overgedragen naar volgend jaar. Bereken zelf of er nog reserves moeten toegewezen worden." + </p> + htmlRedeneerschema("RESULTAAT") + "</div>";
+    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing van het resultaat ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>Het resultaat wordt, na eventuele allocatie aan de reserves, overgedragen naar volgend jaar. Bereken zelf of er nog reserves moeten toegewezen worden." + htmlRedeneerschema("RESULTAAT") + "</div>";
 
     return html;
   }
