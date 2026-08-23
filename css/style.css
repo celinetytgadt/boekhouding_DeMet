@@ -1636,11 +1636,26 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
    scherm passen, ook op een kleine Chromebook. */
 .indien-lijst { display: flex; flex-direction: column; gap: 2px; margin: 10px 0; }
 
+/* Naam links, daarnaast twee smalle kolommen: geboekt en in orde. De
+   kopregel gebruikt hetzelfde raster, zodat de cijfers eronder uitlijnen. */
+.indien-kop,
 .indien-rij {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 62px 62px;
   align-items: center;
   gap: 8px;
   padding: 4px 8px;
+}
+
+.indien-kop {
+  font-size: 11px;
+  color: var(--kleur-tekst-zacht);
+  text-transform: lowercase;
+  padding-bottom: 0;
+}
+.indien-kop span + span { text-align: center; }
+
+.indien-rij {
   border: 1px solid var(--kleur-rand);
   border-radius: 4px;
   cursor: pointer;
@@ -1650,12 +1665,13 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 .indien-rij:hover { background: var(--kleur-achtergrond); }
 .indien-rij.uit { opacity: 0.55; cursor: default; }
 .indien-rij.uit:hover { background: none; }
-.indien-naam { flex: 1; }
+.indien-naam { min-width: 0; }
 
 .indien-telling {
   font-size: 11px;
   color: var(--kleur-tekst-zacht);
   white-space: nowrap;
+  text-align: center;
 }
 .indien-telling.volledig { color: #00a366; font-weight: 600; }
 
@@ -1732,13 +1748,11 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 /* In het indienvenster: hoeveel verrichtingen al in orde bevonden zijn. */
 .indien-inorde {
   font-size: 11px;
-  border-radius: 9px;
-  padding: 0 6px;
-  background: #ddfff2;
-  border: 1px solid var(--kleur-goed);
-  color: #00875a;
+  color: var(--kleur-tekst-zacht);
   white-space: nowrap;
+  text-align: center;
 }
+.indien-inorde.volledig { color: #00a366; font-weight: 600; }
 
 /* De bevestigingsstap vóór het verzenden. */
 .bevestig-waarschuwing {

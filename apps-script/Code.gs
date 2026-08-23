@@ -54,12 +54,12 @@ var VESTIGING = "LEU";
 
 // De map op de gedeelde Drive waar alle werkbestanden samenkomen. Plak hier
 // het ID van die map: open ze in Drive en neem het stuk van de URL na
-// /folders/ (bv. 1AbCdEfGhIjKlMnOpQrStUvWxYz).
+// /folders/ (bv. 1gVbFLxA90tzH7uUYS-vBBRV1klXViwPd).
 //
 // Blijft dit leeg, dan maakt het script een map "Boekhoudapp werkbestanden"
 // aan in de eigen Drive van het account waaronder het draait — handig om te
 // testen, maar dan staat het werk van deze vestiging apart.
-var MAP_ID_GEDEELD = "1Nn5-MPk_7DEaS7xDz7bBR0pTHGXj1Q24";
+var MAP_ID_GEDEELD = "1gVbFLxA90tzH7uUYS-vBBRV1klXViwPd";
 
 var BLAD_KLAS = "Klas";
 var BLAD_INZENDINGEN = "Inzendingen";
@@ -330,11 +330,24 @@ function werkMap_() {
  */
 function versieMap_() {
   var ouder = werkMap_();
-  if (MAP_ID_GEDEELD) {
-    var it = ouder.getFoldersByName(MAP_VERSIES);
-    return it.hasNext() ? it.next() : ouder.createFolder(MAP_VERSIES);
-  }
+  if (MAP_ID_GEDEELD) return submap_(ouder, MAP_VERSIES);
   return map_("MAP_VERSIES_ID", MAP_VERSIES, ouder);
+}
+
+/**
+ * Zoekt een submap op naam, zonder te struikelen over hoofdletters:
+ * "Versies" en "versies" zijn dezelfde map. Bestaat ze nog niet, dan wordt ze
+ * aangemaakt — anders zou er stilletjes een tweede map bijkomen naast die van
+ * jou.
+ */
+function submap_(ouder, naam) {
+  var gezocht = String(naam).toLowerCase();
+  var it = ouder.getFolders();
+  while (it.hasNext()) {
+    var m = it.next();
+    if (String(m.getName()).toLowerCase() === gezocht) return m;
+  }
+  return ouder.createFolder(naam);
 }
 
 function map_(eigenschap, naam, ouder) {
@@ -490,6 +503,7 @@ function onOpen() {
     .addItem("Codes genereren voor lege vakjes", "genereerCodes")
     .addSeparator()
     .addItem("Waar staan de werkbestanden?", "toonWerkMap")
+    .addItem("Werk terugzetten uit een versie…", "zetVersieTerug")
     .addItem("Eerste installatie", "installeer")
     .addToUi();
 }
@@ -546,24 +560,97 @@ function toonWerkMap() {
   var ui = SpreadsheetApp.getUi();
   try {
     var map = werkMap_();
-    var eigen = 0, totaal = 0;
+    var eigen = [], andere = 0;
     var it = map.getFiles();
     while (it.hasNext()) {
       var naam = it.next().getName();
       if (naam.indexOf("werk_") !== 0) continue;
-      totaal++;
-      if (naam.indexOf("werk_" + vestigingDeel_()) === 0) eigen++;
+      if (naam.indexOf("werk_" + vestigingDeel_()) === 0) eigen.push(naam);
+      else andere++;
     }
+    eigen.sort();
+
     ui.alert(
       "Vestiging van deze Sheet: " + (VESTIGING || "(niet ingevuld)") + "\n\n" +
       "Map: " + map.getName() + "\n" +
       "Adres: " + map.getUrl() + "\n" +
       (MAP_ID_GEDEELD ? "Gekozen via MAP_ID_GEDEELD." : "Automatisch aangemaakt in de eigen Drive (MAP_ID_GEDEELD is leeg).") + "\n\n" +
-      "Werkbestanden in die map: " + totaal + ", waarvan " + eigen + " van deze vestiging.");
+      "Versies komen in de submap '" + MAP_VERSIES + "' van díé map.\n\n" +
+      "Werkbestanden van deze vestiging: " + eigen.length +
+      (eigen.length ? "\n  " + eigen.slice(0, 15).join("\n  ") + (eigen.length > 15 ? "\n  …" : "") : "") +
+      "\nVan andere vestigingen: " + andere + "\n\n" +
+      "Herkent de app een bestand niet, dan staat het in de verkeerde map of heeft het niet " +
+      "exact de naam werk_" + vestigingDeel_() + "<naam zonder hoofdletters, spaties en leestekens>.json");
   } catch (err) {
     ui.alert("De map is niet bereikbaar:\n\n" + err.message +
       "\n\nKijk het ID bij MAP_ID_GEDEELD na, en of dit account bewerkrechten heeft op die map.");
   }
+}
+
+/**
+ * Zet de nieuwste bewaarde versie van één leerling terug als haar
+ * werkbestand. Het script léést nooit uit de submap 'versies' — dat is een
+ * archief — dus een bestand daar zomaar neerzetten doet niets. Deze functie
+ * is de brug: ze kopieert de inhoud naar het echte werkbestand, en zet het
+ * huidige werk eerst als extra versie apart.
+ */
+function zetVersieTerug() {
+  var ui = SpreadsheetApp.getUi();
+  var vraag = ui.prompt("Werk terugzetten",
+    "Van welke leerling? Schrijf de naam zoals in het tabblad Klas.", ui.ButtonSet.OK_CANCEL);
+  if (vraag.getSelectedButton() !== ui.Button.OK) return;
+  var naam = String(vraag.getResponseText() || "").trim();
+  if (!naam) return;
+
+  var slug = vestigingDeel_() + normaliseerNaam_(naam);
+  var versies = [];
+  var it = versieMap_().getFiles();
+  while (it.hasNext()) {
+    var f = it.next();
+    if (f.getName().indexOf("werk_" + slug + "_") === 0) versies.push(f);
+  }
+  if (!versies.length) {
+    ui.alert("Geen bewaarde versies gevonden voor " + naam + ".\n\n" +
+      "Er werd gezocht naar bestanden die beginnen met werk_" + slug + "_ in de submap '" +
+      MAP_VERSIES + "'.");
+    return;
+  }
+  versies.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
+  var nieuwste = versies[0];
+
+  var pakket;
+  try {
+    pakket = JSON.parse(nieuwste.getBlob().getDataAsString());
+  } catch (err) {
+    ui.alert("Die versie is onleesbaar:\n\n" + nieuwste.getName());
+    return;
+  }
+  // Vers tijdstip, anders houdt de app het (oudere) werk in de browser voor
+  // het recentste en vraagt ze niets.
+  pakket.gewijzigd = new Date().toISOString();
+  var inhoud = JSON.stringify(pakket);
+
+  var antwoordKnop = ui.alert("Werk terugzetten",
+    "De nieuwste bewaarde versie van " + naam + " is:\n\n" + nieuwste.getName() +
+    "\n\nDie wordt haar werkbestand. Wat er nu in staat, wordt eerst als extra versie weggezet.",
+    ui.ButtonSet.YES_NO);
+  if (antwoordKnop !== ui.Button.YES) return;
+
+  var map = werkMap_();
+  var stempel = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmm");
+  var bestaande = map.getFilesByName(werkBestandsnaam_(naam));
+  if (bestaande.hasNext()) {
+    var huidig = bestaande.next();
+    versieMap_().createFile("werk_" + slug + "_" + stempel + "-voor-terugzetten.json",
+      huidig.getBlob().getDataAsString(), MimeType.PLAIN_TEXT);
+    huidig.setContent(inhoud);
+  } else {
+    map.createFile(werkBestandsnaam_(naam), inhoud, MimeType.PLAIN_TEXT);
+  }
+
+  ui.alert("Klaar.\n\n" +
+    "Laat " + naam + " zich opnieuw aanmelden in de app. Staat er op die computer nog ander " +
+    "werk, dan vraagt de app welke versie ze wil — ze kiest dan 'het werk van de server'.");
 }
 
 /**

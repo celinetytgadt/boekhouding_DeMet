@@ -403,18 +403,23 @@
      Indienen ter nakijking
      ====================================================================== */
 
-  function maakCategorie(naam, refs, geboekt, totaalStukken) {
+  /* refs   = alles wat bij het indienen meegaat
+     telRefs = waarop de tellers "geboekt" en "in orde" slaan: de
+               verantwoordingsstukken zelf. Zo staan beide kolommen in het
+               indienvenster op dezelfde noemer (7/9 en 6/9). */
+  function maakCategorie(naam, refs, geboekt, telRefs) {
     // Verrichtingen die al in orde bevonden zijn, gaan niet meer mee. Zo
     // hoeft de vakexpert niet telkens hetzelfde opnieuw na te kijken.
     var teSturen = refs.filter(function (r) { return !isInOrde(r); });
     var stand = typeof window.controleStandVoor === "function"
       ? window.controleStandVoor(naam)
       : { totaal: 0, af: 0, ok: true };
+    var tel = telRefs || refs;
     return {
       naam: naam,
-      totaal: totaalStukken === undefined ? refs.length : totaalStukken,
+      totaal: tel.length,
       geboekt: geboekt,
-      inOrde: refs.length - teSturen.length,
+      inOrde: tel.filter(function (r) { return isInOrde(r); }).length,
       refs: teSturen,
       controles: stand,
     };
@@ -431,19 +436,25 @@
         var b = st.boekingen[o.ref];
         return b && b.geboekt;
       }).length;
-      var refs = items.map(function (o) { return o.ref; });
+      var stukken = items.map(function (o) { return o.ref; });
+      var refs = stukken.slice();
 
       // De pagina Klanten & leveranciers hoort bij één categorie en gaat
-      // daar dus in één keer mee, met de twee open vragen erbij.
-      if (cat === CATEGORIE_RELATIES) refs.push("RELATIES");
-      // De afvinkjes van de controles gaan mee als één extra regel, zodat
-      // in de Sheet te zien is of er zelf nagekeken werd vóór het indienen.
-      if (typeof CATEGORIE_CONTROLES !== "undefined" &&
-          (CATEGORIE_CONTROLES[cat] || HANDMATIGE_CONTROLES.some(function (c) { return c.categorie === cat; }))) {
-        refs.push("CONTROLE:" + cat);
+      // daar dus in één keer mee, met de twee open vragen erbij. Ze telt ook
+      // mee in de twee kolommen: anders zou een categorie 9/9 en 9/9 tonen
+      // terwijl die vragen nog openstaan of nog nagekeken moeten worden.
+      // "Geboekt" betekent hier: allebei de vragen ingevuld.
+      if (cat === CATEGORIE_RELATIES) {
+        refs.push("RELATIES");
+        stukken.push("RELATIES");
+        var vragen = st.relatieVragen || {};
+        if (vragen.klanten && vragen.leveranciers) geboekt++;
       }
 
-      lijst.push(maakCategorie(cat, refs, geboekt, items.length));
+      // De afvinkjes van de controles gaan bewust NIET mee: dat is
+      // zelfcontrole voor de leerling, geen nakijkwerk voor de vakexpert.
+
+      lijst.push(maakCategorie(cat, refs, geboekt, stukken));
     });
 
     var resIngevuld = Object.keys(st.resultaat.stap || {}).some(function (k) { return st.resultaat.stap[k]; });
@@ -470,21 +481,21 @@
       "<p>Vink aan wat je wil doorsturen. Wat je niet aanvinkt, blijft van jou.</p>" +
       '<div class="indien-lijst">' +
       // Per categorie precies drie dingen: de naam, hoeveel er geboekt is en
-      // hoeveel er al in orde bevonden is. Wat de leerling zelf afvinkte
-      // (de controles) stond hier vroeger ook nog bij, maar dat maakte de
-      // rij onleesbaar — die vraag komt nu in de bevestigingsstap.
+      // hoeveel er al in orde bevonden is — die twee als aparte kolommen,
+      // telkens op dezelfde noemer. Wat de leerling zelf afvinkte (de
+      // controles) stond hier vroeger ook nog bij, maar dat maakte de rij
+      // onleesbaar; die vraag komt nu in de bevestigingsstap.
+      '<div class="indien-kop"><span></span><span>geboekt</span><span>in orde</span></div>' +
       overzicht.map(function (c) {
         var niets = c.refs.length === 0;
-        var af = c.geboekt === c.totaal;
-        var telling = niets ? "alles in orde" : c.geboekt + " van de " + c.totaal + " geboekt";
-        var inOrde = c.inOrde && !niets
-          ? '<span class="indien-inorde">' + c.inOrde + " in orde</span>"
-          : "";
         return '<label class="indien-rij' + (niets ? " uit" : "") + '">' +
-          '<input type="checkbox" data-cat="' + esc(c.naam) + '"' + (niets ? " disabled" : "") + ">" +
-          '<span class="indien-naam">' + esc(c.naam) + "</span>" +
-          '<span class="indien-telling' + (niets || af ? " volledig" : "") + '">' + esc(telling) + "</span>" +
-          inOrde +
+          '<span class="indien-naam">' +
+          '<input type="checkbox" data-cat="' + esc(c.naam) + '"' + (niets ? " disabled" : "") + "> " +
+          esc(c.naam) + "</span>" +
+          '<span class="indien-telling' + (c.geboekt === c.totaal ? " volledig" : "") + '">' +
+          c.geboekt + "/" + c.totaal + "</span>" +
+          '<span class="indien-inorde' + (c.inOrde === c.totaal ? " volledig" : "") + '">' +
+          c.inOrde + "/" + c.totaal + "</span>" +
           "</label>";
       }).join("") +
       "</div>" +
@@ -626,7 +637,6 @@
     if (ref === "RESULTAATVERWERKING") return maakResultaatItem(categorie);
     if (ref === "EINDBALANS") return maakBalansItem(categorie);
     if (ref === "RELATIES") return maakRelatieItem(categorie);
-    if (ref.indexOf("CONTROLE:") === 0) return maakControleItem(categorie);
 
     var def = OPDRACHTEN.filter(function (o) { return o.ref === ref; })[0] || {};
     var boeking = APP.getState().boekingen[ref];
@@ -703,27 +713,6 @@
         { redenering: "Openstaande facturen van klanten", omschrijving: v.klanten || "" },
         { redenering: "Openstaande facturen van leveranciers", omschrijving: v.leveranciers || "" },
       ],
-    };
-  }
-
-  // De afvinkjes van de controles bij deze categorie, als één regel. Zo zie
-  // je in de Sheet meteen of er zelf nagekeken werd vóór het indienen.
-  function maakControleItem(categorie) {
-    var st = APP.getState();
-    var lijst = HANDMATIGE_CONTROLES.filter(function (c) { return c.categorie === categorie; });
-    var af = lijst.filter(function (c) { return !!st.controles[c.id]; });
-
-    return {
-      ref: "CONTROLE:" + categorie,
-      categorie: categorie,
-      titel: "Controles " + categorie,
-      status: lijst.length && af.length === lijst.length ? "nagekeken" : af.length + " van " + lijst.length + " nagekeken",
-      boeking: lijst.map(function (c) {
-        return (st.controles[c.id] ? "✓ " : "✗ ") + c.vraag;
-      }).join("\n"),
-      lijnen: lijst.map(function (c) {
-        return { redenering: c.vraag, omschrijving: st.controles[c.id] ? "afgevinkt" : "niet afgevinkt" };
-      }),
     };
   }
 

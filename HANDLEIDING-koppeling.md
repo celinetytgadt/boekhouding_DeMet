@@ -39,6 +39,26 @@ map hebben.
 > andere vestiging, opent die Sheet — daar is geen aparte instelling voor
 > nodig.
 
+### Hoe de mappen horen te staan
+
+Je hebt er precies twee nodig:
+
+```
+Boekhoudapp werkbestanden        ← het ID hiervan zet je in MAP_ID_GEDEELD
+├── werk_LEU_lottev.json         ← het werk van elke leerling
+├── werk_TW_amalt.json
+└── versies                      ← maakt het script zelf aan; de back-ups
+    └── werk_LEU_lottev_20260823-1015.json
+```
+
+Belangrijk: *versies* is een **submap ván** de werkmap, niet een map ernaast.
+Staat ze ernaast, dan ziet het script ze niet en maakt het er zelf een tweede
+aan. Hoofdletters maken niet uit: *Versies* en *versies* zijn dezelfde map.
+
+Waar die werkmap zelf staat, mag je kiezen. Zet je haar in de map waar ook je
+nakijk-Sheets en handleidingen staan, dan blijft dat overzichtelijk: één
+submap voor de app, de rest voor jezelf.
+
 ### Een bestaande map naar de gedeelde Drive brengen
 
 Een **map** verhuizen van *Mijn Drive* naar een gedeelde Drive laat Google
@@ -221,6 +241,9 @@ van wat op de server staat, dan kiest de leerling zelf welke versie het wordt
 
 **Indienen.** Met de knop *Indienen* kiest de leerling per categorie
 (Aankopen, Verkopen, Financiële verrichtingen …) wat er nagekeken mag worden.
+Naast elke categorie staan twee tellers op dezelfde noemer: hoeveel
+verantwoordingsstukken er geboekt zijn, en hoeveel er al in orde bevonden zijn
+(bv. 7/9 en 6/9).
 Wat niet aangevinkt is, blijft privé. Verrichtingen die nog niet geboekt zijn,
 gaan wel mee met de vermelding *onafgewerkt*, zodat jij ziet waar iemand
 vastloopt.
@@ -242,8 +265,8 @@ nagekeken*, en bij het indienen wordt dezelfde vraag nog eens gesteld. Vroeger
 gingen álle vinkjes uit bij één heropening; dat was zoveel werk dat er blind
 opnieuw geklikt werd.
 
-Die afvinkjes komen mee in je Sheet, als een aparte regel per categorie
-(`CONTROLE: Aankopen`). Zo zie je meteen of er zelf nagekeken werd.
+Die afvinkjes blijven bij de leerling: ze komen **niet** in je Sheet terecht.
+Het is zelfcontrole, geen nakijkwerk.
 
 **Klanten en leveranciers.** Die pagina staat in het menu bij de financiële
 verrichtingen en gaat daar ook mee in bij het indienen. Er staan twee open
@@ -331,13 +354,24 @@ niet nodig.
 ### Werk terugzetten
 
 De werkbestanden van de drie vestigingen staan samen in de gedeelde map, als
-`werk_<vestiging>_<naam>.json` — bijvoorbeeld `werk_LEU_lottev.json`. In de
-submap **versies** staan de vijf vorige versies per leerling (hoogstens één
-kopie per uur).
+`werk_<vestiging>_<naam>.json` — bijvoorbeeld `werk_LEU_lottev.json`. De naam
+is de naam van de leerling zonder hoofdletters, spaties en leestekens. In de
+submap **versies**, die het script zelf aanmaakt ín die map, staan de vijf
+vorige versies per leerling (hoogstens één kopie per uur).
 
-Heeft een leerling iets kapotgeklikt: open het versiebestand, kopieer de
-inhoud naar het gewone `werk_<vestiging>_<naam>.json`, en laat de leerling
-zich opnieuw aanmelden.
+> Het script **leest** nooit uit *versies*: dat is een archief. Een bestand
+> daar neerzetten doet dus niets.
+
+Heeft een leerling iets kapotgeklikt, gebruik dan **Boekhoudapp → Werk
+terugzetten uit een versie…**. Je tikt de naam van de leerling, het script
+zoekt de nieuwste bewaarde versie, zet het huidige werk eerst als extra versie
+apart en schrijft de oude versie terug. Laat de leerling zich daarna opnieuw
+aanmelden; heeft ze op die computer nog ander werk staan, dan vraagt de app
+welke versie het wordt — ze kiest dan *het werk van de server*.
+
+Wil je het met de hand doen: kopieer de inhoud van het versiebestand naar
+`werk_<vestiging>_<naam>.json` in de gewone map. Het bestand moet **exact** zo
+heten, anders vindt het script het niet.
 
 ### Een leerling is de code kwijt
 
