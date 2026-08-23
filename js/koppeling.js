@@ -30,7 +30,17 @@
   "use strict";
 
   var cfg = typeof KOPPELING !== "undefined" ? KOPPELING : {};
-  var klaslijst = typeof KLASLIJST !== "undefined" ? KLASLIJST : [];
+
+  /* De vestigingen uit config-koppeling.js. Elke vestiging heeft een eigen
+     Sheet, een eigen web-app-URL en een eigen klaslijst; de app is voor alle
+     drie dezelfde. Staat er nog een oude config met één webAppUrl, dan blijft
+     die gewoon werken. */
+  var vestigingen = (typeof VESTIGINGEN !== "undefined" && VESTIGINGEN && VESTIGINGEN.length)
+    ? VESTIGINGEN
+    : [{ code: "", naam: "", webAppUrl: cfg.webAppUrl || "", sleutel: cfg.sleutel || "" }];
+
+  // De gekozen vestiging (een object uit de lijst hierboven).
+  var vestiging = vestigingen.length === 1 ? vestigingen[0] : null;
 
   var AANMELD_KEY = "boekhoudapp_aanmelding";
   var FEEDBACK_KEY_PREFIX = "boekhoudapp_feedback_";
@@ -40,7 +50,7 @@
   // overeenkomen met BEOORDELINGEN in Code.gs en met IN_ORDE in app.js.
   var IN_ORDE = "In orde";
 
-  // Aanmelding van deze browser: { naam, code }
+  // Aanmelding van deze browser: { vestiging, naam, code }
   var aanmelding = null;
   // Feedback per verrichting, nieuwste eerst:
   // { REF: [ { beoordeling, feedback, ingediend }, … ] }
@@ -53,7 +63,37 @@
      Kleine hulpjes
      ====================================================================== */
 
-  function actief() { return !!cfg.webAppUrl; }
+  // De web-app en het sleutelwoord van de gekozen vestiging.
+  function webAppUrl() { return (vestiging && vestiging.webAppUrl) || ""; }
+  function sleutelwoord() { return (vestiging && vestiging.sleutel) || cfg.sleutel || ""; }
+
+  // Is er iets om mee te praten? actief() kijkt naar de gekozen vestiging,
+  // ingesteld() naar de app als geheel (voor de knoppen bovenaan).
+  function actief() { return !!webAppUrl(); }
+  function ingesteld() {
+    return vestigingen.some(function (v) { return !!v.webAppUrl; });
+  }
+
+  function vestigingMet(code) {
+    for (var i = 0; i < vestigingen.length; i++) {
+      if (String(vestigingen[i].code) === String(code)) return vestigingen[i];
+    }
+    return null;
+  }
+
+  function vestigingLabel(v) {
+    if (!v) return "";
+    return v.naam ? v.naam : v.code;
+  }
+
+  // De klaslijst van één vestiging. KLASLIJSTEN staat in data-klas.js; een
+  // oude, platte KLASLIJST blijft werken.
+  function klaslijstVoor(code) {
+    if (typeof KLASLIJSTEN !== "undefined" && KLASLIJSTEN && KLASLIJSTEN[code]) {
+      return KLASLIJSTEN[code] || [];
+    }
+    return typeof KLASLIJST !== "undefined" ? KLASLIJST : [];
+  }
 
   function normaliseerNaam(n) {
     return String(n || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -92,7 +132,7 @@
      ====================================================================== */
 
   function haal(params) {
-    var url = cfg.webAppUrl + "?" + Object.keys(params).map(function (k) {
+    var url = webAppUrl() + "?" + Object.keys(params).map(function (k) {
       return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
     }).join("&");
     return fetch(url, { method: "GET", redirect: "follow" })
@@ -103,7 +143,7 @@
   // OPTIONS-verzoek, en daar antwoordt Apps Script niet op. De verzending
   // zou dan altijd stuklopen op CORS.
   function stuur(data) {
-    return fetch(cfg.webAppUrl, {
+    return fetch(webAppUrl(), {
       method: "POST",
       redirect: "follow",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -112,7 +152,7 @@
   }
 
   function metAanmelding(data) {
-    data.sleutel = cfg.sleutel;
+    data.sleutel = sleutelwoord();
     data.naam = aanmelding ? aanmelding.naam : "";
     data.code = aanmelding ? aanmelding.code : "";
     return data;
@@ -134,47 +174,80 @@
      ====================================================================== */
 
   function bouwAanmeldUI() {
+    var vestSelect = document.getElementById("vestiging-select");
     var select = document.getElementById("leerling-select");
     var naamInput = document.getElementById("leerling-naam-input");
     var codeVeld = document.getElementById("leerling-code");
     var knop = document.getElementById("btn-aanmelden");
     if (!select || !naamInput) return;
 
-    var metLijst = klaslijst.length > 0;
-
-    // Zonder klaslijst blijft het vrije naamveld van app.js in dienst.
-    // Handig zolang er met collega's getest wordt.
-    select.hidden = !metLijst;
-    codeVeld.hidden = !metLijst;
-    knop.hidden = !metLijst;
-    naamInput.hidden = metLijst;
-    var label = document.querySelector('label[for="leerling-naam-input"]');
-    if (label) label.setAttribute("for", metLijst ? "leerling-select" : "leerling-naam-input");
-    if (!metLijst) return;
-
-    select.innerHTML = '<option value="">— kies je naam —</option>' +
-      klaslijst.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
-
-    if (aanmelding) {
-      select.value = aanmelding.naam;
-      codeVeld.value = aanmelding.code;
+    // De vestigingskeuze verschijnt enkel als er meer dan één is. Bij één
+    // vestiging blijft het scherm even eenvoudig als vroeger.
+    if (vestSelect) {
+      vestSelect.hidden = vestigingen.length < 2;
+      if (vestigingen.length > 1) {
+        vestSelect.innerHTML = '<option value="">— kies je school —</option>' +
+          vestigingen.map(function (v) {
+            return '<option value="' + esc(v.code) + '">' + esc(vestigingLabel(v)) + "</option>";
+          }).join("");
+        if (vestiging) vestSelect.value = vestiging.code;
+        vestSelect.addEventListener("change", function () {
+          vestiging = vestigingMet(vestSelect.value);
+          status("");
+          vulNamen();
+        });
+      }
     }
 
     knop.addEventListener("click", meldAan);
     codeVeld.addEventListener("keydown", function (e) { if (e.key === "Enter") meldAan(); });
     select.addEventListener("change", function () { status(""); });
+
+    vulNamen();
+
+    /* De namenlijst hangt af van de gekozen vestiging, dus ze wordt telkens
+       opnieuw opgebouwd. Zonder klaslijst blijft het vrije naamveld van
+       app.js in dienst — handig zolang er met collega's getest wordt. */
+    function vulNamen() {
+      var lijst = vestiging ? klaslijstVoor(vestiging.code) : [];
+      var metLijst = lijst.length > 0;
+
+      select.hidden = !metLijst;
+      codeVeld.hidden = !metLijst;
+      knop.hidden = !metLijst;
+      naamInput.hidden = metLijst;
+      var label = document.querySelector('label[for="leerling-naam-input"], label[for="leerling-select"]');
+      if (label) label.setAttribute("for", metLijst ? "leerling-select" : "leerling-naam-input");
+      if (!metLijst) { select.innerHTML = ""; return; }
+
+      select.innerHTML = '<option value="">— kies je naam —</option>' +
+        lijst.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+
+      if (aanmelding && vestiging && aanmelding.vestiging === vestiging.code) {
+        select.value = aanmelding.naam;
+        codeVeld.value = aanmelding.code;
+      } else {
+        select.value = "";
+        codeVeld.value = "";
+      }
+    }
   }
 
   function meldAan() {
     var naam = document.getElementById("leerling-select").value;
     var code = document.getElementById("leerling-code").value.trim();
+    if (!vestiging) { status("Kies eerst je school.", "fout"); return; }
+    if (!actief()) {
+      status("Voor " + vestigingLabel(vestiging) + " is de koppeling nog niet ingesteld — verwittig je vakexpert.", "fout");
+      return;
+    }
     if (!naam) { status("Kies eerst je naam.", "fout"); return; }
 
     status("Bezig met aanmelden…");
-    haal({ actie: "aanmelden", sleutel: cfg.sleutel, naam: naam, code: code })
+    haal({ actie: "aanmelden", sleutel: sleutelwoord(), naam: naam, code: code })
       .then(function (r) {
         if (!r || !r.ok) { status("Aanmelden lukt niet: " + foutTekst(r), "fout"); return; }
-        aanmelding = { naam: r.leerling || naam, code: code };
+        aanmelding = { vestiging: vestiging.code, naam: r.leerling || naam, code: code };
         schrijf(AANMELD_KEY, JSON.stringify(aanmelding));
         status("Aangemeld.", "ok");
         naAanmelding();
@@ -191,6 +264,10 @@
    * overschreven — bij twijfel kiest de leerling zelf.
    */
   function naAanmelding() {
+    // Twee vestigingen kunnen een gelijknamige leerling hebben. De
+    // bewaarsleutel in de browser krijgt daarom de code van de vestiging
+    // erbij, zodat ze op een gedeelde computer niet in elkaars werk komen.
+    if (APP.zetOpslagPrefix) APP.zetOpslagPrefix(aanmelding.vestiging || "");
     APP.laadStudent(aanmelding.naam);
     laadFeedbackUitBrowser();
     APP.renderAlles();
@@ -222,7 +299,7 @@
   }
 
   function metAanmeldParams(p) {
-    p.sleutel = cfg.sleutel;
+    p.sleutel = sleutelwoord();
     p.naam = aanmelding ? aanmelding.naam : "";
     p.code = aanmelding ? aanmelding.code : "";
     return p;
@@ -318,7 +395,7 @@
     try {
       var pakket = JSON.stringify(metAanmelding({ actie: "bewaren", state: APP.getState() }));
       var blob = new Blob([pakket], { type: "text/plain;charset=utf-8" });
-      if (navigator.sendBeacon(cfg.webAppUrl, blob)) teBewaren = false;
+      if (navigator.sendBeacon(webAppUrl(), blob)) teBewaren = false;
     } catch (e) { console.error(e); }
   }
 
@@ -376,7 +453,12 @@
   }
 
   function openIndienVenster() {
-    if (!actief()) { toonMelding("Indienen", "De koppeling met Google Sheets is nog niet ingesteld."); return; }
+    if (!actief()) {
+      toonMelding("Indienen", vestiging
+        ? "Voor " + esc(vestigingLabel(vestiging)) + " is de koppeling met Google Sheets nog niet ingesteld."
+        : "Kies bovenaan eerst je school en meld je aan.");
+      return;
+    }
     if (!aanmelding) {
       toonMelding("Indienen", "Meld je eerst bovenaan aan met je naam en je code.");
       return;
@@ -387,21 +469,22 @@
       '<div class="modal-body">' +
       "<p>Vink aan wat je wil doorsturen. Wat je niet aanvinkt, blijft van jou.</p>" +
       '<div class="indien-lijst">' +
+      // Per categorie precies drie dingen: de naam, hoeveel er geboekt is en
+      // hoeveel er al in orde bevonden is. Wat de leerling zelf afvinkte
+      // (de controles) stond hier vroeger ook nog bij, maar dat maakte de
+      // rij onleesbaar — die vraag komt nu in de bevestigingsstap.
       overzicht.map(function (c) {
         var niets = c.refs.length === 0;
         var af = c.geboekt === c.totaal;
-        var telling = niets
-          ? "alles in orde"
-          : c.geboekt + "/" + c.totaal + " geboekt" + (c.inOrde ? " · " + c.inOrde + " in orde" : "");
-        var ctrl = c.controles.totaal
-          ? '<span class="indien-controles' + (c.controles.ok ? " af" : "") + '">' +
-            (c.controles.ok ? "✓ nagekeken" : c.controles.af + "/" + c.controles.totaal + " nagekeken") + "</span>"
+        var telling = niets ? "alles in orde" : c.geboekt + " van de " + c.totaal + " geboekt";
+        var inOrde = c.inOrde && !niets
+          ? '<span class="indien-inorde">' + c.inOrde + " in orde</span>"
           : "";
         return '<label class="indien-rij' + (niets ? " uit" : "") + '">' +
           '<input type="checkbox" data-cat="' + esc(c.naam) + '"' + (niets ? " disabled" : "") + ">" +
           '<span class="indien-naam">' + esc(c.naam) + "</span>" +
-          ctrl +
           '<span class="indien-telling' + (niets || af ? " volledig" : "") + '">' + esc(telling) + "</span>" +
+          inOrde +
           "</label>";
       }).join("") +
       "</div>" +
@@ -435,9 +518,26 @@
     var overzicht = categorieOverzicht();
     var gekozen = overzicht.filter(function (c) { return categorieen.indexOf(c.naam) !== -1; });
     var open = gekozen.filter(function (c) { return c.controles.totaal && !c.controles.ok; });
+    // Categorieën waar een boeking heropend is nadat de controles al
+    // afgevinkt waren. De vinkjes blijven staan (zie app.js), maar hier
+    // wordt er wel nog eens naar gevraagd.
+    var herbekijken = gekozen.filter(function (c) {
+      return typeof window.controlesHerbekijkenVoor === "function" &&
+        window.controlesHerbekijkenVoor(c.naam);
+    });
 
     var html = '<div class="modal-body">';
     html += "<p>Je dient in: <strong>" + gekozen.map(function (c) { return esc(c.naam); }).join(", ") + "</strong>.</p>";
+
+    if (herbekijken.length) {
+      html += '<div class="bevestig-waarschuwing">';
+      html += "<p><strong>Heb je de controles hiervan opnieuw nagekeken?</strong></p><ul>";
+      herbekijken.forEach(function (c) {
+        html += "<li>" + esc(c.naam) + ": je hebt hier een boeking heropend nadat je de controles afvinkte</li>";
+      });
+      html += "</ul><p>Je vinkjes zijn blijven staan. Kijk op de controlepagina van die categorie " +
+        "nog eens na of alles nog klopt met je nieuwe boeking.</p></div>";
+    }
 
     if (open.length) {
       html += '<div class="bevestig-waarschuwing">';
@@ -447,7 +547,7 @@
           " van de " + c.controles.totaal + " controles nog niet afgevinkt</li>";
       });
       html += "</ul><p>Ga eerst naar de controlepagina van die categorie — daar vind je vaak zelf nog wat er misloopt.</p></div>";
-    } else if (gekozen.some(function (c) { return c.controles.totaal; })) {
+    } else if (!herbekijken.length && gekozen.some(function (c) { return c.controles.totaal; })) {
       html += '<p class="bevestig-ok">✓ Je controles zijn nagekeken.</p>';
     }
 
@@ -456,7 +556,7 @@
     html += '<div class="modal-voet">' +
       '<button type="button" class="btn-secundair" data-role="bevestig-terug">Terug</button>' +
       '<button type="button" class="btn-primair" data-role="bevestig-ja">' +
-      (open.length ? "Toch indienen" : "Ja, indienen") + "</button></div>";
+      (open.length || herbekijken.length ? "Toch indienen" : "Ja, indienen") + "</button></div>";
 
     zetModalInhoud(venster, html);
     venster.querySelector('[data-role="bevestig-terug"]').addEventListener("click", function () {
@@ -504,6 +604,11 @@
             "Je stuurde " + r.aantal + " verrichting(en) door. Je vakexpert kijkt ze na; " +
             "klik later op <em>Feedback ophalen</em> om de reactie te lezen."));
           status("Ingediend om " + datumTekst(new Date().toISOString()), "ok");
+          // De vraag "heb je dat deel opnieuw nagekeken?" is gesteld en de
+          // leerling heeft toch ingediend. Ze blijft dus niet terugkomen.
+          if (typeof window.controlesNagekeken === "function") {
+            categorieen.forEach(function (cat) { window.controlesNagekeken(cat); });
+          }
           bewaarNaarServer(true);
         } else {
           zetModalInhoud(venster, htmlMelding("fout", "Niet gelukt", esc(foutTekst(r))));
@@ -551,17 +656,32 @@
     };
   }
 
-  // De volledige boeking in één leesbare regel, zodat je in de Sheet niet
-  // hoeft door te klikken om te zien wat er staat.
+  // De volledige boeking in de Sheet, één boekingslijn per regel — zoals ze
+  // in een dagboek staat:
+  //
+  //     704000    22.000  C
+  //     451100     4.320  C
+  //     400000    26.320  D  [winkel]
+  //
+  // Zo lees je de boeking in de kolom zelf en moet je het tabblad Detail
+  // enkel nog openen als je wil uitpluizen wát de leerling geredeneerd heeft.
   function leesbareBoeking(rows) {
     if (!rows.length) return "";
     return rows.map(function (r) {
-      var mar = APP.marBij(r.rekening);
-      var stuk = (r.rekening || "??") + " " + (r.dc || "?") + " " + (r.bedrag || "?");
-      if (mar) stuk += " (" + mar.naam + ")";
-      if (r.relatie) stuk += " [" + r.relatie + "]";
-      return stuk;
-    }).join("  ·  ");
+      var regel = (r.rekening || "??") + "  " + bedragTekst(r.bedrag) + "  " + (r.dc || "?");
+      if (r.relatie) regel += "  [" + r.relatie + "]";
+      return regel;
+    }).join("\n");
+  }
+
+  // Bedragen in de Sheet zoals de leerling ze op papier zou schrijven:
+  // 22.000 en 1.234,50. Wat niet als bedrag te lezen valt, gaat ongewijzigd
+  // mee — dan zie je meteen wat er getikt staat.
+  function bedragTekst(bedrag) {
+    if (bedrag === null || bedrag === undefined || String(bedrag).trim() === "") return "?";
+    var n = APP.parseBedrag ? APP.parseBedrag(bedrag) : null;
+    if (n === null || isNaN(n)) return String(bedrag);
+    return APP.formatBedrag(n);
   }
 
   // De twee open vragen over de openstaande facturen. Ze gaan samen door als
@@ -578,7 +698,7 @@
       categorie: categorie,
       titel: "Klanten & leveranciers",
       status: stukken.length === 2 ? "ingevuld" : (stukken.length ? "onafgewerkt" : "niet begonnen"),
-      boeking: stukken.join("  ·  "),
+      boeking: stukken.join("\n"),
       lijnen: [
         { redenering: "Openstaande facturen van klanten", omschrijving: v.klanten || "" },
         { redenering: "Openstaande facturen van leveranciers", omschrijving: v.leveranciers || "" },
@@ -600,7 +720,7 @@
       status: lijst.length && af.length === lijst.length ? "nagekeken" : af.length + " van " + lijst.length + " nagekeken",
       boeking: lijst.map(function (c) {
         return (st.controles[c.id] ? "✓ " : "✗ ") + c.vraag;
-      }).join("  ·  "),
+      }).join("\n"),
       lijnen: lijst.map(function (c) {
         return { redenering: c.vraag, omschrijving: st.controles[c.id] ? "afgevinkt" : "niet afgevinkt" };
       }),
@@ -620,7 +740,7 @@
       categorie: categorie,
       titel: "Resultaatverwerking",
       status: velden.length ? "ingevuld" : "niet begonnen",
-      boeking: velden.map(function (v) { return v[0] + ": " + v[1]; }).join("  ·  "),
+      boeking: velden.map(function (v) { return v[0] + ": " + v[1]; }).join("\n"),
       lijnen: velden.map(function (v) { return { redenering: v[0], bedrag: v[1] }; }),
     };
   }
@@ -643,7 +763,7 @@
       categorie: categorie,
       titel: "Eindbalans",
       status: stukken.length ? "ingevuld" : "niet begonnen",
-      boeking: stukken.join("  ·  "),
+      boeking: stukken.join("\n"),
       lijnen: Object.keys(perVak).map(function (vak) {
         return { rekening: namen[vak] || vak, redenering: perVak[vak].sort().join(", ") };
       }),
@@ -667,7 +787,9 @@
      ====================================================================== */
 
   function feedbackKey() {
-    return FEEDBACK_KEY_PREFIX + normaliseerNaam(aanmelding ? aanmelding.naam : APP.getState().student);
+    var vest = aanmelding && aanmelding.vestiging ? aanmelding.vestiging + "_" : "";
+    return FEEDBACK_KEY_PREFIX + vest +
+      normaliseerNaam(aanmelding ? aanmelding.naam : APP.getState().student);
   }
 
   function laadFeedbackUitBrowser() {
@@ -830,6 +952,15 @@
       if (ruw) aanmelding = JSON.parse(ruw);
     } catch (e) { aanmelding = null; }
 
+    // De vestiging van de vorige keer terughalen. Staat ze er niet meer in
+    // config-koppeling.js, dan begint de leerling opnieuw met kiezen.
+    if (aanmelding && aanmelding.vestiging) {
+      vestiging = vestigingMet(aanmelding.vestiging) || vestiging;
+      if (!vestiging || vestiging.code !== aanmelding.vestiging) aanmelding = null;
+    } else if (aanmelding && vestigingen.length === 1) {
+      aanmelding.vestiging = vestigingen[0].code;
+    }
+
     bouwAanmeldUI();
 
     var btnIndienen = document.getElementById("btn-indienen");
@@ -837,16 +968,16 @@
     if (btnIndienen) btnIndienen.addEventListener("click", openIndienVenster);
     if (btnFeedback) btnFeedback.addEventListener("click", function () { haalFeedback(false); });
 
-    if (!actief()) {
+    if (!ingesteld()) {
       // Geen koppeling ingesteld: de app werkt zoals vroeger, volledig lokaal.
       if (btnIndienen) btnIndienen.hidden = true;
       if (btnFeedback) btnFeedback.hidden = true;
       return;
     }
 
-    if (aanmelding && aanmelding.naam) {
+    if (aanmelding && aanmelding.naam && actief()) {
       naAanmelding();
-    } else if (!klaslijst.length && APP.getState().student) {
+    } else if (vestiging && !klaslijstVoor(vestiging.code).length && APP.getState().student) {
       // Testopstelling zonder klaslijst: de naam uit het vrije veld volstaat.
       aanmelding = { naam: APP.getState().student, code: "" };
       naAanmelding();

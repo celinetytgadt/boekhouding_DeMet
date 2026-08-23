@@ -87,6 +87,15 @@ button {
   max-width: 40vw;
 }
 
+/* De keuzelijst met de vestigingen, links van de naam. Ze staat er enkel
+   als er meer dan één vestiging in config-koppeling.js zit. */
+#vestiging-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.4);
+  max-width: 40vw;
+}
+
 #opslaan-status {
   font-size: 11px;
   opacity: 0.85;
@@ -909,6 +918,17 @@ table.saldibalans tfoot td { font-weight: 700; border-top: 2px solid var(--kleur
 .paneel-hint { font-size: 12px; color: var(--kleur-tekst-zacht); margin-top: 0; }
 .paneel-tip { background: #e9eaf7; border-color: var(--kleur-primair); font-size: 13px; }
 .paneel-tip p:last-child { margin-bottom: 0; }
+
+/* Er is een boeking heropend nadat de controles van deze categorie al
+   afgevinkt waren. De vinkjes blijven staan; dit blokje vraagt om ze nog
+   eens na te lopen. */
+.paneel-herbekijken {
+  background: #fff8ef;
+  border-color: #e8890c;
+  border-left: 5px solid #e8890c;
+  font-size: 13px;
+}
+.paneel-herbekijken p { margin: 0 0 8px 0; }
 .lijst-leeg { padding: 10px; color: var(--kleur-tekst-zacht); font-size: 12.5px; }
 
 .link-knop {
@@ -1459,16 +1479,11 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 .feedback-niet-afgerond .feedback-oordeel { background: #ffe4e1; border-color: var(--kleur-fout); }
 
 /* Eerdere ronden: leesbaar, maar duidelijk ondergeschikt aan de nieuwste. */
-.feedback-historiek-knop {
-  margin-top: 10px;
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: var(--font);
+.feedback-historiek-titel {
   font-size: 12px;
-  color: var(--kleur-primair);
-  cursor: pointer;
-  text-decoration: underline;
+  font-weight: 600;
+  color: var(--kleur-tekst-zacht);
+  margin-bottom: 6px;
 }
 
 .feedback-historiek {
@@ -1714,20 +1729,15 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
   font-weight: 600;
 }
 
-/* In het indienvenster: hoeveel controles al nagekeken zijn. */
-.indien-controles {
+/* In het indienvenster: hoeveel verrichtingen al in orde bevonden zijn. */
+.indien-inorde {
   font-size: 11px;
   border-radius: 9px;
   padding: 0 6px;
-  background: #fff4e5;
-  border: 1px solid #e8890c;
-  color: #a35d00;
-  white-space: nowrap;
-}
-.indien-controles.af {
   background: #ddfff2;
-  border-color: var(--kleur-goed);
+  border: 1px solid var(--kleur-goed);
   color: #00875a;
+  white-space: nowrap;
 }
 
 /* De bevestigingsstap vóór het verzenden. */

@@ -38,7 +38,28 @@
 // Apps Script-editor, kijk dan altijd of dit woord nog klopt. Staat hier
 // iets anders dan in js/config-koppeling.js, dan weigert het script alles
 // met de melding "de app is niet juist ingesteld".
-var SLEUTEL = "CELINET";
+var SLEUTEL = "DEMET";
+
+// ---------------------------------------------------------------------------
+// DE VESTIGING VAN DEZE SHEET
+//
+// Elke vestiging heeft een eigen Sheet met een eigen kopie van dit script.
+// Vul hier de code van jouw vestiging in: LEU, SKW of TW. Ze moet exact
+// overeenkomen met de code in js/config-koppeling.js.
+//
+// De code komt vooraan in de bestandsnaam van het werkbestand
+// (werk_LEU_lotte.json), zodat de drie vestigingen samen in dezelfde map
+// kunnen staan zonder elkaars werk te overschrijven.
+var VESTIGING = "LEU";
+
+// De map op de gedeelde Drive waar alle werkbestanden samenkomen. Plak hier
+// het ID van die map: open ze in Drive en neem het stuk van de URL na
+// /folders/ (bv. 1AbCdEfGhIjKlMnOpQrStUvWxYz).
+//
+// Blijft dit leeg, dan maakt het script een map "Boekhoudapp werkbestanden"
+// aan in de eigen Drive van het account waaronder het draait — handig om te
+// testen, maar dan staat het werk van deze vestiging apart.
+var MAP_ID_GEDEELD = "1Nn5-MPk_7DEaS7xDz7bBR0pTHGXj1Q24";
 
 var BLAD_KLAS = "Klas";
 var BLAD_INZENDINGEN = "Inzendingen";
@@ -208,7 +229,7 @@ function normaliseerNaam_(n) {
 function bewaarWerk(naam, stateObj) {
   if (!stateObj) return { ok: false, fout: "geen werk meegestuurd" };
   var map = werkMap_();
-  var bestandsnaam = "werk_" + normaliseerNaam_(naam) + ".json";
+  var bestandsnaam = werkBestandsnaam_(naam);
   var inhoud = JSON.stringify({
     leerling: naam,
     gewijzigd: new Date().toISOString(),
@@ -226,9 +247,23 @@ function bewaarWerk(naam, stateObj) {
   return { ok: true, gewijzigd: new Date().toISOString() };
 }
 
+/**
+ * De naam van het werkbestand van één leerling. De code van de vestiging
+ * staat erin, zodat de drie vestigingen samen in dezelfde map op de gedeelde
+ * Drive kunnen staan — ook als er in twee scholen een Lotte zit.
+ */
+function werkBestandsnaam_(naam) {
+  return "werk_" + vestigingDeel_() + normaliseerNaam_(naam) + ".json";
+}
+
+function vestigingDeel_() {
+  var v = String(VESTIGING || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return v ? v + "_" : "";
+}
+
 function haalWerkOp(naam) {
   var map = werkMap_();
-  var bestanden = map.getFilesByName("werk_" + normaliseerNaam_(naam) + ".json");
+  var bestanden = map.getFilesByName(werkBestandsnaam_(naam));
   if (!bestanden.hasNext()) return { ok: true, gevonden: false };
   try {
     var pakket = JSON.parse(bestanden.next().getBlob().getDataAsString());
@@ -245,7 +280,7 @@ function haalWerkOp(naam) {
  */
 function bewaarVersie_(naam, bestand) {
   try {
-    var slug = normaliseerNaam_(naam);
+    var slug = vestigingDeel_() + normaliseerNaam_(naam);
     var map = versieMap_();
     var bestaand = [];
     var it = map.getFiles();
@@ -269,12 +304,37 @@ function bewaarVersie_(naam, bestand) {
   }
 }
 
+/**
+ * De map met de werkbestanden. Staat er een ID bij MAP_ID_GEDEELD, dan is
+ * dat de map op de gedeelde Drive en gebruiken alle vestigingen dezelfde.
+ * Anders wordt er één aangemaakt in de eigen Drive.
+ */
 function werkMap_() {
+  if (MAP_ID_GEDEELD) {
+    try {
+      return DriveApp.getFolderById(MAP_ID_GEDEELD);
+    } catch (err) {
+      throw new Error(
+        "De gedeelde map is niet bereikbaar. Kijk het ID bij MAP_ID_GEDEELD na, " +
+        "en of dit account toegang heeft tot die map. (" + err.message + ")");
+    }
+  }
   return map_("MAP_ID", MAP_NAAM, DriveApp.getRootFolder());
 }
 
+/**
+ * De submap "versies", altijd ín de map hierboven. Bij een gedeelde map wordt
+ * ze daar gezocht op naam en niet via een onthouden ID: anders zou een script
+ * dat vroeger in de eigen Drive draaide de oude versiemap blijven gebruiken,
+ * terwijl de werkbestanden al op de gedeelde Drive staan.
+ */
 function versieMap_() {
-  return map_("MAP_VERSIES_ID", MAP_VERSIES, werkMap_());
+  var ouder = werkMap_();
+  if (MAP_ID_GEDEELD) {
+    var it = ouder.getFoldersByName(MAP_VERSIES);
+    return it.hasNext() ? it.next() : ouder.createFolder(MAP_VERSIES);
+  }
+  return map_("MAP_VERSIES_ID", MAP_VERSIES, ouder);
 }
 
 function map_(eigenschap, naam, ouder) {
@@ -429,6 +489,7 @@ function onOpen() {
     .addSeparator()
     .addItem("Codes genereren voor lege vakjes", "genereerCodes")
     .addSeparator()
+    .addItem("Waar staan de werkbestanden?", "toonWerkMap")
     .addItem("Eerste installatie", "installeer")
     .addToUi();
 }
@@ -474,6 +535,35 @@ function zetKlaarVoorLeerling_(waarde) {
   ui.alert(waarde
     ? aantal + " verrichting(en) van " + leerling + " staan nu klaar. Ze zijn zichtbaar zodra de leerling in de app op Feedback ophalen klikt."
     : aantal + " verrichting(en) van " + leerling + " zijn weer verborgen voor de leerling.");
+}
+
+/**
+ * Zegt in welke map dit script écht schrijft, en hoeveel werkbestanden van
+ * deze vestiging daar al staan. Handig na een verhuis naar een gedeelde
+ * Drive: zo zie je zwart op wit of het ID bij MAP_ID_GEDEELD klopt.
+ */
+function toonWerkMap() {
+  var ui = SpreadsheetApp.getUi();
+  try {
+    var map = werkMap_();
+    var eigen = 0, totaal = 0;
+    var it = map.getFiles();
+    while (it.hasNext()) {
+      var naam = it.next().getName();
+      if (naam.indexOf("werk_") !== 0) continue;
+      totaal++;
+      if (naam.indexOf("werk_" + vestigingDeel_()) === 0) eigen++;
+    }
+    ui.alert(
+      "Vestiging van deze Sheet: " + (VESTIGING || "(niet ingevuld)") + "\n\n" +
+      "Map: " + map.getName() + "\n" +
+      "Adres: " + map.getUrl() + "\n" +
+      (MAP_ID_GEDEELD ? "Gekozen via MAP_ID_GEDEELD." : "Automatisch aangemaakt in de eigen Drive (MAP_ID_GEDEELD is leeg).") + "\n\n" +
+      "Werkbestanden in die map: " + totaal + ", waarvan " + eigen + " van deze vestiging.");
+  } catch (err) {
+    ui.alert("De map is niet bereikbaar:\n\n" + err.message +
+      "\n\nKijk het ID bij MAP_ID_GEDEELD na, en of dit account bewerkrechten heeft op die map.");
+  }
 }
 
 /**
@@ -542,8 +632,11 @@ function installeer() {
     inz.setColumnWidth(K_STATUS_LEERLING, 110);
     inz.setColumnWidth(K_BEOORDELING, 130);
     inz.setColumnWidth(K_FEEDBACK, 380);
-    inz.getRange(2, K_BOEKING, inz.getMaxRows() - 1, 1).setWrap(true);
-    inz.getRange(2, K_FEEDBACK, inz.getMaxRows() - 1, 1).setWrap(true);
+    // De boeking staat met één lijn per regel in de cel (704000  22.000  C).
+    // Wrap én bovenaan uitlijnen, anders staat een boeking van vier lijnen
+    // in het midden van een hoge rij te zweven.
+    inz.getRange(2, K_BOEKING, inz.getMaxRows() - 1, 1).setWrap(true).setVerticalAlignment("top");
+    inz.getRange(2, K_FEEDBACK, inz.getMaxRows() - 1, 1).setWrap(true).setVerticalAlignment("top");
   });
 
   // Staat er al een filter, dan blijft die gewoon staan: createFilter()
@@ -572,8 +665,11 @@ function installeer() {
 
   SpreadsheetApp.getUi().alert(
     "Klaar.\n\n" +
+    "Vestiging van deze Sheet: " + (VESTIGING || "(niet ingevuld)") + "\n" +
+    "Werkbestanden komen in: " + werkMapNaam_() + "\n" +
     "Sleutelwoord van dit script: " + SLEUTEL + "\n" +
-    "Dat moet exact hetzelfde zijn als 'sleutel' in js/config-koppeling.js.\n\n" +
+    "Vestiging en sleutelwoord moeten exact overeenkomen met wat er bij deze " +
+    "vestiging staat in js/config-koppeling.js.\n\n" +
     "1. Vul in het tabblad Klas de namen van je leerlingen in kolom A in.\n" +
     "2. Menu Boekhoudapp → Codes genereren voor lege vakjes.\n" +
     "3. Publiceer het script (Implementeren → Nieuwe implementatie → Web-app) " +
@@ -581,6 +677,16 @@ function installeer() {
     "Nakijken doe je in het tabblad Inzendingen: filter op 'is laatste' = JA." +
     (opmerkingen.length ? "\n\nNiet alles lukte, maar de installatie is wel doorgelopen:\n" + opmerkingen.join("\n") : "")
   );
+}
+
+// Enkel voor de melding na de installatie: de naam van de map waarin dit
+// script schrijft. Lukt het niet, dan mag dat de installatie niet stoppen.
+function werkMapNaam_() {
+  try {
+    return werkMap_().getName() + (MAP_ID_GEDEELD ? " (gedeelde map)" : " (eigen Drive)");
+  } catch (err) {
+    return "NIET BEREIKBAAR — kijk MAP_ID_GEDEELD na (" + err.message + ")";
+  }
 }
 
 function maakBlad_(ss, naam, koppen) {

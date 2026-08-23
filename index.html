@@ -16,6 +16,11 @@
     <span id="app-naam">Boekhoudapp Kern 8</span>
   </div>
   <div id="topbar-leerling">
+    <!-- Eerst de vestiging, dan de naam. De keuzelijst met vestigingen
+         verschijnt enkel als er in js/config-koppeling.js meer dan één
+         staat; elke vestiging heeft een eigen Sheet en een eigen
+         klaslijst. -->
+    <select id="vestiging-select" aria-label="School" hidden></select>
     <label for="leerling-naam-input">Naam:</label>
     <!-- Twee manieren om je aan te melden. Staat er een klaslijst in
          js/data-klas.js, dan toont koppeling.js de keuzelijst met het

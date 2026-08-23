@@ -3,13 +3,74 @@
 Fase 2 van de boekhoudapp: leerlingen bewaren hun werk centraal, dienen zelf
 in wat ze willen laten nakijken, en zien jouw feedback terug in de app.
 
-Alles draait onder **jouw** Google-account. Leerlingen loggen nergens in en
-krijgen geen enkele toegang tot de Sheet of tot de map met werkbestanden.
+Alles draait onder het Google-account van de vakexpert. Leerlingen loggen
+nergens in en krijgen geen enkele toegang tot de Sheet of tot de map met
+werkbestanden.
+
+---
+
+## Drie vestigingen, één app
+
+De app zelf staat **één keer** op GitHub Pages. Elke vestiging (LEU, SKW, TW)
+heeft daarnaast:
+
+- een **eigen Google Sheet** met een eigen kopie van `Code.gs`, in de Drive van
+  de collega die daar nakijkt;
+- een **eigen publicatie** van dat script (dus een eigen web-app-URL);
+- een **eigen klaslijst** in `js/data-klas.js`.
+
+De leerling kiest bovenaan de app eerst de school en dan de eigen naam. Alles
+wat daarna vertrekt, gaat naar de Sheet van díé vestiging.
+
+De werkbestanden komen wél **samen in één map op de gedeelde Drive**. Ze zijn
+uit elkaar te houden aan de naam: `werk_LEU_lottev.json`,
+`werk_TW_amalt.json`. Twee dingen moeten daarvoor kloppen in elke Code.gs:
+
+```js
+var VESTIGING = "LEU";        // LEU, SKW of TW
+var MAP_ID_GEDEELD = "…";     // het ID van de gedeelde map
+```
+
+Het ID van de map vind je in de adresbalk als je die map in Drive opent: het
+stuk na `/folders/`. Iedereen die een Sheet beheert, moet bewerkrechten op die
+map hebben.
+
+> Nakijken doet elke collega in de eigen Sheet. Wie mee wil kijken bij een
+> andere vestiging, opent die Sheet — daar is geen aparte instelling voor
+> nodig.
+
+### Een bestaande map naar de gedeelde Drive brengen
+
+Een **map** verhuizen van *Mijn Drive* naar een gedeelde Drive laat Google
+meestal niet toe. **Losse bestanden** verhuizen mag wel. Dus:
+
+1. Maak op de gedeelde Drive zelf een nieuwe map *Boekhoudapp werkbestanden*.
+2. Open de oude map in Mijn Drive, selecteer alle bestanden (Ctrl+A) en
+   verplaats ze naar de nieuwe map. Doe hetzelfde met de inhoud van de submap
+   *versies* (maak die submap eerst opnieuw aan in de nieuwe map).
+3. Zet het ID van de nieuwe map in `MAP_ID_GEDEELD` in elke `Code.gs`,
+   implementeer een nieuwe versie, en controleer met **Boekhoudapp → Waar
+   staan de werkbestanden?**
+
+Lukt het verplaatsen van de bestanden ook niet, dan is dat geen ramp: laat de
+nieuwe map gewoon leeg beginnen. Het werk van de leerlingen staat óók in hun
+eigen browser en gaat bij de volgende bewaarbeurt vanzelf naar de nieuwe map.
+Enkel wie intussen van computer wisselt, verliest wat er nog niet
+gesynchroniseerd was.
+
+> **Controleren waar het script schrijft:** menu **Boekhoudapp → Waar staan de
+> werkbestanden?**. Dat toont de naam en het adres van de map die dit script
+> écht gebruikt, en hoeveel werkbestanden van deze vestiging er al staan.
+
+Wat hieronder staat, doorloop je dus **één keer per vestiging**.
 
 ---
 
 > **Al geïnstalleerd en er is een nieuwe versie van `Code.gs`?**
-> Doe dan drie dingen, in deze volgorde:
+> Kijk na het plakken altijd na of `SLEUTEL`, `VESTIGING` en
+> `MAP_ID_GEDEELD` nog ingevuld staan zoals bij jou — die staan in de code
+> zelf en gaan bij een nieuwe versie dus mee verloren. Doe daarna drie dingen,
+> in deze volgorde:
 > 1. Plak de nieuwe code in **Uitbreidingen → Apps Script** en bewaar.
 > 2. **Implementeren → Implementaties beheren → potlood → Versie: Nieuwe
 >    versie → Implementeren.** Zonder die stap blijft de oude code draaien.
@@ -23,8 +84,8 @@ krijgen geen enkele toegang tot de Sheet of tot de map met werkbestanden.
 
 ### 1. Maak de Google Sheet
 
-Maak in je Drive een nieuwe Google Sheet. Noem ze bijvoorbeeld
-*Boekhoudapp — nakijken 2026*. Deel ze met niemand.
+Maak in je Drive een nieuwe Google Sheet. Zet de vestiging in de naam, dan
+zoek je niet: *Boekhoudapp — nakijken LEU 2026*. Delen hoeft niet.
 
 ### 2. Plak het script
 
@@ -39,13 +100,18 @@ van `apps-script/Code.gs`. Bewaar (het diskettepictogram).
 > spreadsheet zelf. Daarom weet de code zonder adres of ID welke Sheet ze
 > moet gebruiken. Bij stap 3 zie je meteen of het gelukt is.
 
-Verander bovenaan `SLEUTEL` in een eigen woord, bijvoorbeeld:
+Vul bovenaan drie dingen in:
 
 ```js
-var SLEUTEL = "CELINET";
+var SLEUTEL = "CELINET";      // hetzelfde woord voor de drie vestigingen mag
+var VESTIGING = "LEU";        // LEU, SKW of TW — de vestiging van déze Sheet
+var MAP_ID_GEDEELD = "";      // het ID van de gedeelde map met de werkbestanden
 ```
 
-Onthoud dat woord — je hebt het straks nog eens nodig.
+Onthoud het sleutelwoord en de vestigingscode — die heb je straks nog eens
+nodig. Laat je `MAP_ID_GEDEELD` leeg, dan maakt het script een map in de eigen
+Drive van dit account; dat is handig om te testen, maar dan staat het werk van
+deze vestiging niet bij de rest.
 
 ### 3. Maak de tabbladen aan
 
@@ -92,25 +158,42 @@ Klik op *Implementeren* en kopieer de **web-app-URL**. Die eindigt op `/exec`.
 
 ### 6. Zet de gegevens in de app
 
-Open `js/config-koppeling.js` en vul in:
+Open `js/config-koppeling.js` en vul bij de juiste vestiging de URL in:
 
 ```js
-webAppUrl: "https://script.google.com/macros/s/AKfycbw46aLZg4tSWTJiiyoAiT7U1zlJr0Byzt0XV9gtq39GovUj7PW8W9ewW7JmB7mjXLLEwQ/exec",
-sleutel: "CELINET",
+const VESTIGINGEN = [
+  {
+    code: "LEU",
+    naam: "Leuven",
+    webAppUrl: "https://script.google.com/macros/s/AKfy…/exec",
+    sleutel: "CELINET",
+  },
+  { code: "SKW", naam: "SKW", webAppUrl: "", sleutel: "CELINET" },
+  { code: "TW",  naam: "TW",  webAppUrl: "", sleutel: "CELINET" },
+];
 ```
 
-Het woord bij `sleutel` moet **exact** hetzelfde zijn als in `Code.gs`.
+De `code` moet **exact** overeenkomen met `VESTIGING` in de `Code.gs` van die
+vestiging, en het woord bij `sleutel` met `SLEUTEL` daar. Bij `naam` zet je
+wat de leerling in de keuzelijst ziet.
+
+> Staat er maar één vestiging in de lijst, dan verdwijnt de keuzelijst en ziet
+> de leerling meteen de namenlijst — zoals vroeger.
 
 ### 7. Zet de namen in de app
 
-Open `js/data-klas.js` en vul de namen in, zoals in kolom A van het tabblad
-Klas:
+Open `js/data-klas.js` en vul de namen in per vestiging, zoals in kolom A van
+het tabblad Klas van die Sheet:
 
 ```js
-const KLASLIJST = [
-  "Lotte V.",
-  "Youssef B.",
-];
+const KLASLIJSTEN = {
+  LEU: [
+    "Lotte V.",
+    "Youssef B.",
+  ],
+  SKW: [],
+  TW: [],
+};
 ```
 
 **Alleen de namen.** De codes horen daar niet: dit bestand staat op GitHub
@@ -118,16 +201,17 @@ Pages en is door iedereen te lezen.
 
 Zet daarna alles op GitHub zoals gewoonlijk. Klaar.
 
-> Blijft `KLASLIJST` leeg, dan valt de app terug op het vrije naamveld van
-> vroeger en werkt alles zonder codes. Handig zolang je met collega's test.
+> Blijft de lijst van een vestiging leeg, dan valt de app voor die vestiging
+> terug op het vrije naamveld van vroeger en werkt alles zonder codes. Handig
+> zolang je met collega's test.
 
 ---
 
 ## Deel 2 — Hoe het werkt voor de leerling
 
-**Aanmelden.** De leerling kiest de eigen naam uit de lijst en tikt de
-persoonlijke code. Dat hoeft maar één keer per computer: de browser onthoudt
-het.
+**Aanmelden.** De leerling kiest eerst de school, dan de eigen naam uit de
+lijst, en tikt de persoonlijke code. Dat hoeft maar één keer per computer: de
+browser onthoudt het.
 
 **Bewaren.** Het werk blijft in de browser staan én gaat elke twee minuten
 stilletjes naar een map in jouw Drive. Meldt een leerling zich later op een
@@ -143,14 +227,20 @@ vastloopt.
 
 **Feedback.** Met de knop *Feedback ophalen* komt binnen wat jij vrijgegeven
 hebt. Bij elke verrichting verschijnt een gekleurd kader met je oordeel en je
-tekst, en in het menu links kleurt het bolletje mee. Eerdere ronden blijven
-bewaard: onder de nieuwste feedback staat een knopje *Eerdere feedback* dat de
-vorige opmerkingen weer toont.
+tekst, en in het menu links kleurt het bolletje mee. Eerdere ronden staan er
+gewoon onder — niets om open te klikken.
 
 **Controles per categorie.** Onder elke categorie staat in het menu een
 pagina *Controle*. Daar vinken leerlingen zelf af wat ze nagekeken hebben,
 vóór ze indienen. Klikken ze op *Indienen* terwijl er nog controles openstaan,
 dan komt er een bevestigingsvenster dat dat zegt — maar het blokkeert niets.
+
+**Een boeking heropenen.** De vinkjes blijven dan staan. Wel wordt die
+categorie gemarkeerd: bovenaan de controlepagina komt een oranje kader ("je
+hebt hier iets gewijzigd na het afvinken") met een knop *Ik heb ze opnieuw
+nagekeken*, en bij het indienen wordt dezelfde vraag nog eens gesteld. Vroeger
+gingen álle vinkjes uit bij één heropening; dat was zoveel werk dat er blind
+opnieuw geklikt werd.
 
 Die afvinkjes komen mee in je Sheet, als een aparte regel per categorie
 (`CONTROLE: Aankopen`). Zo zie je meteen of er zelf nagekeken werd.
@@ -166,9 +256,22 @@ vragen op over de openstaande facturen.
 ### Waar je kijkt
 
 In het tabblad **Inzendingen** staat één rij per verrichting, met de volledige
-boeking leesbaar in de kolom *boeking*. Er wordt **nooit** een rij
-overschreven: dient een leerling dezelfde verrichting opnieuw in, dan komt er
-een nieuwe rij onderaan bij. Zo zie je de evolutie.
+boeking in de kolom *boeking* — één boekingslijn per regel, zoals in een
+dagboek:
+
+```
+704000  22.000  C
+451100   4.320  C
+400000  26.320  D  [winkel]
+```
+
+Dus: rekening, bedrag, debet of credit, en achteraan tussen haakjes de klant
+of leverancier als die ingevuld is. Voor het gewone nakijken heb je het
+tabblad *Detail* dus niet meer nodig.
+
+Er wordt **nooit** een rij overschreven: dient een leerling dezelfde
+verrichting opnieuw in, dan komt er een nieuwe rij onderaan bij. Zo zie je de
+evolutie.
 
 ### De filter die je elke keer gebruikt
 
@@ -227,13 +330,14 @@ niet nodig.
 
 ### Werk terugzetten
 
-De werkbestanden staan in je Drive in de map **Boekhoudapp werkbestanden**,
-als `werk_<naam>.json`. In de submap **versies** staan de vijf vorige versies
-per leerling (hoogstens één kopie per uur).
+De werkbestanden van de drie vestigingen staan samen in de gedeelde map, als
+`werk_<vestiging>_<naam>.json` — bijvoorbeeld `werk_LEU_lottev.json`. In de
+submap **versies** staan de vijf vorige versies per leerling (hoogstens één
+kopie per uur).
 
 Heeft een leerling iets kapotgeklikt: open het versiebestand, kopieer de
-inhoud naar het gewone `werk_<naam>.json`, en laat de leerling zich opnieuw
-aanmelden.
+inhoud naar het gewone `werk_<vestiging>_<naam>.json`, en laat de leerling
+zich opnieuw aanmelden.
 
 ### Een leerling is de code kwijt
 
@@ -241,8 +345,9 @@ Kijk in het tabblad Klas. Je mag de code daar ook gewoon aanpassen.
 
 ### Een leerling komt erbij
 
-Naam in kolom A van het tabblad Klas, dan **Codes genereren voor lege
-vakjes**, en de naam ook in `js/data-klas.js` zetten.
+Naam in kolom A van het tabblad Klas van jouw vestiging, dan **Codes genereren
+voor lege vakjes**, en de naam ook bij de juiste vestiging in
+`js/data-klas.js` zetten.
 
 ### Wat als de wifi wegvalt
 
@@ -255,8 +360,9 @@ geduld", daarna of het gelukt is of niet.
 
 De knoppen *Exporteren*, *Importeren* en *Alles wissen* bestaan niet meer: nu
 alles centraal bewaard wordt, hebben ze geen nut. Moet een leerling toch
-opnieuw beginnen, dan verwijder jij het bestand `werk_<naam>.json` uit de map
-**Boekhoudapp werkbestanden** en laat je die leerling zich opnieuw aanmelden.
+opnieuw beginnen, dan verwijder jij het bestand
+`werk_<vestiging>_<naam>.json` uit de gedeelde map en laat je die leerling
+zich opnieuw aanmelden.
 
 ### Hoe veilig is dit
 
@@ -282,8 +388,8 @@ de oude versie draaien. De URL blijft dan wel dezelfde.
 
 | Bestand | Waarvoor |
 |---|---|
-| `apps-script/Code.gs` | de serverkant, hoort in de Apps Script-editor die je opent via **Uitbreidingen → Apps Script** in je Sheet |
-| `js/config-koppeling.js` | de web-app-URL en het sleutelwoord |
-| `js/data-klas.js` | de namen in de keuzelijst (géén codes) |
+| `apps-script/Code.gs` | de serverkant, hoort in de Apps Script-editor die je opent via **Uitbreidingen → Apps Script** in je Sheet; bovenaan staan `VESTIGING` en `MAP_ID_GEDEELD` |
+| `js/config-koppeling.js` | de drie vestigingen: code, naam, web-app-URL en sleutelwoord |
+| `js/data-klas.js` | de namen in de keuzelijst, per vestiging (géén codes) |
 | `js/koppeling.js` | alles wat de app met de Sheet doet |
 | `js/app.js` | ongewijzigd van opzet; er is enkel een brug (`window.APP`) bijgekomen en een feedbackkader per verrichting |

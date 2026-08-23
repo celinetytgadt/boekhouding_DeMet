@@ -109,7 +109,19 @@
      ======================================================================== */
 
   var LAATSTE_LEERLING_KEY = "boekhoudapp_laatste_leerling";
-  function storageKeyVoor(student) { return "boekhoudapp_data_" + slug(student); }
+  var PREFIX_KEY = "boekhoudapp_vestiging";
+
+  /* De code van de vestiging (LEU, SKW, TW) hoort mee in de bewaarsleutel:
+     twee scholen kunnen een gelijknamige leerling hebben, en op een gedeelde
+     computer mogen die niet in elkaars werk terechtkomen. koppeling.js zet
+     deze prefix bij het aanmelden; zonder koppeling blijft ze leeg en
+     verandert er niets. */
+  var opslagPrefix = "";
+  try { opslagPrefix = localStorage.getItem(PREFIX_KEY) || ""; } catch (e) { opslagPrefix = ""; }
+
+  function storageKeyVoor(student) {
+    return "boekhoudapp_data_" + (opslagPrefix ? opslagPrefix + "_" : "") + slug(student);
+  }
 
   function maakLegeRij() {
     return { bedrag: "", redenering: "", apko: "", stijgtDaalt: "", rekening: "", dc: "", relatie: "" };
@@ -120,6 +132,12 @@
       student: student || "",
       boekingen: {},
       controles: {},
+      // Categorieën waar een boeking gewijzigd is nadat de controles al
+      // afgevinkt waren. De vinkjes blijven staan (alles opnieuw aanvinken
+      // was te veel werk en leidde tot blind klikken); in plaats daarvan
+      // vraagt de app op de controlepagina én bij het indienen of dat deel
+      // opnieuw nagekeken is.
+      controlesHerbekijken: {},
       resultaat: {
         stap: { opbrengsten: "", kosten: "", winst: "", belasting: "", restwinst: "" },
         slotcontroleResultaat: false,
@@ -149,6 +167,7 @@
     s.student = naam !== undefined ? naam : (s.student || "");
     if (!s.boekingen) s.boekingen = {};
     if (!s.controles) s.controles = {};
+    if (!s.controlesHerbekijken) s.controlesHerbekijken = {};
     if (!s.eindbalans) s.eindbalans = {};
     if (!Array.isArray(s.afpuntingen)) s.afpuntingen = [];
     s.afpuntingen = s.afpuntingen.filter(function (k) {
@@ -259,7 +278,6 @@
     // wordt bij elke toetsaanslag opnieuw opgebouwd; zonder dit zou een
     // ingeklapte tabel telkens terugspringen.
     openDocumenten: {},
-    openFeedbackHistoriek: {}, // per verrichting: staat de oudere feedback open?
   };
   var docImgTeller = 0;
 
@@ -424,6 +442,35 @@
   // Voor het indienvenster: welke categorieën hebben nog openstaande
   // controles? koppeling.js gebruikt dit voor de bevestigingsstap.
   window.controleStandVoor = function (cat) { return controleStand(cat); };
+
+  function categorieVanRef(ref) {
+    for (var i = 0; i < OPDRACHTEN.length; i++) {
+      if (OPDRACHTEN[i].ref === ref) return OPDRACHTEN[i].categorie;
+    }
+    return null;
+  }
+
+  /* Een boeking heropenen betekent niet dat alle vinkjes weg moeten. Wel dat
+     de controles van díé categorie opnieuw bekeken horen te worden. Dat
+     onthouden we hier; de melding volgt op de controlepagina en bij het
+     indienen. Is er in die categorie nog niets afgevinkt, dan valt er ook
+     niets te herbekijken. */
+  function markeerControlesTeHerbekijken(cat) {
+    if (!cat) return;
+    var stand = controleStand(cat);
+    if (!stand.totaal || !stand.af) return;
+    state.controlesHerbekijken[cat] = true;
+  }
+
+  // koppeling.js gebruikt dit bij het indienen: eerst de melding, en na een
+  // geslaagde inzending gaat de markering weer uit.
+  window.controlesHerbekijkenVoor = function (cat) { return !!state.controlesHerbekijken[cat]; };
+  window.controlesNagekeken = function (cat) {
+    if (!state.controlesHerbekijken[cat]) return;
+    delete state.controlesHerbekijken[cat];
+    saveState();
+    renderAlles();
+  };
 
   function controleSaldoSoort() {
     var gb = berekenGrootboek();
@@ -777,16 +824,19 @@
 
     var nieuwste = lijst[0];
     var ouder = lijst.slice(1);
-    var open = !!uiState.openFeedbackHistoriek[ref];
 
     var html = '<div class="feedback-blok feedback-' + beoordelingKlasse(nieuwste.beoordeling) + '">';
     html += '<div class="feedback-titel"><strong>Feedback van je vakexpert</strong></div>';
     html += htmlFeedbackRonde(nieuwste, false);
 
+    // Alle eerdere ronden staan er gewoon onder. Geen inklapknop meer: wat
+    // weggeklikt staat, wordt niet gelezen. Lang worden die lijstjes niet —
+    // een verrichting die "In orde" is, gaat op slot.
     if (ouder.length) {
-      html += '<button type="button" class="feedback-historiek-knop" data-role="feedback-historiek" data-ref="' + escapeAttr(ref) + '">' +
-        (open ? "▾ " : "▸ ") + "Eerdere feedback (" + ouder.length + ")</button>";
-      if (open) html += '<div class="feedback-historiek">' + ouder.map(function (f) { return htmlFeedbackRonde(f, true); }).join("") + "</div>";
+      html += '<div class="feedback-historiek">' +
+        '<div class="feedback-historiek-titel">Eerdere feedback (' + ouder.length + ")</div>" +
+        ouder.map(function (f) { return htmlFeedbackRonde(f, true); }).join("") +
+        "</div>";
     }
     html += "</div>";
     return html;
@@ -964,6 +1014,18 @@
 
     if (extra.inleiding) {
       html += '<div class="paneel paneel-tip"><p>' + escapeAttr(extra.inleiding) + "</p></div>";
+    }
+
+    // Er is hier iets gewijzigd nadat de controles afgevinkt waren. De
+    // vinkjes blijven staan, maar dit blokje vraagt om ze nog eens na te
+    // lopen — en dezelfde vraag komt terug bij het indienen.
+    if (state.controlesHerbekijken[cat]) {
+      html += '<div class="paneel paneel-herbekijken">' +
+        "<p><strong>Je hebt een boeking van deze categorie heropend nadat je hier afvinkte.</strong> " +
+        "Je vinkjes zijn blijven staan, maar loop ze nog eens na: klopt alles nog met je nieuwe boeking?</p>" +
+        '<button type="button" class="btn-secundair" data-role="controles-nagekeken" data-cat="' +
+        escapeAttr(cat) + '">Ik heb ze opnieuw nagekeken</button>' +
+        "</div>";
     }
 
     // De invulbalans bij de beginbalans: dezelfde sleepoefening als op het
@@ -2227,10 +2289,12 @@
       if (!knop) return;
       var role = knop.dataset.role;
 
-      if (role === "feedback-historiek") {
-        var refF = knop.dataset.ref;
-        uiState.openFeedbackHistoriek[refF] = !uiState.openFeedbackHistoriek[refF];
-        renderAlles();
+      if (role === "controles-nagekeken") {
+        // De leerling bevestigt dat de controles van deze categorie opnieuw
+        // bekeken zijn na een wijziging. Het waarschuwingsblokje verdwijnt
+        // dan, ook bij het indienen.
+        delete state.controlesHerbekijken[knop.dataset.cat];
+        saveState(); renderAlles();
       } else if (role === "rij-toevoegen") {
         boekingVoor(knop.dataset.scope).rows.push(maakLegeRij());
         saveState(); renderAlles();
@@ -2246,13 +2310,15 @@
       } else if (role === "heropenen") {
         var refH = knop.dataset.scope;
         boekingVoor(refH).geboekt = false;
-        // Wijzigen = opnieuw controleren: de handmatige vinkjes en de
-        // slotcontrole gaan uit, en afpuntingen die op deze boeking steunen
-        // vervallen (de rijen kunnen immers veranderen).
-        state.controles = {};
-        state.resultaat.slotcontroleResultaat = false;
-        state.resultaat.slotcontroleBalans = false;
-        state.resultaat.slotcontroleMelding = null;
+        // Wijzigen = opnieuw controleren, maar de vinkjes blijven staan: ze
+        // allemaal opnieuw laten aanzetten was te veel werk en zorgde vooral
+        // voor blind doorklikken. In plaats daarvan wordt deze categorie
+        // gemarkeerd als "opnieuw na te kijken". De slotcontrole hoeft hier
+        // niet gewist te worden: het tabblad Eindbalans herrekent die bij elk
+        // bezoek en laat ze vanzelf vallen zodra iets niet meer klopt.
+        // Afpuntingen die op deze boeking steunen vervallen wél — de rijen
+        // kunnen immers veranderen.
+        markeerControlesTeHerbekijken(categorieVanRef(refH));
         state.afpuntingen = state.afpuntingen.filter(function (k) {
           return k.van.split(":")[0] !== refH && k.naar.split(":")[0] !== refH;
         });
@@ -2529,6 +2595,13 @@
     setState: function (nieuw, naam) {
       state = normaliseerState(nieuw, naam !== undefined ? naam : (nieuw && nieuw.student) || "");
     },
+    zetOpslagPrefix: function (code) {
+      opslagPrefix = code ? slug(code) : "";
+      try {
+        if (opslagPrefix) localStorage.setItem(PREFIX_KEY, opslagPrefix);
+        else localStorage.removeItem(PREFIX_KEY);
+      } catch (e) { /* geblokkeerde opslag: dan werkt de app gewoon zonder */ }
+    },
     laadStudent: function (naam) {
       laadStudent(naam);
       var veld = document.getElementById("leerling-naam-input");
@@ -2538,6 +2611,7 @@
     renderAlles: renderAlles,
     marBij: marBij,
     formatBedrag: formatBedrag,
+    parseBedrag: parseBedrag,
     slug: slug,
   };
 

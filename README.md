@@ -18,11 +18,11 @@ js/data-relaties.js       lijst klanten/leveranciers voor 400000/440000 — per 
 js/data-controles.js      controlevragen per categorie, laatste afschrift, afwijkende saldokanten
 js/data-balans.js         de vakken van de eindbalans en de resultatenrekening
 js/data-info.js           de teksten achter de i-icoontjes
-js/config-koppeling.js    web-app-URL en sleutelwoord van de Google Sheet
-js/data-klas.js           de namen in de keuzelijst (géén codes!)
+js/config-koppeling.js    de vestigingen: code, naam, web-app-URL, sleutelwoord
+js/data-klas.js           de namen in de keuzelijst, per vestiging (géén codes!)
 js/app.js                 alle logica — hoeft normaal niet aangepast te worden
-js/koppeling.js           alles wat met de Google Sheet praat
-apps-script/Code.gs       de serverkant, hoort in de Apps Script-editor van de Sheet
+js/koppeling.js           alles wat met de Google Sheets praat
+apps-script/Code.gs       de serverkant, hoort in de Apps Script-editor van elke Sheet
 test/                     automatische test van de koppeling (Node + jsdom)
 documenten/                afbeeldingen van de verantwoordingsstukken (zie documenten/README.md)
 ```
@@ -114,7 +114,14 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   Die kleur komt terug bij de verrichting én in het menu links. Wat *in orde*
   is, gaat op slot en wordt niet meer meegestuurd bij een volgende inzending —
   enkel het relatieveld blijft aanpasbaar, want dat kijkt de vakexpert niet na.
-  Eerdere feedbackronden blijven inklapbaar zichtbaar.
+  Eerdere feedbackronden staan er gewoon onder, zonder inklapknop.
+
+- **Drie vestigingen (LEU, SKW, TW)** — één app, drie Sheets. Elke vestiging
+  heeft een eigen Sheet met een eigen kopie van `Code.gs` (met `VESTIGING`
+  ingevuld) en een eigen publicatie; de leerling kiest bovenaan eerst de
+  school en dan de naam. De werkbestanden komen samen in één map op de
+  gedeelde Drive, met de code van de vestiging in de bestandsnaam
+  (`werk_LEU_lottev.json`). Zie `HANDLEIDING-koppeling.md`.
 
 - **Exporteren, importeren en Alles wissen** bestaan niet meer: overbodig nu
   alles centraal bewaard wordt. Moet een leerling opnieuw beginnen, dan
@@ -175,15 +182,23 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 - **De eindbalans is een sleepoefening**: de app telt op wat de leerling in
   een vak legt en toont of activa en passiva gelijk zijn, maar zegt niet of
   een rekening in het juiste vak ligt. Dat blijft bewust nakijkwerk.
-- **Wijzigen = opnieuw controleren.** Heropent een leerling een boeking, dan
-  gaan de handmatige controle-vinkjes en de slotcontrole automatisch weer
-  uit, en vervallen de afpuntingen die op die boeking steunen. De geslaagde
-  slotcontrole-melding ("Hoera…") wordt bovendien bij elk bezoek aan het
-  tabblad Eindbalans herberekend: klopt er intussen iets niet meer (bv. een
-  kaartje verplaatst), dan verdwijnt ze weer.
+- **Wijzigen = opnieuw controleren, maar zonder alles te wissen.** Heropent
+  een leerling een boeking, dan blijven de controle-vinkjes staan. Wel wordt
+  de categorie van die boeking gemarkeerd in `state.controlesHerbekijken`:
+  bovenaan de controlepagina komt een oranje kader met een knop *Ik heb ze
+  opnieuw nagekeken*, en bij het indienen wordt dezelfde vraag nog eens
+  gesteld (blokkeert niets). Na een geslaagde inzending gaat de markering uit.
+  Afpuntingen die op die boeking steunen, vervallen wél. De geslaagde
+  slotcontrole-melding ("Hoera…") wordt bij elk bezoek aan het tabblad
+  Eindbalans herberekend: klopt er intussen iets niet meer, dan verdwijnt ze
+  vanzelf.
 
 ## Leerling-identificatie
 
-Eén tekstveld bovenaan (voornaam, eventueel met eerste letter achternaam
-erbij). Dat naam bepaalt de bewaarsleutel in de browser (autosave) en
-staat mee in het export-bestand.
+Bovenaan kiest de leerling de vestiging (enkel als er meer dan één in
+`config-koppeling.js` staat) en daarna de naam uit de klaslijst, met de
+persoonlijke code uit het tabblad Klas. Zonder klaslijst blijft het vrije
+naamveld staan (voornaam, eventueel met de eerste letter van de achternaam).
+Vestiging + naam bepalen samen de bewaarsleutel in de browser, zodat
+gelijknamige leerlingen van twee scholen op een gedeelde computer niet in
+elkaars werk komen.
