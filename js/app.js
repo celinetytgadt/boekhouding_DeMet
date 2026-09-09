@@ -853,29 +853,61 @@
       "</div>";
   }
 
+  /* De tekst op de startpagina. Staat er een welkomsttekst in het tabblad
+     Instellingen van de Sheet (de vakexpert zet ze daar via het
+     beheertabblad), dan wint die. Anders de standaardtekst hieronder. */
   function renderStart() {
     var html = htmlBannerNaamOntbreekt();
     html += '<h1 class="pagina-titel">Boekhoudapp Kern 8</h1>';
-    html += '<div class="paneel">' +
-      "<p>Hey collega's, fijn dat jullie deze app willen testen! </p>"
-+      
-      "<p>De app spreekt vrij goed voor zichzelf, een handleiding vind je <a href='https://docs.google.com/document/d/1X7m9_qPoTeqay_f0Xp-gqbDpYGRryGkBAMWi6GZoL3k/edit' target='_blank' rel='noopener'>in dit document</a> </p>"
-+ 
-      "<p>Ik hoop dat het voor jullie ook vlot werkt, maak gerust bij het testen bewuste fouten die leerlingen makkelijk zouden kunnen maken. </p>"
-+
-      "<p>Er zijn wat veel knoppen bovenaan, test ze gerust uit. 'handleiding' ontbreekt nog, 'indienen' geeft de antwoorden door naar een google sheet dat gebruikt kan worden om te verbeteren en feedback te geven. De feedback vind je in dit document: https://docs.google.com/spreadsheets/d/1Vsg3F9KfJngBxuHmJo9Jdy53A9klJF-tEfRkZurHaDc/edit?usp=sharing </p>"
-+
-      "<p>Zodra de expert feedback heeft gegeven (via de google sheets - menubalk kiezen voor 'boekhoudapp'), kan de leerling op 'feedback ophalen' klikken om te zien wat de expert heeft nagekeken.  </p>"
-+
-      "<p>_______________________________________________________ </p>"       
-+           
-"<p>Kies links een opdracht. Vul per verantwoordingsstuk het redeneerschema in. Verplicht zijn het bedrag, het rekeningnummer en debet of credit; de kolommen redenering, A/P/K/O en stijgt/daalt zijn denkhulp en mag je invullen zoals het je past. De omschrijving bij het rekeningnummer vult de app automatisch aan.</p>" +
-      "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
-      "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt de vakexpert na. De app controleert wel of debet en credit kloppen.</p>" +
-      "<p>Overal waar je een <span class=\"btn-info btn-info-voorbeeld\">i</span> ziet staan, vind je uitleg over hoe dat onderdeel werkt.</p>" +
-      "<p>Je werk wordt automatisch bewaard in je browser. Gebruik <em>Exporteren</em> af en toe om een bestandje te bewaren als back-up, zeker als je van toestel wisselt — met <em>Importeren</em> laad je het weer in.</p>" +
-      "</div>";
+    html += '<div class="paneel">' + welkomstHtml() + "</div>";
     return html;
+  }
+
+  function welkomstHtml() {
+    var eigen = window.INSTELLINGEN && window.INSTELLINGEN.welkomsttekst;
+    if (eigen && String(eigen).trim()) return opmaakTekst(eigen);
+    return STANDAARD_WELKOM;
+  }
+
+  var STANDAARD_WELKOM =
+    "<p>Welkom. Hier boek je de verantwoordingsstukken in, met je T-rekeningen altijd naast je.</p>" +
+    "<p>Kies links een opdracht en vul het redeneerschema in. Verplicht zijn het bedrag, het rekeningnummer en debet of credit; " +
+    "de kolommen redenering, A/P/K/O en stijgt/daalt zijn denkhulp en vul je in zoals het jou helpt. " +
+    "De omschrijving bij het rekeningnummer vult de app zelf aan.</p>" +
+    "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
+    "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt je vakexpert na. Ze controleert wel of debet en credit kloppen.</p>" +
+    "<p>Bij elke categorie staat in het menu een <strong>Controle</strong>. Doe die vóór je indient: daar vind je zelf de meeste fouten terug.</p>" +
+    "<p>Met <strong>Indienen</strong> bovenaan stuur je een categorie door naar je vakexpert. Dien daarna diezelfde taak ook in " +
+    "in Classroom — anders krijg je er geen feedback op.</p>" +
+    "<p>Overal waar je een <span class=\"btn-info btn-info-voorbeeld\">i</span> ziet staan, vind je uitleg over hoe dat onderdeel werkt.</p>" +
+    "<p>Zodra je aangemeld bent, wordt je werk automatisch bewaard. Je kan dus gerust op een andere computer verder werken.</p>";
+
+  /* Kleine opmaaktaal voor teksten die de vakexpert zelf intikt (de
+     welkomsttekst, de mededeling). Alles wordt eerst ontdaan van HTML, zodat
+     er nooit code uit de Sheet in de pagina belandt. Daarna:
+       lege regel      -> nieuwe alinea
+       [tekst](https://…) -> een link die in een nieuw venster opent
+       **vet**         -> vet
+     Meer is er niet, en meer is er ook niet nodig. */
+  function opmaakTekst(ruw) {
+    var veilig = escapeAttr(String(ruw || "")).replace(/\r\n?/g, "\n");
+    var alineas = veilig.split(/\n{2,}/);
+    return alineas.map(function (a) {
+      var t = a.replace(/\n/g, "<br>");
+      t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (_, tekst, url) {
+        return '<a href="' + url + '" target="_blank" rel="noopener">' + tekst + "</a>";
+      });
+      t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      return "<p>" + t + "</p>";
+    }).join("");
+  }
+
+  /* Een korte mededeling van de vakexpert, bovenaan elke pagina. Leeg in het
+     tabblad Instellingen = geen kader. */
+  function htmlMededeling() {
+    var t = window.INSTELLINGEN && window.INSTELLINGEN.mededeling;
+    if (!t || !String(t).trim()) return "";
+    return '<div class="mededeling">' + opmaakTekst(t) + "</div>";
   }
 
   function renderSaldibalans() {
@@ -933,10 +965,18 @@
     if (!def.geenDocument) {
       html += htmlUitklapbaarDocument("doc-" + ref, "Verantwoordingsstuk", def.doc, true);
     }
-    if (def.hulpdoc) {
-      html += htmlUitklapbaarDocument("hulp-" + ref, def.hulpdocTitel || "Hulpdocument", def.hulpdoc, true);
-    }
+    hulpdocumenten(def).forEach(function (h, i) {
+      html += htmlUitklapbaarDocument("hulp-" + ref + "-" + i, h.titel || "Hulpdocument", h.doc, true);
+    });
     return html;
+  }
+
+  /* De hulpdocumenten bij een opdracht, altijd als lijst. Eén hulpdocument
+     mag met "hulpdoc"/"hulpdocTitel"; meerdere met "hulpdocs". */
+  function hulpdocumenten(def) {
+    if (def.hulpdocs && def.hulpdocs.length) return def.hulpdocs;
+    if (def.hulpdoc) return [{ doc: def.hulpdoc, titel: def.hulpdocTitel }];
+    return [];
   }
 
   /* Een document in een inklapbaar paneel. Of het open of dicht staat, wordt
@@ -2103,6 +2143,15 @@
         (s.ref && laatsteBeoordeling(s.ref) ? htmlNavBolletje(s.ref, true) : "") + "</div>";
     });
 
+    // Het beheertabblad voor de vakexperten. Het staat er voor iedereen,
+    // maar zonder de expertcode valt er niets te zien: die wordt op de
+    // server gecontroleerd.
+    if (window.BEHEER && window.BEHEER.beschikbaar()) {
+      html += '<div class="nav-categorie">Voor vakexperten</div>';
+      html += '<div class="nav-top-item nav-beheer' + (uiState.huidigePagina.type === "beheer" ? " actief" : "") +
+        '" data-page-type="beheer">Beheer</div>';
+    }
+
     el.innerHTML = html;
   }
 
@@ -2114,17 +2163,22 @@
     var el = document.getElementById("pagina-inhoud");
     if (!el) return;
     var p = uiState.huidigePagina;
-    var html = "";
-    if (p.type === "start") html = renderStart();
-    else if (p.type === "saldibalans") html = renderSaldibalans();
-    else if (p.type === "opdracht") html = renderOpdracht(p.ref);
-    else if (p.type === "relaties") html = renderRelaties();
-    else if (p.type === "controle") html = renderCategorieControle(p.cat);
-    else if (p.type === "controles") html = renderControles();
-    else if (p.type === "resultaat") html = renderResultaat();
-    else if (p.type === "eindbalans") html = renderEindbalansPagina();
-    else html = renderStart();
+    var html = htmlMededeling();
+    if (p.type === "start") html += renderStart();
+    else if (p.type === "saldibalans") html += renderSaldibalans();
+    else if (p.type === "opdracht") html += renderOpdracht(p.ref);
+    else if (p.type === "relaties") html += renderRelaties();
+    else if (p.type === "controle") html += renderCategorieControle(p.cat);
+    else if (p.type === "controles") html += renderControles();
+    else if (p.type === "resultaat") html += renderResultaat();
+    else if (p.type === "eindbalans") html += renderEindbalansPagina();
+    // Het beheertabblad zit in js/beheer.js: het hoort niet bij het werk van
+    // de leerling en app.js hoeft er niets van te weten. Ontbreekt dat
+    // bestand, dan bestaat de pagina gewoon niet.
+    else if (p.type === "beheer") html += (window.BEHEER ? window.BEHEER.html() : "");
+    else html += renderStart();
     el.innerHTML = html;
+    if (p.type === "beheer" && window.BEHEER) window.BEHEER.naRender(el);
   }
 
   function metBehoudVanFocus(fn) {
@@ -2613,6 +2667,8 @@
     formatBedrag: formatBedrag,
     parseBedrag: parseBedrag,
     slug: slug,
+    opmaakTekst: opmaakTekst,
+    huidigePagina: function () { return uiState.huidigePagina.type; },
   };
 
   document.addEventListener("DOMContentLoaded", init);

@@ -1777,3 +1777,141 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
   padding: 8px 16px;
   font-size: 13px;
 }
+
+/* ==========================================================================
+   Mededeling, Classroom en het beheertabblad
+   ========================================================================== */
+
+/* De korte mededeling van de vakexpert, bovenaan elke pagina. Ze komt uit
+   het tabblad Instellingen van de Sheet; staat daar niets, dan is er geen
+   kader. */
+.mededeling {
+  background: #fff8ef;
+  border: 1px solid #e8890c;
+  border-left: 5px solid #e8890c;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+.mededeling p { margin: 0 0 6px 0; }
+.mededeling p:last-child { margin-bottom: 0; }
+
+/* Na het indienen: de herinnering dat de taak ook in Classroom moet. */
+.classroom-blok {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--kleur-primair);
+  border-radius: 8px;
+  background: #e9eaf7;
+  text-align: left;
+  font-size: 13px;
+}
+.classroom-blok p { margin: 0 0 8px 0; }
+.classroom-blok p:last-child { margin-bottom: 0; }
+.classroom-knoppen { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.btn-classroom {
+  display: inline-block;
+  background: var(--kleur-primair);
+  color: white;
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.btn-classroom:hover { background: var(--kleur-primair-donker); }
+
+/* De kleine ronde knop bovenaan om feedback nu op te halen. Feedback komt
+   vanzelf binnen; deze knop is voor wie niet wil wachten en mag dus niet
+   even hard roepen als Indienen. */
+#topbar-leerling button.btn-icoon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Het beheertabblad staat onderaan het menu, rustig weggezet: leerlingen
+   hebben er niets te zoeken. */
+.nav-beheer { font-size: 12.5px; opacity: 0.85; }
+
+.beheer-slot input[type="password"] {
+  padding: 7px 9px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 6px;
+  font: inherit;
+  width: 160px;
+}
+.beheer-rij { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.beheer-tabel { width: 100%; border-collapse: collapse; margin: 10px 0; }
+.beheer-tabel th, .beheer-tabel td {
+  border-bottom: 1px solid var(--kleur-rand);
+  padding: 5px 6px;
+  text-align: left;
+  vertical-align: middle;
+}
+.beheer-tabel thead th { font-size: 12px; color: var(--kleur-tekst-zacht); font-weight: 600; }
+.beheer-tabel input[type="text"] {
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 5px;
+  font: inherit;
+}
+.beheer-klas td:nth-child(2) { width: 110px; }
+.beheer-klas td:nth-child(4) { width: 40px; }
+.beheer-taken th { width: 240px; font-weight: 600; font-size: 13px; }
+.beheer-code { font-variant-numeric: tabular-nums; font-weight: 600; }
+.beheer-nog { font-weight: 400; color: var(--kleur-tekst-zacht); font-size: 12px; }
+.beheer-weg td { opacity: 0.45; text-decoration: line-through; }
+.beheer-weg input { text-decoration: line-through; }
+
+.btn-mini {
+  border: 1px solid var(--kleur-rand);
+  background: white;
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 12px;
+  color: var(--kleur-tekst);
+}
+.btn-mini:hover { border-color: var(--kleur-fout); color: var(--kleur-fout); }
+
+.beheer-veld { display: block; margin-bottom: 16px; }
+.beheer-label { display: block; font-weight: 600; margin-bottom: 4px; }
+.beheer-veld input[type="text"], .beheer-veld textarea, .beheer-slot textarea,
+.paneel textarea[data-role="klas-plak"] {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 6px;
+  font: inherit;
+  resize: vertical;
+}
+.beheer-uitleg {
+  display: block;
+  font-size: 12px;
+  color: var(--kleur-tekst-zacht);
+  margin-top: 4px;
+}
+.beheer-uitleg code, .paneel details code {
+  background: #eef0f8;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11.5px;
+  word-break: break-all;
+}
+
+.beheer-voet {
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -4px 14px rgba(0, 7, 145, 0.12);
+}
+.beheer-melding { margin: 10px 0 0 0; font-size: 13px; font-weight: 600; }
+.beheer-ok { color: #0f7a52; }
+.beheer-fout { color: var(--kleur-fout); }
+.beheer-info { color: var(--kleur-tekst-zacht); }

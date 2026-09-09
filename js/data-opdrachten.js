@@ -9,6 +9,8 @@
 // Veld "hulpdoc": een tweede, inklapbaar document dat de leerling nodig
 // heeft om deze boeking te maken (bv. de aflossingstabel bij een
 // bankafschrift). Zo hoeven ze niet van pagina te wisselen (§2).
+// Zijn er meerdere hulpdocumenten, gebruik dan "hulpdocs":
+//     hulpdocs: [ { doc: "LENING1", titel: "…" }, { doc: "LENING2", titel: "…" } ]
 // Veld "geenDocument": true als er geen verantwoordingsstuk bij hoort
 // (bv. BTW, BELASTING en RESULTAAT, die volgen uit eigen berekeningen).
 // Veld "navLabel": de tekst in het menu links, als die anders moet zijn dan
@@ -62,7 +64,14 @@ const OPDRACHTEN = [
   // overboekingen) duidelijker.
   { ref: "KAS01", categorie: "Financiële verrichtingen", titel: "Kasblad KAS01", doc: "KAS01" },
 
-  { ref: "BANK01", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK01", doc: "BANK01", hulpdoc: "LENING1", hulpdocTitel: "Aflossingstabel lening p1", hulpdoc: "LENING2", hulpdocTitel: "Aflossingstabel lening p2" },
+  // Twee hulpdocumenten: daarvoor is het veld "hulpdocs" er. Twee keer
+  // "hulpdoc" in hetzelfde object werkt niet — JavaScript houdt dan enkel
+  // het laatste over, en dan zag de leerling alleen bladzijde 2.
+  { ref: "BANK01", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK01", doc: "BANK01",
+    hulpdocs: [
+      { doc: "LENING1", titel: "Aflossingstabel lening (p. 1)" },
+      { doc: "LENING2", titel: "Aflossingstabel lening (p. 2)" },
+    ] },
   { ref: "BANK02", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK02", doc: "BANK02" },
   { ref: "BANK03", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK03", doc: "BANK03" },
   { ref: "BANK04", categorie: "Financiële verrichtingen", titel: "Bankafschrift BANK04", doc: "BANK04" },

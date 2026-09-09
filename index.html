@@ -33,12 +33,15 @@
     <button id="btn-aanmelden" type="button" hidden title="Aanmelden en je werk ophalen">Aanmelden</button>
     <span id="opslaan-status"></span>
     <span id="koppeling-status" class="koppeling-status"></span>
-    <!-- Testversie: de handleiding voor de collega's die meetesten. De
-         bestandsnaam moet exact overeenkomen — GitHub Pages is
-         hoofdlettergevoelig. -->
-    <a id="link-handleiding" class="topbar-link" href="Handleiding-testleerkrachten.pdf" target="_blank" rel="noopener" title="Handleiding voor de collega's die meetesten (pdf)">Handleiding</a>
+    <!-- De cursus en de handleiding. De vakexpert vult de adressen in bij
+         het beheertabblad; staat er niets, dan blijft de knop verborgen. -->
+    <a id="link-cursus" class="topbar-link" href="#" target="_blank" rel="noopener" title="Je cursus opzoeken" hidden>Cursus</a>
+    <a id="link-handleiding" class="topbar-link" href="#" target="_blank" rel="noopener" title="Handleiding bij de app" hidden>Handleiding</a>
     <button id="btn-indienen" type="button" class="btn-primair-topbar" title="Stuur je werk door naar je vakexpert">Indienen</button>
-    <button id="btn-feedback" type="button" title="Kijk of er feedback klaarstaat">Feedback ophalen</button>
+    <!-- Feedback komt vanzelf binnen bij het openen van de app en als je
+         terugkeert naar dit tabblad. Deze knop is er voor wie niet wil
+         wachten, en staat daarom klein. -->
+    <button id="btn-feedback" type="button" class="btn-icoon" title="Feedback nu opnieuw ophalen" aria-label="Feedback nu opnieuw ophalen">↻</button>
   </div>
   <button id="btn-nav-toggle" type="button" aria-label="Menu">☰</button>
   <button id="btn-tpanel-toggle" type="button" aria-label="T-rekeningen">T</button>
@@ -150,5 +153,8 @@
 <script src="js/app.js"></script>
 <!-- Na app.js: koppeling.js gebruikt window.APP. -->
 <script src="js/koppeling.js"></script>
+<!-- Het beheertabblad voor de vakexperten. Laat je dit bestand weg, dan
+     verdwijnt dat tabblad en verandert er verder niets. -->
+<script src="js/beheer.js"></script>
 </body>
 </html>

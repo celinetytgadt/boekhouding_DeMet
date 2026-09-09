@@ -13,10 +13,10 @@
 // gerust.
 
 const RELATIES = {
-  klanten: [ "klanten 2025",
+  klanten: [
     // bv. "Klant A", "Bakkerij Janssens", ...
   ],
-  leveranciers: [ "leveranciers 2025",
+  leveranciers: [
     // bv. "Leverancier X", "Groothandel Peeters", ...
   ],
 };

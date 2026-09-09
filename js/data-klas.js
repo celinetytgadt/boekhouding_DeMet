@@ -1,15 +1,17 @@
 // data-klas.js
-// De namen die de leerlingen in de keuzelijst bovenaan de app zien, per
-// vestiging. De code van de vestiging (LEU, SKW, TW) moet overeenkomen met
-// die in js/config-koppeling.js.
+// NOODOPLOSSING — normaal hoef je hier niets meer in te vullen.
 //
-// Hier staan ALLEEN de namen. De persoonlijke codes horen in het tabblad
-// "Klas" van de Google Sheet van díé vestiging en nergens anders: dit
-// bestand staat op GitHub Pages en is door iedereen leesbaar.
+// De namen van de leerlingen staan sinds september 2026 in het tabblad
+// "Klas" van de Google Sheet van de vestiging, samen met hun persoonlijke
+// code. De app haalt ze daar op zodra de leerling een school gekozen heeft.
+// Een vakexpert voegt ze toe via het tabblad Beheer in de app (of gewoon
+// rechtstreeks in de Sheet).
 //
-// Schrijf de namen tussen dubbele aanhalingstekens, met een komma erachter,
-// en zonder // ervoor — met // ervoor is het commentaar en ziet de app de
-// naam niet. Zo hoort het eruit te zien:
+// Waarom staat dit bestand er dan nog? Als de web-app van een vestiging
+// onbereikbaar is, kan de app de klaslijst niet ophalen. Staat er hieronder
+// niets, dan valt ze terug op het vrije naamveld — precies zoals vroeger,
+// en dat volstaat. Wil je toch een vaste reservelijst voor een vestiging,
+// zet de namen er dan bij:
 //
 //     const KLASLIJSTEN = {
 //       LEU: [
@@ -18,28 +20,11 @@
 //       ],
 //     };
 //
-// Schrijf ze zoals in kolom A van het tabblad Klas van die vestiging.
-// Hoofdletters, punten en spaties maken niet uit — het script vergelijkt
-// namen zonder die tekens — maar gelijk houden leest prettiger.
-//
-// Blijft de lijst van een vestiging leeg (LEU: []), dan valt de app voor die
-// vestiging terug op het vrije naamveld zoals vroeger. Handig zolang je met
-// collega's test.
+// De codes horen hier NOOIT in: dit bestand staat op GitHub Pages en is door
+// iedereen leesbaar.
 
 const KLASLIJSTEN = {
-  LEU: [
-    "test LEU (code 1234)",
-    "Zeger",
-    "Mats",
-    "Mai",
-    "Yorick",
-  ],
-  SKW: [
-    "leerling 1",
-    "leerling 2",
-  ],
-  TW: [
-    "leerling 3",
-    "leerling 4",
-  ],
+  LEU: [],
+  SKW: [],
+  TW: [],
 };

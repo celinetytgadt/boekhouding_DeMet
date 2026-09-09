@@ -59,6 +59,17 @@
   var teBewaren = false;
   var bezigMetBewaren = false;
 
+  // Wat de vakexpert in de Sheet ingesteld heeft (teksten, links), de taken
+  // in Classroom per categorie, en de klaslijst zoals de server ze geeft.
+  // Zolang die er niet zijn, valt de app terug op js/data-klas.js en op de
+  // standaardteksten in app.js.
+  var instellingen = {};
+  var taken = {};
+  var klasServer = null;        // { code: "LEU", namen: [...] }
+  var beheerMogelijk = false;   // is er een expertcode ingesteld?
+  var vulNamenFn = null;        // bouwAanmeldUI zet die hier klaar
+  var laatsteFeedbackTijd = 0;
+
   /* ======================================================================
      Kleine hulpjes
      ====================================================================== */
@@ -89,6 +100,12 @@
   // De klaslijst van één vestiging. KLASLIJSTEN staat in data-klas.js; een
   // oude, platte KLASLIJST blijft werken.
   function klaslijstVoor(code) {
+    // De Sheet is de enige plaats waar de klaslijst bijgehouden wordt: daar
+    // staan de namen én de codes bij elkaar. js/data-klas.js blijft als
+    // noodoplossing bestaan voor als de server onbereikbaar is.
+    if (klasServer && klasServer.code === code && klasServer.namen.length) {
+      return klasServer.namen;
+    }
     if (typeof KLASLIJSTEN !== "undefined" && KLASLIJSTEN && KLASLIJSTEN[code]) {
       return KLASLIJSTEN[code] || [];
     }
@@ -194,7 +211,12 @@
         vestSelect.addEventListener("change", function () {
           vestiging = vestigingMet(vestSelect.value);
           status("");
+          // Elke vestiging heeft haar eigen Sheet, en dus haar eigen
+          // klaslijst, teksten en taken.
+          instellingen = {}; taken = {}; klasServer = null; beheerMogelijk = false;
+          window.INSTELLINGEN = instellingen;
           vulNamen();
+          haalInstellingen();
         });
       }
     }
@@ -203,6 +225,7 @@
     codeVeld.addEventListener("keydown", function (e) { if (e.key === "Enter") meldAan(); });
     select.addEventListener("change", function () { status(""); });
 
+    vulNamenFn = vulNamen;
     vulNamen();
 
     /* De namenlijst hangt af van de gekozen vestiging, dus ze wordt telkens
@@ -399,6 +422,102 @@
     } catch (e) { console.error(e); }
   }
 
+
+  /* ======================================================================
+     Instellingen uit de Sheet
+
+     De teksten, de links, de taken in Classroom en de namen van de klaslijst
+     staan sinds deze versie in de Google Sheet van de vestiging, en niet
+     meer in de bestanden op GitHub. De vakexpert past ze aan in het
+     beheertabblad van de app; hier worden ze opgehaald.
+
+     Ze worden opgehaald zodra de vestiging bekend is, dus vóór de leerling
+     aangemeld is: de namenlijst is er nu net voor nodig.
+     ====================================================================== */
+
+  function haalInstellingen(daarna) {
+    if (!actief()) { if (daarna) daarna(); return; }
+    var voorVestiging = vestiging.code;
+    haal({ actie: "instellingen", sleutel: sleutelwoord() })
+      .then(function (r) {
+        // Intussen een andere school gekozen? Dan is dit antwoord verouderd.
+        if (!vestiging || vestiging.code !== voorVestiging) return;
+        if (!r || !r.ok) { if (daarna) daarna(); return; }
+        instellingen = r.instellingen || {};
+        taken = r.taken || {};
+        klasServer = { code: voorVestiging, namen: r.klas || [] };
+        beheerMogelijk = !!r.beheerMogelijk;
+        window.INSTELLINGEN = instellingen;
+        zetTopbarLinks();
+        if (vulNamenFn) vulNamenFn();
+        APP.renderAlles();
+        if (daarna) daarna();
+      })
+      .catch(function (err) {
+        // Onbereikbaar? Dan valt de app terug op js/data-klas.js en op de
+        // standaardteksten. Geen foutmelding: de leerling kan hier niets aan
+        // doen en de app werkt gewoon verder.
+        console.error(err);
+        if (daarna) daarna();
+      });
+  }
+
+  // De knoppen Cursus en Handleiding bovenaan. Staat er geen link ingevuld,
+  // dan verdwijnt de knop — beter geen knop dan een knop die niets doet.
+  function zetTopbarLinks() {
+    [["link-cursus", instellingen.cursusUrl], ["link-handleiding", instellingen.handleidingUrl]]
+      .forEach(function (paar) {
+        var el = document.getElementById(paar[0]);
+        if (!el) return;
+        var url = String(paar[1] || "").trim();
+        el.hidden = !url;
+        if (url) el.href = url;
+      });
+  }
+
+  /* De link naar de taak in Classroom die bij een categorie hoort. In het
+     tabblad Taken van de Sheet staat er één rij per categorie; eindbalans en
+     resultaatverwerking delen er één ("Resultaatverwerking & Eindbalans").
+
+     Daar hoort de volledige link uit Classroom in te staan (taak openen → ⋮ →
+     Link kopiëren). Staat er iets anders — bv. enkel het ID van de taak — dan
+     toont de app de herinnering zonder knop: liever geen knop dan een knop
+     die op een foutmelding uitkomt. */
+  function taakLink(categorie) {
+    var ruw = taken[categorie];
+    if (!ruw) {
+      var sleutels = Object.keys(taken);
+      for (var i = 0; i < sleutels.length; i++) {
+        var delen = sleutels[i].split("&").map(function (d) { return d.trim().toLowerCase(); });
+        if (delen.indexOf(String(categorie).toLowerCase()) !== -1) { ruw = taken[sleutels[i]]; break; }
+      }
+    }
+    ruw = String(ruw || "").trim();
+    return /^https?:\/\//i.test(ruw) ? ruw : "";
+  }
+
+  /* Het blokje dat de leerling eraan herinnert dat indienen in de app niet
+     hetzelfde is als indienen in Classroom. Zonder ingevulde links blijft de
+     herinnering staan, maar dan zonder knoppen. */
+  function htmlClassroom(categorieen) {
+    var links = [];
+    categorieen.forEach(function (cat) {
+      var url = taakLink(cat);
+      if (!url) return;
+      if (links.some(function (l) { return l.url === url; })) return;   // gedeelde taak
+      links.push({ cat: cat, url: url });
+    });
+    var html = '<div class="classroom-blok">' +
+      "<p><strong>Dien de taak nu ook in in Classroom.</strong> Je kan dan pas feedback krijgen.</p>";
+    if (links.length) {
+      html += '<p class="classroom-knoppen">' + links.map(function (l) {
+        return '<a class="btn-classroom" href="' + esc(l.url) + '" target="_blank" rel="noopener">' +
+          esc(l.cat) + " in Classroom ↗</a>";
+      }).join("") + "</p>";
+    }
+    return html + "</div>";
+  }
+
   /* ======================================================================
      Indienen ter nakijking
      ====================================================================== */
@@ -562,7 +681,8 @@
       html += '<p class="bevestig-ok">✓ Je controles zijn nagekeken.</p>';
     }
 
-    html += '<p class="keuze-nota">Na het indienen kan je gewoon verder werken. Wat je vakexpert daarna "in orde" noemt, gaat op slot.</p>';
+    html += '<p class="keuze-nota">Na het indienen kan je gewoon verder werken. Wat je vakexpert daarna "in orde" noemt, gaat op slot. ' +
+      "Vergeet daarna de taak ook niet in Classroom in te dienen — anders kan je geen feedback krijgen.</p>";
     html += "</div>";
     html += '<div class="modal-voet">' +
       '<button type="button" class="btn-secundair" data-role="bevestig-terug">Terug</button>' +
@@ -612,8 +732,9 @@
       .then(function (r) {
         if (r && r.ok) {
           zetModalInhoud(venster, htmlMelding("ok", "Ingediend",
-            "Je stuurde " + r.aantal + " verrichting(en) door. Je vakexpert kijkt ze na; " +
-            "klik later op <em>Feedback ophalen</em> om de reactie te lezen."));
+            "Je stuurde " + r.aantal + " verrichting(en) door. Je vakexpert kijkt ze na; de feedback verschijnt " +
+            "vanzelf in de app zodra ze vrijgegeven is.",
+            htmlClassroom(categorieen)));
           status("Ingediend om " + datumTekst(new Date().toISOString()), "ok");
           // De vraag "heb je dat deel opnieuw nagekeken?" is gesteld en de
           // leerling heeft toch ingediend. Ze blijft dus niet terugkomen.
@@ -796,6 +917,7 @@
   }
 
   function haalFeedback(stil) {
+    laatsteFeedbackTijd = Date.now();
     if (!actief() || !aanmelding) {
       if (!stil) toonMelding("Feedback ophalen", "Meld je eerst bovenaan aan met je naam en je code.");
       return;
@@ -910,11 +1032,11 @@
       '<p class="keuze-nota">Dat duurt meestal een paar seconden.</p></div>';
   }
 
-  function htmlMelding(soort, titel, tekstHtml) {
+  function htmlMelding(soort, titel, tekstHtml, extraHtml) {
     var teken = soort === "ok" ? "✓" : (soort === "fout" ? "!" : "i");
     return '<div class="modal-body modal-melding melding-' + soort + '">' +
       '<div class="melding-teken" aria-hidden="true">' + teken + "</div>" +
-      "<h3>" + esc(titel) + "</h3><p>" + tekstHtml + "</p></div>" +
+      "<h3>" + esc(titel) + "</h3><p>" + tekstHtml + "</p>" + (extraHtml || "") + "</div>" +
       '<div class="modal-voet"><button type="button" class="btn-primair" data-role="modal-sluit">Sluiten</button></div>';
   }
 
@@ -933,6 +1055,22 @@
   window.KOPPELING_HOOKS = {
     naWijziging: function () { teBewaren = true; },
 
+  };
+
+  /* Het luikje voor js/beheer.js. Dat bestand bouwt het beheertabblad voor
+     de vakexperten; het praat met dezelfde web-app, maar met de expertcode
+     in plaats van een leerlingnaam. Ontbreekt beheer.js, dan merkt de app er
+     niets van. */
+  window.KOPPELING_API = {
+    actief: actief,
+    ingesteld: ingesteld,
+    vestiging: function () { return vestiging; },
+    vestigingLabel: function () { return vestigingLabel(vestiging); },
+    beheerMogelijk: function () { return beheerMogelijk; },
+    haal: function (params) { return haal(params); },
+    stuur: function (data) { return stuur(data); },
+    sleutel: sleutelwoord,
+    herlaadInstellingen: function (daarna) { haalInstellingen(daarna); },
   };
 
   function init() {
@@ -963,6 +1101,20 @@
       if (btnFeedback) btnFeedback.hidden = true;
       return;
     }
+
+    // De instellingen (teksten, links, klaslijst, taken) horen bij de
+    // vestiging en worden dus opgehaald zodra die bekend is — nog vóór de
+    // leerling aangemeld is, want de namenlijst komt er ook uit.
+    haalInstellingen();
+
+    // Feedback stil verversen als de leerling terugkomt naar dit tabblad.
+    // Hoogstens één keer per twee minuten, en niet terwijl er beheerd wordt.
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden || !aanmelding || !actief()) return;
+      if (APP.huidigePagina && APP.huidigePagina() === "beheer") return;
+      if (Date.now() - laatsteFeedbackTijd < 120000) return;
+      haalFeedback(true);
+    });
 
     if (aanmelding && aanmelding.naam && actief()) {
       naAanmelding();

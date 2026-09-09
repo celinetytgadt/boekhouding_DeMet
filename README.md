@@ -19,13 +19,35 @@ js/data-controles.js      controlevragen per categorie, laatste afschrift, afwij
 js/data-balans.js         de vakken van de eindbalans en de resultatenrekening
 js/data-info.js           de teksten achter de i-icoontjes
 js/config-koppeling.js    de vestigingen: code, naam, web-app-URL, sleutelwoord
-js/data-klas.js           de namen in de keuzelijst, per vestiging (géén codes!)
+js/data-klas.js           noodlijst met namen; normaal leeg — de klaslijst staat in de Sheet
 js/app.js                 alle logica — hoeft normaal niet aangepast te worden
 js/koppeling.js           alles wat met de Google Sheets praat
+js/beheer.js              het tabblad Beheer voor de vakexperten (achter de expertcode)
 apps-script/Code.gs       de serverkant, hoort in de Apps Script-editor van elke Sheet
 test/                     automatische test van de koppeling (Node + jsdom)
 documenten/                afbeeldingen van de verantwoordingsstukken (zie documenten/README.md)
 ```
+
+### Wat staat er níét meer in deze bestanden?
+
+Sinds september 2026 staat alles wat een vakexpert zelf moet kunnen wijzigen in
+de **Google Sheet van de vestiging**, en niet meer op GitHub. Ze passen het aan
+via het tabblad **Beheer** in de app (onderaan het menu links, achter de
+expertcode) of rechtstreeks in de Sheet:
+
+| wat | waar in de Sheet |
+|---|---|
+| de namen van de leerlingen, met hun code | tabblad **Klas** |
+| de link naar de taak in Classroom, per categorie | tabblad **Taken** |
+| de welkomsttekst op de startpagina | tabblad **Instellingen**, rij `welkomsttekst` |
+| een mededeling bovenaan elke pagina | rij `mededeling` |
+| de link naar de cursus (knop bovenaan) | rij `cursusUrl` |
+| de link naar de handleiding (knop bovenaan) | rij `handleidingUrl` |
+| de expertcode | rij `expertcode` — enkel in de Sheet te wijzigen |
+
+Elke vestiging heeft haar eigen Sheet en dus haar eigen instellingen. Is de
+web-app onbereikbaar, dan toont de app haar eigen standaardteksten en valt ze
+voor de namen terug op `js/data-klas.js`.
 
 ### Waar pas je wat aan?
 
@@ -99,6 +121,10 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 - **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
   opdrachtenbundel van dit jaar vastligt (mag ook leeg blijven: de app
   onthoudt de namen die leerlingen zelf intikken).
+- **De controle van de verrichtingen automatiseren** — de volgende grote stap.
+  Vandaag kijkt de app enkel na of debet en credit gelijk zijn en of een
+  rekening aan de juiste kant staat; de inhoudelijke beoordeling doet de
+  vakexpert.
 - **Nakijken door de vakexpert via Google Sheets (§10 van de
   specificatie)** — gebouwd, zie `HANDLEIDING-koppeling.md`. In het kort:
   een Apps Script-web-app die onder het account van de vakexpert draait.
