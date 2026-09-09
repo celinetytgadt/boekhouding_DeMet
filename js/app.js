@@ -842,10 +842,6 @@
     return html;
   }
 
-  function heeftFeedback(ref) {
-    return feedbackLijst(ref).length > 0;
-  }
-
   function htmlBannerNaamOntbreekt() {
     if (state.student) return "";
     return '<div class="paneel" style="border-color:var(--kleur-fout);background:#ffece9;">' +

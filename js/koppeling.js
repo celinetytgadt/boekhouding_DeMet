@@ -33,11 +33,10 @@
 
   /* De vestigingen uit config-koppeling.js. Elke vestiging heeft een eigen
      Sheet, een eigen web-app-URL en een eigen klaslijst; de app is voor alle
-     drie dezelfde. Staat er nog een oude config met één webAppUrl, dan blijft
-     die gewoon werken. */
+     drie dezelfde. */
   var vestigingen = (typeof VESTIGINGEN !== "undefined" && VESTIGINGEN && VESTIGINGEN.length)
     ? VESTIGINGEN
-    : [{ code: "", naam: "", webAppUrl: cfg.webAppUrl || "", sleutel: cfg.sleutel || "" }];
+    : [];
 
   // De gekozen vestiging (een object uit de lijst hierboven).
   var vestiging = vestigingen.length === 1 ? vestigingen[0] : null;
@@ -66,9 +65,9 @@
   var instellingen = {};
   var taken = {};
   var klasServer = null;        // { code: "LEU", namen: [...] }
-  var beheerMogelijk = false;   // is er een expertcode ingesteld?
   var vulNamenFn = null;        // bouwAanmeldUI zet die hier klaar
   var laatsteFeedbackTijd = 0;
+  var instellingenBezig = false;   // er loopt al een ophaalronde
 
   /* ======================================================================
      Kleine hulpjes
@@ -76,7 +75,7 @@
 
   // De web-app en het sleutelwoord van de gekozen vestiging.
   function webAppUrl() { return (vestiging && vestiging.webAppUrl) || ""; }
-  function sleutelwoord() { return (vestiging && vestiging.sleutel) || cfg.sleutel || ""; }
+  function sleutelwoord() { return (vestiging && vestiging.sleutel) || ""; }
 
   // Is er iets om mee te praten? actief() kijkt naar de gekozen vestiging,
   // ingesteld() naar de app als geheel (voor de knoppen bovenaan).
@@ -97,8 +96,7 @@
     return v.naam ? v.naam : v.code;
   }
 
-  // De klaslijst van één vestiging. KLASLIJSTEN staat in data-klas.js; een
-  // oude, platte KLASLIJST blijft werken.
+  // De klaslijst van één vestiging. KLASLIJSTEN staat in data-klas.js.
   function klaslijstVoor(code) {
     // De Sheet is de enige plaats waar de klaslijst bijgehouden wordt: daar
     // staan de namen én de codes bij elkaar. js/data-klas.js blijft als
@@ -109,7 +107,7 @@
     if (typeof KLASLIJSTEN !== "undefined" && KLASLIJSTEN && KLASLIJSTEN[code]) {
       return KLASLIJSTEN[code] || [];
     }
-    return typeof KLASLIJST !== "undefined" ? KLASLIJST : [];
+    return [];
   }
 
   function normaliseerNaam(n) {
@@ -148,26 +146,98 @@
      Verkeer met de web-app
      ====================================================================== */
 
+  /* Hoe lang we op Google wachten voor we het opgeven. Een koud script doet
+     er vlot tien seconden over; blijft het na een minuut stil, dan komt er
+     ook niets meer. Zonder deze grens bleef een verzoek dat nergens meer
+     heen ging voor altijd hangen, en bleef de knop grijs. */
+  var WACHT_MS = 60000;
+
+  /* Eén plaats waar er met de web-app gepraat wordt. Ze doet drie dingen die
+     een kale fetch niet doet:
+
+       • ze geeft op na WACHT_MS in plaats van eeuwig te blijven wachten;
+       • ze kijkt naar de HTTP-status én naar wat er terugkomt. Apps Script
+         antwoordt bij een storing met een HTML-pagina, en JSON.parse maakte
+         daar een nietszeggende fout van ("Unexpected token <");
+       • ze onthoudt in de fout wát er misging, zodat foutUitleg() de
+         gebruiker iets bruikbaars kan tonen in plaats van altijd
+         "geen verbinding". */
+  function verzoek(url, opts) {
+    var controle = typeof AbortController === "function" ? new AbortController() : null;
+    var klok = setTimeout(function () { if (controle) controle.abort(); }, WACHT_MS);
+    var instellingenFetch = { method: opts.method, redirect: "follow" };
+    if (opts.headers) instellingenFetch.headers = opts.headers;
+    if (opts.body) instellingenFetch.body = opts.body;
+    if (controle) instellingenFetch.signal = controle.signal;
+
+    return fetch(url, instellingenFetch)
+      .then(function (r) {
+        // r.ok en r.text() bestaan niet in elk testharnas; valt terug op
+        // r.json() zoals vroeger.
+        if (typeof r.text !== "function") return r.json();
+        if (r.ok === false) throw soortFout("http", "De server antwoordde met foutcode " + r.status + ".");
+        return r.text().then(function (tekst) {
+          try {
+            return JSON.parse(tekst);
+          } catch (e) {
+            // Bijna altijd de aanmeldpagina of een storingspagina van Google.
+            throw soortFout("geenJson",
+              "De server stuurde geen antwoord terug dat de app begrijpt. " +
+              "Meestal betekent dat dat het script van Google opnieuw aangemeld moet worden of even overbelast is.");
+          }
+        });
+      })
+      .then(function (antw) { clearTimeout(klok); return antw; })
+      .catch(function (err) {
+        clearTimeout(klok);
+        if (err && err.soort) throw err;
+        if (err && err.name === "AbortError") {
+          throw soortFout("traag", "De server antwoordde niet binnen de minuut.");
+        }
+        throw soortFout("netwerk", "Geen verbinding met de server.");
+      });
+  }
+
+  function soortFout(soort, tekst) {
+    var e = new Error(tekst);
+    e.soort = soort;
+    return e;
+  }
+
+  /* Wat we de gebruiker tonen als een verzoek misliep. Vroeger stond er
+     altijd "Geen verbinding met de server", ook als de server wél antwoordde
+     maar met een storingspagina — en dan ging je op de verkeerde plaats
+     zoeken. */
+  function foutUitleg(err) {
+    if (err && err.soort === "traag") {
+      return "De server antwoordde niet binnen de minuut. Meestal is ze even overbelast; probeer het zo dadelijk opnieuw.";
+    }
+    if (err && err.soort === "geenJson") return err.message;
+    if (err && err.soort === "http") return err.message + " Probeer het zo dadelijk opnieuw.";
+    return "Geen verbinding met de server.";
+  }
+
   function haal(params) {
     var url = webAppUrl() + "?" + Object.keys(params).map(function (k) {
       return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
     }).join("&");
-    return fetch(url, { method: "GET", redirect: "follow" })
-      .then(function (r) { return r.json(); });
+    return verzoek(url, { method: "GET" });
   }
 
   // Bewust text/plain: bij application/json stuurt de browser eerst een
   // OPTIONS-verzoek, en daar antwoordt Apps Script niet op. De verzending
   // zou dan altijd stuklopen op CORS.
   function stuur(data) {
-    return fetch(webAppUrl(), {
+    return verzoek(webAppUrl(), {
       method: "POST",
-      redirect: "follow",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(data),
-    }).then(function (r) { return r.json(); });
+    });
   }
 
+  // Het sleutelwoord van de vestiging en de aanmelding van deze browser bij
+  // een verzoek zetten. Zowel GET (als queryparameters) als POST (in de
+  // body) hebben ze nodig, dus één functie voor allebei.
   function metAanmelding(data) {
     data.sleutel = sleutelwoord();
     data.naam = aanmelding ? aanmelding.naam : "";
@@ -213,7 +283,7 @@
           status("");
           // Elke vestiging heeft haar eigen Sheet, en dus haar eigen
           // klaslijst, teksten en taken.
-          instellingen = {}; taken = {}; klasServer = null; beheerMogelijk = false;
+          instellingen = {}; taken = {}; klasServer = null;
           window.INSTELLINGEN = instellingen;
           vulNamen();
           haalInstellingen();
@@ -276,7 +346,7 @@
         naAanmelding();
       })
       .catch(function (err) {
-        status("Geen verbinding met de server — je werk wordt wel gewoon in deze browser bewaard.", "fout");
+        status(foutUitleg(err) + " Je werk wordt wel gewoon in deze browser bewaard.", "fout");
         console.error(err);
       });
   }
@@ -295,7 +365,7 @@
     laadFeedbackUitBrowser();
     APP.renderAlles();
 
-    haal(metAanmeldParams({ actie: "werk" }))
+    haal(metAanmelding({ actie: "werk" }))
       .then(function (r) {
         if (!r || !r.ok) { status(foutTekst(r), "fout"); return; }
         if (!r.gevonden) { status("Aangemeld — nog niets bewaard op de server.", "ok"); startAutoBewaren(); return; }
@@ -319,13 +389,6 @@
       });
 
     if (cfg.feedbackBijOpstart) haalFeedback(true);
-  }
-
-  function metAanmeldParams(p) {
-    p.sleutel = sleutelwoord();
-    p.naam = aanmelding ? aanmelding.naam : "";
-    p.code = aanmelding ? aanmelding.code : "";
-    return p;
   }
 
   function neemOver(r) {
@@ -437,29 +500,60 @@
 
   function haalInstellingen(daarna) {
     if (!actief()) { if (daarna) daarna(); return; }
+    // Loopt er al een ronde, dan is een tweede verspilling: Google krijgt
+    // twee keer dezelfde vraag en de app moet twee keer wachten.
+    if (instellingenBezig) { if (daarna) daarna(); return; }
+    instellingenBezig = true;
     var voorVestiging = vestiging.code;
     haal({ actie: "instellingen", sleutel: sleutelwoord() })
       .then(function (r) {
+        instellingenBezig = false;
         // Intussen een andere school gekozen? Dan is dit antwoord verouderd.
         if (!vestiging || vestiging.code !== voorVestiging) return;
         if (!r || !r.ok) { if (daarna) daarna(); return; }
-        instellingen = r.instellingen || {};
-        taken = r.taken || {};
-        klasServer = { code: voorVestiging, namen: r.klas || [] };
-        beheerMogelijk = !!r.beheerMogelijk;
-        window.INSTELLINGEN = instellingen;
-        zetTopbarLinks();
-        if (vulNamenFn) vulNamenFn();
-        APP.renderAlles();
+        zetInstellingen(voorVestiging, r.instellingen, r.taken, r.klas);
         if (daarna) daarna();
       })
       .catch(function (err) {
+        instellingenBezig = false;
         // Onbereikbaar? Dan valt de app terug op js/data-klas.js en op de
         // standaardteksten. Geen foutmelding: de leerling kan hier niets aan
         // doen en de app werkt gewoon verder.
         console.error(err);
         if (daarna) daarna();
       });
+  }
+
+  /* Instellingen, taken en klaslijst van één vestiging in de app zetten en
+     het scherm bijwerken. Wordt gevoed vanuit twee kanten: de gewone
+     ophaalronde hierboven, en het beheertabblad dat net bewaard heeft (die
+     kreeg alles al terug van de server en hoeft het dus niet nog eens op te
+     halen).
+
+     De twee antwoorden zien er lichtjes anders uit: het publieke antwoord
+     geeft de taken als { categorie: link } en de klas als lijst namen, het
+     beheerantwoord geeft rijen met meer erin. Allebei worden ze hier op
+     dezelfde vorm gebracht. */
+  function zetInstellingen(code, nieuweInstellingen, nieuweTaken, nieuweKlas) {
+    instellingen = nieuweInstellingen || {};
+    taken = takenAlsMap(nieuweTaken);
+    klasServer = { code: code, namen: (nieuweKlas || []).map(function (l) {
+      return typeof l === "string" ? l : String((l && l.naam) || "");
+    }).filter(Boolean) };
+    window.INSTELLINGEN = instellingen;
+    zetTopbarLinks();
+    if (vulNamenFn) vulNamenFn();
+    APP.renderAlles();
+  }
+
+  function takenAlsMap(ruw) {
+    if (!ruw) return {};
+    if (!Array.isArray(ruw)) return ruw;
+    var uit = {};
+    ruw.forEach(function (t) {
+      if (t && t.categorie && t.link) uit[t.categorie] = t.link;
+    });
+    return uit;
   }
 
   // De knoppen Cursus en Handleiding bovenaan. Staat er geen link ingevuld,
@@ -929,7 +1023,7 @@
     }
     status("Feedback ophalen…");
 
-    haal(metAanmeldParams({ actie: "feedback" }))
+    haal(metAanmelding({ actie: "feedback" }))
       .then(function (r) {
         if (!r || !r.ok) {
           status(foutTekst(r), "fout");
@@ -964,9 +1058,9 @@
       })
       .catch(function (err) {
         console.error(err);
-        status("Geen verbinding met de server.", "fout");
-        if (venster) zetModalInhoud(venster.el, htmlMelding("fout", "Geen verbinding",
-          "De feedback kon niet opgehaald worden. Controleer je internetverbinding en probeer het straks opnieuw."));
+        status(foutUitleg(err), "fout");
+        if (venster) zetModalInhoud(venster.el, htmlMelding("fout", "Niet gelukt",
+          esc(foutUitleg(err)) + " Je feedback kon niet opgehaald worden — probeer het straks opnieuw."));
       });
   }
 
@@ -1054,7 +1148,6 @@
   // valt. Zonder deze haak zouden we elke twee minuten hetzelfde versturen.
   window.KOPPELING_HOOKS = {
     naWijziging: function () { teBewaren = true; },
-
   };
 
   /* Het luikje voor js/beheer.js. Dat bestand bouwt het beheertabblad voor
@@ -1064,13 +1157,17 @@
   window.KOPPELING_API = {
     actief: actief,
     ingesteld: ingesteld,
-    vestiging: function () { return vestiging; },
     vestigingLabel: function () { return vestigingLabel(vestiging); },
-    beheerMogelijk: function () { return beheerMogelijk; },
     haal: function (params) { return haal(params); },
     stuur: function (data) { return stuur(data); },
     sleutel: sleutelwoord,
-    herlaadInstellingen: function (daarna) { haalInstellingen(daarna); },
+    foutUitleg: foutUitleg,
+    // Het beheertabblad heeft net bewaard en kreeg alles terug: de app
+    // meteen bijwerken, zonder er nóg een verzoek voor te doen.
+    neemBeheerOver: function (r) {
+      if (!r || !vestiging) return;
+      zetInstellingen(vestiging.code, r.instellingen, r.taken, r.klas);
+    },
   };
 
   function init() {

@@ -164,8 +164,6 @@ function doGet(e) {
     var p = (e && e.parameter) || {};
     if (p.sleutel !== SLEUTEL) return antwoord({ ok: false, fout: "sleutel" });
 
-    if (p.actie === "ping") return antwoord({ ok: true, versie: 2 });
-
     // De instellingen, de taken en de namen van de klaslijst. Bewust zonder
     // aanmelding: de app heeft de namen nodig vóór de leerling aangemeld is.
     // Er gaat hier niets naar buiten dat niet toch al in de app zichtbaar is.
@@ -204,36 +202,47 @@ function doGet(e) {
  * op — dan zou elke verzending stuklopen op CORS.
  */
 function doPost(e) {
-  var lock = LockService.getScriptLock();
+  var lock = null;
   try {
     var data = JSON.parse((e && e.postData && e.postData.contents) || "{}");
     if (data.sleutel !== SLEUTEL) return antwoord({ ok: false, fout: "sleutel" });
 
+    /* Enkel wie in de Sheet schrijft, heeft het slot nodig: die rijen mogen
+       niet door elkaar geschreven worden. Het gewone bewaren schrijft naar
+       één bestand in de Drive — dat van díé leerling — en kan niemand in de
+       weg zitten.
+
+       Dat maakte het verschil: elke leerling bewaart om de twee minuten, en
+       zolang het bewaren óók het slot nam, stond wie op dat moment iets in
+       het beheertabblad wilde opslaan gewoon te wachten tot alle andere
+       verzoeken van die minuut voorbij waren. */
+    var neemSlot = function () {
+      lock = LockService.getScriptLock();
+      return lock.tryLock(30000);
+    };
+
     // Het beheertabblad meldt zich met de expertcode aan en niet met een
     // leerlingnaam. Daarom vóór de gewone aanmeldcontrole.
     if (data.actie === "beheerBewaren") {
-      if (!lock.tryLock(30000)) return antwoord({ ok: false, fout: "te druk, probeer opnieuw" });
+      if (!neemSlot()) return antwoord({ ok: false, fout: "te druk, probeer opnieuw" });
       return antwoord(bewaarBeheer_(data));
     }
 
     var check = controleerAanmelding(data.naam, data.code);
     if (!check.ok) return antwoord(check);
 
-    // Tot 30 seconden wachten: twintig leerlingen die tegelijk bewaren mogen
-    // elkaars rijen niet door elkaar schrijven.
-    if (!lock.tryLock(30000)) return antwoord({ ok: false, fout: "te druk, probeer opnieuw" });
-
     if (data.actie === "bewaren") {
       return antwoord(bewaarWerk(data.naam, data.state));
     }
     if (data.actie === "indienen") {
+      if (!neemSlot()) return antwoord({ ok: false, fout: "te druk, probeer opnieuw" });
       return antwoord(verwerkInzending(data));
     }
     return antwoord({ ok: false, fout: "onbekende actie" });
   } catch (err) {
     return antwoord({ ok: false, fout: String(err) });
   } finally {
-    try { lock.releaseLock(); } catch (e2) {}
+    if (lock) { try { lock.releaseLock(); } catch (e2) {} }
   }
 }
 
@@ -342,10 +351,20 @@ function haalWerkOp(naam) {
  * Zet af en toe een kopie van de vorige versie apart, zodat je werk kan
  * terugzetten als een leerling zich vergist. Hoogstens één kopie per uur,
  * en er blijven er AANTAL_VERSIES bewaard.
+ *
+ * Het uur wordt eerst in de scripteigenschappen nagekeken en pas daarna in de
+ * map zelf. Anders werd bij élke bewaarbeurt — dus elke twee minuten, voor
+ * elke leerling — de hele versiemap doorlopen, en die map groeit alsmaar aan.
+ * Dat was het traagste stuk van het bewaren.
  */
 function bewaarVersie_(naam, bestand) {
   try {
     var slug = vestigingDeel_() + normaliseerNaam_(naam);
+    var props = PropertiesService.getScriptProperties();
+    var sleutelLaatste = "VERSIE_" + slug;
+    var laatste = Number(props.getProperty(sleutelLaatste) || 0);
+    if (laatste && (new Date().getTime() - laatste) / 60000 < VERSIE_INTERVAL_MIN) return;
+
     var map = versieMap_();
     var bestaand = [];
     var it = map.getFiles();
@@ -357,8 +376,12 @@ function bewaarVersie_(naam, bestand) {
 
     if (bestaand.length) {
       var minutenGeleden = (new Date() - bestaand[0].getDateCreated()) / 60000;
-      if (minutenGeleden < VERSIE_INTERVAL_MIN) return;
+      if (minutenGeleden < VERSIE_INTERVAL_MIN) {
+        props.setProperty(sleutelLaatste, String(bestaand[0].getDateCreated().getTime()));
+        return;
+      }
     }
+    props.setProperty(sleutelLaatste, String(new Date().getTime()));
     var stempel = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmm");
     map.createFile("werk_" + slug + "_" + stempel + ".json", bestand.getBlob().getDataAsString(), MimeType.PLAIN_TEXT);
 
@@ -472,27 +495,35 @@ function verwerkInzending(data) {
 /**
  * Zet "is laatste" leeg bij alle oudere rijen van deze leerling voor de
  * verrichtingen die nu opnieuw ingediend zijn.
+ *
+ * Er worden bewust enkel de drie kolommen gelezen die hier nodig zijn, en er
+ * wordt enkel de kolom "is laatste" teruggeschreven. Vroeger ging het hele
+ * tabblad heen en weer — kolom "boeking" met haar lange teksten incluis — en
+ * dat tabblad groeit het hele schooljaar aan.
  */
 function markeerOudereRijen_(blad, leerling, refs, vanafRij) {
   if (vanafRij <= 2) return;
   var aantal = vanafRij - 2;
   if (aantal <= 0) return;
 
-  var bereik = blad.getRange(2, 1, aantal, KOP_INZENDINGEN.length);
-  var waarden = bereik.getValues();
+  var leerlingen = blad.getRange(2, K_LEERLING, aantal, 1).getValues();
+  var refKolom = blad.getRange(2, K_REF, aantal, 1).getValues();
+  var laatsteBereik = blad.getRange(2, K_IS_LAATSTE, aantal, 1);
+  var laatste = laatsteBereik.getValues();
+
   var gezocht = normaliseerNaam_(leerling);
   var refSet = {};
   refs.forEach(function (r) { refSet[String(r)] = true; });
 
   var gewijzigd = false;
-  for (var i = 0; i < waarden.length; i++) {
-    if (waarden[i][K_IS_LAATSTE - 1] !== "JA") continue;
-    if (normaliseerNaam_(waarden[i][K_LEERLING - 1]) !== gezocht) continue;
-    if (!refSet[String(waarden[i][K_REF - 1])]) continue;
-    waarden[i][K_IS_LAATSTE - 1] = "";
+  for (var i = 0; i < aantal; i++) {
+    if (laatste[i][0] !== "JA") continue;
+    if (normaliseerNaam_(leerlingen[i][0]) !== gezocht) continue;
+    if (!refSet[String(refKolom[i][0])]) continue;
+    laatste[i][0] = "";
     gewijzigd = true;
   }
-  if (gewijzigd) bereik.setValues(waarden);
+  if (gewijzigd) laatsteBereik.setValues(laatste);
 }
 
 function schrijfDetail_(data, inzendingId, nu) {
@@ -529,26 +560,32 @@ function schrijfDetail_(data, inzendingId, nu) {
 function haalFeedbackOp(naam) {
   var blad = blad_(BLAD_INZENDINGEN);
   if (blad.getLastRow() < 2) return [];
-  var waarden = blad.getRange(2, 1, blad.getLastRow() - 1, KOP_INZENDINGEN.length).getValues();
+  var n = blad.getLastRow() - 1;
+  // Twee smalle blokken in plaats van het hele tabblad: de kolom "boeking"
+  // staat er tussenin en bevat de volledige boeking van elke leerling. Die
+  // hier meelezen maakte het ophalen van feedback onnodig zwaar, en dat
+  // gebeurt bij élke keer dat een leerling de app opent.
+  var links = blad.getRange(2, K_TIJDSTIP, n, K_REF).getValues();          // tijdstip … ref
+  var rechts = blad.getRange(2, K_BEOORDELING, n, 3).getValues();          // beoordeling, feedback, klaar
   var gezocht = normaliseerNaam_(naam);
   var uit = [];
 
-  waarden.forEach(function (rij) {
-    if (normaliseerNaam_(rij[K_LEERLING - 1]) !== gezocht) return;
-    if (rij[K_KLAAR - 1] !== true) return;
-    var beoordeling = String(rij[K_BEOORDELING - 1] || "").trim();
-    var tekst = String(rij[K_FEEDBACK - 1] || "").trim();
-    if (!beoordeling && !tekst) return;
+  for (var i = 0; i < n; i++) {
+    if (normaliseerNaam_(links[i][K_LEERLING - 1]) !== gezocht) continue;
+    if (rechts[i][2] !== true) continue;
+    var beoordeling = String(rechts[i][0] || "").trim();
+    var tekst = String(rechts[i][1] || "").trim();
+    if (!beoordeling && !tekst) continue;
 
-    var tijdstip = rij[K_TIJDSTIP - 1];
+    var tijdstip = links[i][K_TIJDSTIP - 1];
     uit.push({
-      ref: String(rij[K_REF - 1]),
+      ref: String(links[i][K_REF - 1]),
       beoordeling: beoordeling,
       feedback: tekst,
       ingediend: tijdstip ? Utilities.formatDate(new Date(tijdstip), Session.getScriptTimeZone(), "d/MM/yyyy") : "",
       tijdstip: tijdstip ? new Date(tijdstip).getTime() : 0,
     });
-  });
+  }
 
   // Nieuwste eerst; de app groepeert ze per verrichting.
   uit.sort(function (a, b) { return b.tijdstip - a.tijdstip; });
@@ -595,9 +632,16 @@ function zetKlaarVoorLeerling_(waarde) {
   var leerling = blad.getRange(rij, K_LEERLING).getValue();
   if (!leerling) { ui.alert("Op deze rij staat geen leerling."); return; }
 
-  var waarden = blad.getRange(2, 1, blad.getLastRow() - 1, KOP_INZENDINGEN.length).getValues();
+  var n = blad.getLastRow() - 1;
+  var waarden = blad.getRange(2, 1, n, KOP_INZENDINGEN.length).getValues();
   var gezocht = normaliseerNaam_(leerling);
   var aantal = 0;
+
+  // De vinkjes in één blok terugschrijven. Cel per cel was één heen-en-weer
+  // met Google per verrichting; bij een leerling met dertig verrichtingen
+  // bleef het menu daardoor merkbaar lang hangen.
+  var kolom = blad.getRange(2, K_KLAAR, n, 1);
+  var vinkjes = kolom.getValues();
 
   for (var i = 0; i < waarden.length; i++) {
     if (normaliseerNaam_(waarden[i][K_LEERLING - 1]) !== gezocht) continue;
@@ -608,9 +652,10 @@ function zetKlaarVoorLeerling_(waarde) {
                       String(waarden[i][K_FEEDBACK - 1] || "").trim();
       if (!heeftIets) continue;
     }
-    blad.getRange(i + 2, K_KLAAR).setValue(waarde);
+    vinkjes[i][0] = waarde;
     aantal++;
   }
+  if (aantal) kolom.setValues(vinkjes);
 
   ui.alert(waarde
     ? aantal + " verrichting(en) van " + leerling + " staan nu klaar. Ze zijn zichtbaar zodra de leerling in de app op Feedback ophalen klikt."
@@ -912,17 +957,29 @@ function bladOfNiets_(naam) {
   return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(naam) || null;
 }
 
+/* Het tabblad Instellingen wordt binnen één verzoek meermaals gelezen: eerst
+   om de expertcode te controleren, daarna om de teksten mee te geven. Elke
+   leesbeurt is een heen-en-weer met Google van een paar honderd milliseconden,
+   dus het antwoord wordt onthouden zolang dít verzoek loopt. Wie schrijft,
+   maakt het geheugen leeg met vergeetInstellingen_(). */
+var _instellingenCache = null;
+
 function instellingenLezen_() {
+  if (_instellingenCache) return _instellingenCache;
   var uit = {};
   var blad = bladOfNiets_(BLAD_INSTELLINGEN);
-  if (!blad || blad.getLastRow() < 2) return uit;
-  var rijen = blad.getRange(2, 1, blad.getLastRow() - 1, 2).getValues();
-  rijen.forEach(function (r) {
-    var sleutel = String(r[0] || "").trim();
-    if (sleutel) uit[sleutel] = String(r[1] === null || r[1] === undefined ? "" : r[1]);
-  });
+  if (blad && blad.getLastRow() >= 2) {
+    var rijen = blad.getRange(2, 1, blad.getLastRow() - 1, 2).getValues();
+    rijen.forEach(function (r) {
+      var sleutel = String(r[0] || "").trim();
+      if (sleutel) uit[sleutel] = String(r[1] === null || r[1] === undefined ? "" : r[1]);
+    });
+  }
+  _instellingenCache = uit;
   return uit;
 }
+
+function vergeetInstellingen_() { _instellingenCache = null; }
 
 function takenLezen_() {
   var uit = [];
@@ -956,6 +1013,19 @@ function klasLezen_() {
  * zonder de expertcode — die verlaten de Sheet enkel na een geslaagde
  * controle van de expertcode.
  */
+/* Enkel de instellingen die de app mag tonen. De expertcode hoort daar
+   nooit bij: die blijft in de Sheet. Eén functie voor de drie plaatsen waar
+   ze weggestuurd worden, zodat een nieuwe instelling niet op één plek
+   vergeten kan worden. */
+function publiekeInstellingen_(inst) {
+  return {
+    welkomsttekst: inst.welkomsttekst || "",
+    mededeling: inst.mededeling || "",
+    cursusUrl: inst.cursusUrl || "",
+    handleidingUrl: inst.handleidingUrl || "",
+  };
+}
+
 function instellingenPubliek_() {
   var inst = instellingenLezen_();
   var taken = {};
@@ -963,12 +1033,7 @@ function instellingenPubliek_() {
   return {
     ok: true,
     vestiging: VESTIGING,
-    instellingen: {
-      welkomsttekst: inst.welkomsttekst || "",
-      mededeling: inst.mededeling || "",
-      cursusUrl: inst.cursusUrl || "",
-      handleidingUrl: inst.handleidingUrl || "",
-    },
+    instellingen: publiekeInstellingen_(inst),
     taken: taken,
     klas: klasLezen_().map(function (l) { return l.naam; }),
     beheerMogelijk: !!String(inst.expertcode || "").trim(),
@@ -1002,12 +1067,7 @@ function haalBeheerOp_(code) {
   return {
     ok: true,
     vestiging: VESTIGING,
-    instellingen: {
-      welkomsttekst: inst.welkomsttekst || "",
-      mededeling: inst.mededeling || "",
-      cursusUrl: inst.cursusUrl || "",
-      handleidingUrl: inst.handleidingUrl || "",
-    },
+    instellingen: publiekeInstellingen_(inst),
     taken: takenLezen_(),
     klas: klasLezen_(),
   };
@@ -1019,6 +1079,11 @@ function haalBeheerOp_(code) {
  * zo kan het beheertabblad later uitgebreid worden zonder dat een oudere
  * app-versie hier gegevens wist.
  *
+ * Alles gaat per blok naar de Sheet en niet cel per cel. Elke losse
+ * setValue is een heen-en-weer met Google; bij een klas van twintig
+ * leerlingen liep dat op tot een halve minuut, en dan haakt de browser af
+ * terwijl het schrijven aan deze kant gewoon doorgaat.
+ *
  * De klaslijst wordt volledig herschreven met wat de app stuurt. Namen
  * zonder code krijgen er een; bestaande codes blijven ongemoeid, zodat een
  * leerling niet plots niet meer binnen raakt.
@@ -1028,42 +1093,64 @@ function bewaarBeheer_(data) {
   if (!check.ok) return check;
 
   var gedaan = [];
+  // Wat we straks teruggeven; blijft null zolang dat deel niet meegestuurd
+  // was, en dan wordt het alsnog uit de Sheet gelezen.
+  var nieuweTaken = null;
+  var nieuweKlas = null;
 
   if (data.instellingen) {
-    var blad = blad_(BLAD_INSTELLINGEN);
-    zorgVoorInstellingen_(blad);
-    var rijen = blad.getRange(2, 1, Math.max(blad.getLastRow() - 1, 1), 2).getValues();
-    var bekend = {};
-    INSTELLINGEN_UITLEG.forEach(function (u) { bekend[u[0]] = true; });
-    for (var i = 0; i < rijen.length; i++) {
-      var sleutel = String(rijen[i][0] || "").trim();
-      // De expertcode wijzigen kan enkel in de Sheet zelf: wie de code al
-      // kent, mag ze niet voor iedereen anders kunnen zetten.
-      if (!sleutel || sleutel === "expertcode" || !bekend[sleutel]) continue;
-      if (Object.prototype.hasOwnProperty.call(data.instellingen, sleutel)) {
-        blad.getRange(i + 2, 2).setValue(String(data.instellingen[sleutel] || ""));
+    var bi = blad_(BLAD_INSTELLINGEN);
+    zorgVoorInstellingen_(bi);
+    var nI = Math.max(bi.getLastRow() - 1, 0);
+    if (nI) {
+      var bekend = {};
+      INSTELLINGEN_UITLEG.forEach(function (u) { bekend[u[0]] = true; });
+      var bereikI = bi.getRange(2, 1, nI, 2);
+      var waardenI = bereikI.getValues();
+      var iets = false;
+      for (var i = 0; i < waardenI.length; i++) {
+        var sleutel = String(waardenI[i][0] || "").trim();
+        // De expertcode wijzigen kan enkel in de Sheet zelf: wie de code al
+        // kent, mag ze niet voor iedereen anders kunnen zetten.
+        if (!sleutel || sleutel === "expertcode" || !bekend[sleutel]) continue;
+        if (!Object.prototype.hasOwnProperty.call(data.instellingen, sleutel)) continue;
+        var nieuweWaarde = String(data.instellingen[sleutel] || "");
+        if (String(waardenI[i][1]) === nieuweWaarde) continue;
+        waardenI[i][1] = nieuweWaarde;
+        iets = true;
       }
+      if (iets) { bereikI.setValues(waardenI); vergeetInstellingen_(); }
     }
     gedaan.push("instellingen");
   }
 
   if (data.taken) {
     var bt = blad_(BLAD_TAKEN);
-    var oud = Math.max(bt.getLastRow() - 1, 0);
-    var nieuw = data.taken.map(function (t) {
-      return [String(t.categorie || ""), String(t.link || ""), String(t.opmerking || "")];
-    }).filter(function (r) { return r[0]; });
-    if (nieuw.length) bt.getRange(2, 1, nieuw.length, 3).setValues(nieuw);
-    for (var j = nieuw.length; j < oud; j++) bt.getRange(j + 2, 1, 1, 3).setValues([["", "", ""]]);
+    var oudT = Math.max(bt.getLastRow() - 1, 0);
+    var rijenT = [];
+    data.taken.forEach(function (t) {
+      var cat = String(t.categorie || "").trim();
+      if (!cat) return;
+      rijenT.push([cat, String(t.link || ""), String(t.opmerking || "")]);
+    });
+    nieuweTaken = rijenT.map(function (r) {
+      return { categorie: r[0], link: r[1], opmerking: r[2] };
+    });
+    // Wat er vroeger meer stond, wordt in hetzelfde blok leeggemaakt.
+    while (rijenT.length < oudT) rijenT.push(["", "", ""]);
+    if (rijenT.length) bt.getRange(2, 1, rijenT.length, 3).setValues(rijenT);
     gedaan.push("taken");
   }
 
   if (data.klas) {
     var bk = blad_(BLAD_KLAS);
     var bestaand = {};
-    klasLezen_().forEach(function (l) { if (l.code) bestaand[normaliseerNaam_(l.naam)] = l.code; });
     var gebruikt = {};
-    Object.keys(bestaand).forEach(function (k) { gebruikt[bestaand[k]] = true; });
+    klasLezen_().forEach(function (l) {
+      if (!l.code) return;
+      bestaand[normaliseerNaam_(l.naam)] = l.code;
+      gebruikt[l.code] = true;
+    });
 
     var oudK = Math.max(bk.getLastRow() - 1, 0);
     var rijenK = [];
@@ -1077,40 +1164,69 @@ function bewaarBeheer_(data) {
       gebruikt[code] = true;
       rijenK.push([naam, code, String(l.opmerking || "")]);
     });
+    var echteRijen = rijenK.length;
+    nieuweKlas = rijenK.map(function (r) {
+      return { naam: r[0], code: r[1], opmerking: r[2] };
+    });
+    while (rijenK.length < oudK) rijenK.push(["", "", ""]);
     if (rijenK.length) {
-      bk.getRange(2, 1, rijenK.length, 3).setValues(rijenK);
+      // Codes als tekst, anders slikt Sheets een voorloopnul op.
       bk.getRange(2, 2, rijenK.length, 1).setNumberFormat("@");
+      bk.getRange(2, 1, rijenK.length, 3).setValues(rijenK);
     }
-    for (var k = rijenK.length; k < oudK; k++) bk.getRange(k + 2, 1, 1, 3).setValues([["", "", ""]]);
-    gedaan.push("klaslijst");
+    gedaan.push("klaslijst (" + echteRijen + ")");
   }
 
-  return { ok: true, bewaard: gedaan, klas: klasLezen_() };
+  // Zeker weten dat alles in de Sheet staat vóór we ja zeggen.
+  SpreadsheetApp.flush();
+
+  /* Alles teruggeven zoals het nu in de Sheet staat — opgebouwd uit wat we
+     zopas geschreven hebben, dus zonder er nog eens voor te gaan lezen. De
+     app werkt zichzelf daarmee meteen bij en hoeft geen tweede verzoek te
+     doen; dat scheelde de helft van de wachttijd bij elke bewaarbeurt. */
+  return {
+    ok: true,
+    bewaard: gedaan,
+    instellingen: publiekeInstellingen_(instellingenLezen_()),
+    taken: nieuweTaken !== null ? nieuweTaken : takenLezen_(),
+    klas: nieuweKlas !== null ? nieuweKlas : klasLezen_(),
+  };
 }
 
 /**
  * Zorgt dat elke bekende instelling een rij heeft, met haar toelichting in
  * kolom C. Bestaande waarden in kolom B blijven staan; enkel wat ontbreekt
  * komt erbij. Zo mag deze functie (en dus de installatie) altijd opnieuw
- * lopen.
+ * lopen. Er wordt enkel geschreven als er écht iets verandert — deze functie
+ * loopt bij elke bewaarbeurt mee.
  */
 function zorgVoorInstellingen_(blad) {
-  var aanwezig = {};
-  if (blad.getLastRow() > 1) {
-    blad.getRange(2, 1, blad.getLastRow() - 1, 1).getValues().forEach(function (r, i) {
-      var s = String(r[0] || "").trim();
-      if (s) aanwezig[s] = i + 2;
-    });
-  }
+  var n = Math.max(blad.getLastRow() - 1, 0);
+  var waarden = n ? blad.getRange(2, 1, n, 3).getValues() : [];
+  var opRij = {};
+  waarden.forEach(function (r, i) {
+    var s = String(r[0] || "").trim();
+    if (s) opRij[s] = i;
+  });
+
+  var iets = false;
   INSTELLINGEN_UITLEG.forEach(function (u) {
-    if (aanwezig[u[0]]) {
-      // De toelichting wel altijd bijwerken: die mag met de app meegroeien.
-      blad.getRange(aanwezig[u[0]], 3).setValue(u[2]);
+    if (opRij[u[0]] !== undefined) {
+      // De toelichting wel bijwerken: die mag met de app meegroeien.
+      if (String(waarden[opRij[u[0]]][2]) !== u[2]) {
+        waarden[opRij[u[0]]][2] = u[2];
+        iets = true;
+      }
       return;
     }
-    var rij = blad.getLastRow() + 1;
-    blad.getRange(rij, 1, 1, 3).setValues([[u[0], u[1], u[2]]]);
+    waarden.push([u[0], u[1], u[2]]);
+    iets = true;
   });
+
+  if (iets && waarden.length) {
+    blad.getRange(2, 1, waarden.length, 3).setValues(waarden);
+    vergeetInstellingen_();
+  }
 }
 
 /**
@@ -1118,17 +1234,20 @@ function zorgVoorInstellingen_(blad) {
  * links blijven staan.
  */
 function zorgVoorTaken_(blad) {
+  var n = Math.max(blad.getLastRow() - 1, 0);
+  var waarden = n ? blad.getRange(2, 1, n, 3).getValues() : [];
   var aanwezig = {};
-  if (blad.getLastRow() > 1) {
-    blad.getRange(2, 1, blad.getLastRow() - 1, 1).getValues().forEach(function (r) {
-      var s = String(r[0] || "").trim();
-      if (s) aanwezig[s] = true;
-    });
-  }
+  waarden.forEach(function (r) {
+    var s = String(r[0] || "").trim();
+    if (s) aanwezig[s] = true;
+  });
+  var iets = false;
   TAAK_CATEGORIEEN.forEach(function (cat) {
     if (aanwezig[cat]) return;
-    blad.getRange(blad.getLastRow() + 1, 1, 1, 3).setValues([[cat, "", ""]]);
+    waarden.push([cat, "", ""]);
+    iets = true;
   });
+  if (iets && waarden.length) blad.getRange(2, 1, waarden.length, 3).setValues(waarden);
 }
 
 /**
@@ -1152,6 +1271,7 @@ function zetExpertcode() {
   for (var i = 0; i < rijen.length; i++) {
     if (String(rijen[i][0] || "").trim() === "expertcode") {
       blad.getRange(i + 2, 2).setValue(code).setNumberFormat("@");
+      vergeetInstellingen_();
       ui.alert("De expertcode voor " + (VESTIGING || "deze vestiging") + " staat op: " + code);
       return;
     }

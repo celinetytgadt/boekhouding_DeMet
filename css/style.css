@@ -860,48 +860,6 @@ table.saldibalans tfoot td { font-weight: 700; border-top: 2px solid var(--kleur
 .info-modal-inhoud ol { margin: 0 0 8px 0; padding-left: 20px; }
 .info-modal-inhoud li { margin-bottom: 3px; }
 
-/* ---------- Alles wissen ---------- */
-
-.btn-gevaar { border-color: rgba(255,255,255,0.5) !important; }
-.btn-gevaar:hover { background: var(--kleur-fout) !important; border-color: var(--kleur-fout) !important; }
-.wissen-modal { max-width: 440px; }
-.wissen-modal-inhoud { padding: 4px 18px 18px 18px; font-size: 13.5px; line-height: 1.5; }
-.wissen-modal-inhoud p { margin: 0 0 10px 0; }
-#wissen-bevestig {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--kleur-rand);
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-}
-.wissen-modal-acties {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 14px;
-}
-.wissen-modal-acties button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: 1px solid var(--kleur-rand);
-  background: var(--kleur-paneel);
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--kleur-tekst);
-}
-.btn-gevaar-vol {
-  background: var(--kleur-fout) !important;
-  border-color: var(--kleur-fout) !important;
-  color: white !important;
-  font-weight: 600;
-}
-.btn-gevaar-vol:disabled {
-  background: #e2c9c6 !important;
-  border-color: #e2c9c6 !important;
-  cursor: not-allowed;
-}
-
 /* ---------- Waarom kan ik nog niet boeken? ---------- */
 
 .boeken-blok { margin-top: 12px; }
@@ -984,22 +942,6 @@ table.relatie-detail tr.factuur-open { background: #fffaf0; }
 table.relatie-detail tr.factuur-open td:last-child { font-weight: 600; color: #8a5a00; }
 .relatie-betaling { color: var(--kleur-tekst-zacht); }
 .relatie-niet-betaald { font-style: italic; }
-/* Factuur en creditnota staan op één regel: het nettobedrag groot, de
-   berekening (bruto − creditnota) klein eronder in hetzelfde vakje. */
-.relatie-berekening {
-  display: block;
-  font-size: 10.5px;
-  font-weight: 400;
-  color: var(--kleur-tekst-zacht);
-  margin-top: 1px;
-}
-/* Een creditnota die vóór elke factuur staat en dus nergens bij hoort. */
-table.relatie-detail tr.relatie-creditnota td {
-  color: var(--kleur-tekst-zacht);
-  font-size: 11.5px;
-  font-weight: 400;
-}
-table.relatie-detail tr.relatie-creditnota td:last-child { text-align: left; font-style: italic; }
 .relatie-leeg { color: var(--kleur-tekst-zacht); font-style: italic; text-align: left; }
 table.relatie-detail tfoot td {
   border-top: 2px solid var(--kleur-rand);

@@ -32,7 +32,13 @@
   var ontgrendeld = false;
   var expertcode = "";
   var bezig = false;
-  var melding = null;     // { soort: "ok" | "fout" | "info", tekst: "…" }
+  var melding = null;     // { soort: "ok" | "fout" | "info", tekst: "…" (platte tekst) }
+
+  // Het element waarop de luisteraars al liggen. app.js bouwt de pagina bij
+  // elke wijziging opnieuw op, maar hergebruikt daarvoor altijd hetzelfde
+  // #pagina-inhoud. De luisteraars hangen aan dát element en overleven het
+  // vervangen van de inhoud — ze mogen er dus maar één keer op.
+  var gebondenAan = null;
 
   // Wat er in de velden staat. Bewust apart van het scherm: app.js bouwt de
   // pagina soms opnieuw op (bv. als er intussen feedback binnenkomt), en dan
@@ -40,6 +46,16 @@
   var model = { instellingen: {}, taken: [], klas: [] };
 
   function api() { return window.KOPPELING_API || null; }
+
+  // De luisteraars blijven liggen als de leerling naar een ander tabblad
+  // gaat. Ze mogen dan niets doen.
+  function opBeheerpagina() {
+    return !!(window.APP && window.APP.huidigePagina && window.APP.huidigePagina() === "beheer");
+  }
+
+  function zegOk(tekst) { melding = { soort: "ok", tekst: tekst }; }
+  function zegFout(tekst) { melding = { soort: "fout", tekst: tekst }; }
+  function zegBezig(tekst) { melding = { soort: "info", tekst: tekst }; }
 
   function esc(s) {
     return String(s === null || s === undefined ? "" : s)
@@ -79,9 +95,12 @@
      Het scherm
      ====================================================================== */
 
+  // De tekst wordt hier ontsmet en niet bij het instellen: zo kan een
+  // boodschap van de server nooit als HTML in de pagina belanden, ook niet
+  // als er later ergens een zeg…() vergeten wordt.
   function htmlMelding() {
     if (!melding) return "";
-    return '<p class="beheer-melding beheer-' + melding.soort + '">' + melding.tekst + "</p>";
+    return '<p class="beheer-melding beheer-' + melding.soort + '">' + esc(melding.tekst) + "</p>";
   }
 
   function htmlSlot() {
@@ -226,17 +245,20 @@
 
   function ontgrendel(code) {
     var a = api();
+    if (bezig) return;                       // dubbelklik of Enter erbovenop
     if (!a || !a.actief()) {
-      melding = { soort: "fout", tekst: "Voor deze vestiging is de koppeling met Google Sheets nog niet ingesteld." };
+      zegFout("Voor deze vestiging is de koppeling met Google Sheets nog niet ingesteld.");
       herteken();
       return;
     }
-    bezig = true; melding = null; herteken();
+    bezig = true;
+    zegBezig("Even geduld — het script van Google moet eerst wakker worden. De eerste keer duurt dat vlot tien seconden.");
+    herteken();
     a.haal({ actie: "beheer", sleutel: a.sleutel(), expertcode: code })
       .then(function (r) {
         bezig = false;
         if (!r || !r.ok) {
-          melding = { soort: "fout", tekst: r && r.uitleg ? esc(r.uitleg) : "Die code klopt niet." };
+          zegFout(r && r.uitleg ? r.uitleg : "Die code klopt niet.");
           herteken();
           return;
         }
@@ -248,7 +270,7 @@
       .catch(function (err) {
         bezig = false;
         console.error(err);
-        melding = { soort: "fout", tekst: "Geen verbinding met de server." };
+        zegFout(a.foutUitleg(err));
         herteken();
       });
   }
@@ -265,8 +287,10 @@
 
   function bewaar() {
     var a = api();
-    if (!a) return;
-    bezig = true; melding = null; herteken();
+    if (!a || bezig) return;                 // één keer tegelijk, nooit meer
+    bezig = true;
+    zegBezig("Bezig met bewaren…");
+    herteken();
 
     var klas = model.klas
       .filter(function (l) { return !l.weg && String(l.naam || "").trim(); })
@@ -288,26 +312,78 @@
       .then(function (r) {
         bezig = false;
         if (!r || !r.ok) {
-          melding = { soort: "fout", tekst: r && r.uitleg ? esc(r.uitleg) : "Bewaren lukte niet. Probeer het opnieuw." };
+          zegFout(r && r.uitleg ? r.uitleg : "Bewaren lukte niet. Probeer het opnieuw.");
           herteken();
           return;
         }
         // De server geeft de klaslijst terug mét de codes die ze zopas
-        // aangemaakt heeft, zodat de expert ze meteen kan doorgeven.
+        // aangemaakt heeft, zodat de expert ze meteen kan doorgeven. De
+        // ingetikte teksten en taken blijven staan zoals ze hier staan: wie
+        // tijdens het bewaren nog iets wijzigde, mag dat niet kwijtspelen.
         model.klas = (r.klas || klas).map(function (l) {
           return { naam: l.naam, code: l.code || "", opmerking: l.opmerking || "", weg: false };
         });
-        melding = { soort: "ok", tekst: "Bewaard. De leerlingen zien dit zodra ze de app opnieuw openen." };
-        // Ook de app zelf meteen bijwerken: teksten, links en namenlijst.
-        a.herlaadInstellingen(function () { herteken(); });
+        // De app zelf (welkomsttekst, knoppen, namenlijst) meteen bijwerken
+        // met wat de server terugstuurde. Vroeger werd daarvoor nóg eens
+        // opgehaald, en dat verdubbelde de wachttijd bij elke bewaarbeurt.
+        a.neemBeheerOver(r);
+        zegOk("Bewaard. De leerlingen zien dit zodra ze de app opnieuw openen.");
         herteken();
       })
       .catch(function (err) {
-        bezig = false;
+        // Het verzoek is onderweg misgelopen. Dat betekent níét dat er niets
+        // bewaard is: Apps Script schrijft gewoon door en laat soms enkel het
+        // antwoord vallen. Voor we iets beweren, gaan we in de Sheet kijken.
         console.error(err);
-        melding = { soort: "fout", tekst: "Geen verbinding met de server. Er is niets bewaard." };
+        zegBezig("De verbinding viel weg. Even nakijken of het toch bewaard is…");
         herteken();
+        kijkNaOfHetBewaardIs(klas, taken);
       });
+  }
+
+  /* Haalt opnieuw op wat er in de Sheet staat en vergelijkt dat met wat we
+     net probeerden te bewaren. Staat het er, dan is er niets aan de hand. */
+  function kijkNaOfHetBewaardIs(klas, taken) {
+    var a = api();
+    if (!a) { bezig = false; return; }
+    setTimeout(function () {
+      a.haal({ actie: "beheer", sleutel: a.sleutel(), expertcode: expertcode })
+        .then(function (r) {
+          bezig = false;
+          if (r && r.ok && komtOvereen(r, klas, taken)) {
+            neemOver(r);
+            a.neemBeheerOver(r);
+            zegOk("Toch bewaard. Het antwoord van de server bleef onderweg steken, maar alles staat in de Sheet.");
+          } else {
+            zegFout("Bewaren is niet gelukt. Probeer het opnieuw — wat je hier ingevuld hebt, blijft staan.");
+          }
+          herteken();
+        })
+        .catch(function (err) {
+          bezig = false;
+          console.error(err);
+          zegFout(a.foutUitleg(err) + " Kijk in de Sheet na of je wijziging er toch staat voor je opnieuw op Bewaren klikt.");
+          herteken();
+        });
+    }, 2000);
+  }
+
+  function komtOvereen(r, klas, taken) {
+    var namenDaar = (r.klas || []).map(function (l) { return sleutelNaam(l.naam); }).sort().join("|");
+    var namenHier = klas.map(function (l) { return sleutelNaam(l.naam); }).sort().join("|");
+    if (namenDaar !== namenHier) return false;
+
+    var links = {};
+    (r.taken || []).forEach(function (t) { links[t.categorie] = String(t.link || ""); });
+    for (var i = 0; i < taken.length; i++) {
+      if (String(links[taken[i].categorie] || "") !== String(taken[i].link || "")) return false;
+    }
+    var inst = r.instellingen || {};
+    var sleutels = Object.keys(model.instellingen);
+    for (var j = 0; j < sleutels.length; j++) {
+      if (String(inst[sleutels[j]] || "") !== String(model.instellingen[sleutels[j]] || "")) return false;
+    }
+    return true;
   }
 
   /* ======================================================================
@@ -327,10 +403,18 @@
     },
 
     naRender: function (el) {
-      // app.js bouwt de pagina telkens opnieuw op, dus de luisteraars worden
-      // hier elke keer opnieuw gelegd. Alles gaat via het model, zodat er bij
-      // zo'n heropbouw niets ingetikts verloren gaat.
+      /* app.js bouwt de pagina telkens opnieuw op, maar altijd binnen
+         hetzelfde #pagina-inhoud. De luisteraars hieronder hangen aan dát
+         element en blijven dus gewoon liggen als de inhoud vervangen wordt.
+         Ze hier elke keer opnieuw leggen betekende dat één klik op Bewaren
+         evenveel keer verstuurd werd als de pagina intussen hertekend was —
+         bij twintig leerlingen toevoegen dus twintig gelijktijdige verzoeken
+         naar Google. Vandaar: één keer binden, en niet meer. */
+      if (gebondenAan === el) return;
+      gebondenAan = el;
+
       el.addEventListener("input", function (e) {
+        if (!opBeheerpagina()) return;
         var t = e.target;
         var rol = t.dataset && t.dataset.role;
         if (rol === "expertcode") { expertcode = t.value; return; }
@@ -341,12 +425,14 @@
       });
 
       el.addEventListener("keydown", function (e) {
+        if (!opBeheerpagina()) return;
         if (e.key === "Enter" && e.target.dataset && e.target.dataset.role === "expertcode") {
           ontgrendel(e.target.value.trim());
         }
       });
 
       el.addEventListener("click", function (e) {
+        if (!opBeheerpagina()) return;
         var knop = e.target.closest ? e.target.closest("[data-role]") : null;
         if (!knop || knop.tagName !== "BUTTON") return;
         var rol = knop.dataset.role;
