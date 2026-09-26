@@ -348,6 +348,41 @@ denkkolommen (redenering, A/P/K/O, stijgt/daalt). Handig als je wil uitpluizen
 hoe iemand tot een boeking gekomen is. Voor het gewone nakijken heb je het
 niet nodig.
 
+### Automatisch nakijken
+
+Het script legt elke inzending meteen naast de oplossingssleutel en vult de
+beoordeling al in. Jij kijkt enkel nog na en geeft vrij.
+
+**De sleutel klaarzetten (één keer per schooljaar, en na elke correctie):**
+
+1. Meld je in de app aan als leerling **test** en boek de volledige bundel
+   correct, inclusief BELASTING, RESULTAAT, de vijf getallen van de
+   resultaatverwerking en de eindbalans. Dien alles in.
+2. Kies in de Sheet **Boekhoudapp → Sleutel overnemen uit een inzending…** en
+   laat de naam leeg (dan wordt het "test"). Het tabblad **Sleutel** wordt
+   gevuld. Je mag het daarna ook zelf bijwerken.
+3. Voor wat er al binnen was: **Boekhoudapp → Open inzendingen automatisch
+   nakijken**. Dat vult enkel rijen in die nog geen beoordeling hebben.
+
+**Hoe er vergeleken wordt:** per boeking het saldo per rekening (debet min
+credit). Of een leerling iets in één lijn boekt of opsplitst, maakt dus niet
+uit, zolang het totaal per rekening klopt. De naam van de klant of
+leverancier telt niet mee. Bij de resultaatverwerking worden de vijf getallen
+vergeleken, bij de eindbalans in welk vak elke rubriek ligt.
+
+**Wat er ingevuld wordt:**
+
+| uitkomst | beoordeling | kolom *automatische controle* |
+|---|---|---|
+| klopt | In orde | ✓ klopt met de sleutel |
+| klopt niet | Te remediëren | ✗ welke rekeningen afwijken, bv. `604030: verwacht 400 D, geboekt niets` |
+| onafgewerkt, niet begonnen of geen sleutel | — (leeg) | — |
+
+Het vinkje **klaar** zet het script nooit aan: de leerling ziet pas iets als
+jij vrijgeeft. De kolom *automatische controle* is enkel voor jou, de leerling
+krijgt ze niet te zien. Schrijf dus zelf de feedback bij wat te remediëren is.
+De open vragen bij Klanten & leveranciers kijk je altijd zelf na.
+
 ---
 
 ## Deel 4 — Praktische zaken

@@ -1803,8 +1803,8 @@
     });
     html += "</div>";
 
-    html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema("BELASTING") + "</div>";
-    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing van het resultaat ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>Het resultaat wordt, na eventuele allocatie aan de reserves, overgedragen naar volgend jaar. Bereken zelf of er nog reserves moeten toegewezen worden." + htmlRedeneerschema("RESULTAAT") + "</div>";
+    html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlFeedbackBlok("BELASTING") + htmlRedeneerschema("BELASTING") + "</div>";
+    html += '<div class="paneel"><h2>RESULTAAT — Toewijzing van het resultaat ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlFeedbackBlok("RESULTAAT") + "Het resultaat wordt, na eventuele allocatie aan de reserves, overgedragen naar volgend jaar. Bereken zelf of er nog reserves moeten toegewezen worden." + htmlRedeneerschema("RESULTAAT") + "</div>";
     // De beginbalans erbij: daarop staan de reserves, zodat de leerling kan
     // berekenen of er nog iets aan de reserves toegewezen moet worden.
     html += htmlUitklapbaarDocument("hulp-RESULTAAT-beginbalans", "Beginbalans (voor de reserves)", "BEGINBALANS", true);

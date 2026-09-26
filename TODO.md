@@ -25,6 +25,14 @@ app, maar meer zoals echte boekhoudsoftware:
   berekend uit de andere rijen. Ze staat altijd onderaan en de leerling kan
   ze niet zelf wijzigen.
 
+## Script (Code.gs) — voor volgend schooljaar
+
+- [ ] **Eén keer bijwerken in plaats van drie keer.** Nu staat `Code.gs` in
+  drie aparte Sheets (één per vestiging). Elke wijziging moet daardoor drie
+  keer: kopiëren, opslaan en implementatie beheren. Mogelijke oplossingen:
+  één gedeelde scriptbibliotheek waar de drie Sheets naar verwijzen, of één
+  script voor de drie vestigingen samen. Werkt nu wel, dus niet dringend.
+
 ## Losse ideeën
 
 - 

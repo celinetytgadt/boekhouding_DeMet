@@ -74,6 +74,7 @@ var BLAD_INZENDINGEN = "Inzendingen";
 var BLAD_DETAIL = "Detail";
 var BLAD_INSTELLINGEN = "Instellingen";
 var BLAD_TAKEN = "Taken";
+var BLAD_SLEUTEL = "Sleutel";
 
 var MAP_NAAM = "Boekhoudapp werkbestanden";
 var MAP_VERSIES = "versies";
@@ -86,12 +87,19 @@ var VERSIE_INTERVAL_MIN = 60;
 var KOP_INZENDINGEN = [
   "tijdstip", "leerling", "categorie", "ref", "boeking", "status leerling",
   "beoordeling", "feedback", "klaar", "is laatste", "inzending",
+  "automatische controle",
 ];
 var KOP_DETAIL = [
   "tijdstip", "leerling", "inzending", "ref", "lijn", "bedrag", "rekening",
   "omschrijving", "D/C", "relatie", "redenering", "A/P/K/O", "stijgt/daalt",
 ];
 var KOP_KLAS = ["naam", "code", "opmerking"];
+var KOP_SLEUTEL = ["ref", "rekening of veld", "D/C", "bedrag of rubrieken", "opmerking"];
+
+// Van welke leerling de oplossingssleutel standaard overgenomen wordt (menu
+// Boekhoudapp → Sleutel overnemen uit een inzending). Je kan bij het
+// overnemen nog een andere naam intikken.
+var SLEUTEL_LEERLING = "test";
 
 var KOP_INSTELLINGEN = ["instelling", "waarde", "toelichting"];
 var KOP_TAKEN = ["categorie", "link naar de taak in Classroom", "opmerking"];
@@ -136,7 +144,7 @@ var INSTELLINGEN_UITLEG = [
 // Kolomnummers in Inzendingen (1-gebaseerd), zodat de rest leesbaar blijft.
 var K_TIJDSTIP = 1, K_LEERLING = 2, K_CATEGORIE = 3, K_REF = 4, K_BOEKING = 5,
     K_STATUS_LEERLING = 6, K_BEOORDELING = 7, K_FEEDBACK = 8, K_KLAAR = 9,
-    K_IS_LAATSTE = 10, K_INZENDING = 11;
+    K_IS_LAATSTE = 10, K_INZENDING = 11, K_AUTOMATISCH = 12;
 
 // De drie beoordelingen, gelijk aan de afspraken met de collega's in
 // Classroom. "In orde" heeft een bijzondere betekenis in de app: zo'n
@@ -478,7 +486,7 @@ function verwerkInzending(data) {
   var rijen = items.map(function (it) {
     return [
       nu, leerling, it.categorie || "", it.ref || "", it.boeking || "",
-      it.status || "", "", "", false, "JA", inzendingId,
+      it.status || "", "", "", false, "JA", inzendingId, "",
     ];
   });
   blad.getRange(eersteNieuweRij, 1, rijen.length, KOP_INZENDINGEN.length).setValues(rijen);
@@ -488,6 +496,14 @@ function verwerkInzending(data) {
 
   markeerOudereRijen_(blad, leerling, items.map(function (it) { return it.ref; }), eersteNieuweRij);
   schrijfDetail_(data, inzendingId, nu);
+
+  // Meteen naast de sleutel leggen. Loopt daar iets mis, dan mag de
+  // inzending zelf daar niet onder lijden: die staat er al.
+  try {
+    nakijkenEnSchrijven_(blad, eersteNieuweRij, items);
+  } catch (err) {
+    console.error("Automatisch nakijken mislukt: " + err);
+  }
 
   return { ok: true, aantal: rijen.length, inzending: inzendingId };
 }
@@ -540,6 +556,349 @@ function schrijfDetail_(data, inzendingId, nu) {
   if (!lijnen.length) return;
   var blad = blad_(BLAD_DETAIL);
   blad.getRange(blad.getLastRow() + 1, 1, lijnen.length, KOP_DETAIL.length).setValues(lijnen);
+}
+
+/* ==========================================================================
+   Automatisch nakijken
+
+   De oplossingssleutel staat in het tabblad Sleutel. Je vult het niet met de
+   hand: dien de oplossing in vanuit de app als leerling "test" (zie
+   SLEUTEL_LEERLING) en kies Boekhoudapp → Sleutel overnemen uit een
+   inzending. Daarna mag je het tabblad gerust zelf bijwerken.
+
+   Per boeking wordt per rekening het saldo vergeleken (debet min credit).
+   Of een leerling 704000 in één lijn boekt (21.000) of in twee (18.000 en
+   3.000), maakt dus niet uit — zolang het totaal per rekening klopt. De naam
+   van de klant of leverancier telt niet mee.
+
+   Wat het script invult:
+     klopt        beoordeling "In orde"
+     klopt niet   beoordeling "Te remediëren" + in de kolom "automatische
+                  controle" welke rekeningen afwijken (enkel voor jou)
+   Het vinkje "klaar" blijft altijd uit: vrijgeven doe je zelf. Onafgewerkte
+   of niet begonnen verrichtingen, en alles waarvoor geen sleutel bestaat
+   (bv. de open vragen bij Klanten & leveranciers), blijven onaangeroerd.
+   ========================================================================== */
+
+var REF_GETALLEN = "RESULTAATVERWERKING";
+var REF_BALANS = "EINDBALANS";
+var REF_NIET_NAKIJKEN = { RELATIES: true };
+
+// Bedragen komen binnen als tekst uit de app ("1.250" of "1.234,50") of als
+// getal uit de Sheet. Wat niet te lezen valt, wordt null.
+function bedragGetal_(v) {
+  if (typeof v === "number") return isNaN(v) ? null : v;
+  var t = String(v === null || v === undefined ? "" : v).replace(/[\s€]/g, "");
+  if (!t) return null;
+  if (t.indexOf(",") !== -1) t = t.replace(/\./g, "").replace(",", ".");
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+  var n = Number(t);
+  return isNaN(n) ? null : n;
+}
+
+function rond2_(n) { return Math.round(n * 100) / 100; }
+
+// 1234.5 → "1.234,50", zoals in de app.
+function bedragTekst_(n) {
+  n = Math.abs(rond2_(n));
+  var centen = Math.round(n * 100) % 100;
+  var heel = String(Math.floor(n + 0.000001)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return heel + (centen ? "," + (centen < 10 ? "0" : "") + centen : "");
+}
+
+function saldoTekst_(n) {
+  if (Math.abs(n) < 0.005) return "niets";
+  return bedragTekst_(n) + (n > 0 ? " D" : " C");
+}
+
+function rekeningNr_(v) { return String(v === null || v === undefined ? "" : v).replace(/\D/g, ""); }
+
+function rubriekLijst_(v) {
+  return String(v === null || v === undefined ? "" : v).split(/[^0-9]+/)
+    .filter(function (x) { return x; }).sort();
+}
+
+function soortVoorRef_(ref) {
+  if (ref === REF_GETALLEN) return "getallen";
+  if (ref === REF_BALANS) return "balans";
+  return "boeking";
+}
+
+// Saldo per rekening: debet positief, credit negatief. Rekeningen die op
+// nul uitkomen, tellen niet mee.
+function saldiUitLijnen_(lijnen) {
+  var saldi = {}, volgorde = [];
+  lijnen.forEach(function (l) {
+    var nr = rekeningNr_(l.rekening);
+    var bedrag = bedragGetal_(l.bedrag);
+    var dc = String(l.dc || "").trim().toUpperCase();
+    if (!nr || bedrag === null || (dc !== "D" && dc !== "C")) return;
+    if (!(nr in saldi)) { saldi[nr] = 0; volgorde.push(nr); }
+    saldi[nr] = rond2_(saldi[nr] + (dc === "D" ? bedrag : -bedrag));
+  });
+  var uit = {};
+  volgorde.forEach(function (nr) { if (Math.abs(saldi[nr]) >= 0.005) uit[nr] = saldi[nr]; });
+  return uit;
+}
+
+/**
+ * Leest het tabblad Sleutel in:
+ *   { AK01: { soort: "boeking", saldi: { "604000": 20000, ... } },
+ *     RESULTAATVERWERKING: { soort: "getallen", getallen: { Winst: 9730, ... } },
+ *     EINDBALANS: { soort: "balans", vakken: { Kapitaal: ["10"], ... } } }
+ */
+function sleutelLezen_() {
+  var blad = bladOfNiets_(BLAD_SLEUTEL);
+  if (!blad || blad.getLastRow() < 2) return {};
+  var rijen = blad.getRange(2, 1, blad.getLastRow() - 1, 4).getValues();
+  var sleutel = {};
+  rijen.forEach(function (r) {
+    var ref = String(r[0] || "").trim();
+    var wat = String(r[1] === null || r[1] === undefined ? "" : r[1]).trim();
+    if (!ref || !wat) return;
+    var soort = soortVoorRef_(ref);
+    if (!sleutel[ref]) sleutel[ref] = { soort: soort, saldi: {}, getallen: {}, vakken: {} };
+    var s = sleutel[ref];
+    if (soort === "boeking") {
+      var nr = rekeningNr_(wat), bedrag = bedragGetal_(r[3]);
+      var dc = String(r[2] || "").trim().toUpperCase();
+      if (!nr || bedrag === null) return;
+      s.saldi[nr] = rond2_((s.saldi[nr] || 0) + (dc === "C" ? -bedrag : bedrag));
+    } else if (soort === "getallen") {
+      var g = bedragGetal_(r[3]);
+      if (g !== null) s.getallen[wat] = g;
+    } else {
+      s.vakken[wat] = rubriekLijst_(r[3]);
+    }
+  });
+  return sleutel;
+}
+
+/**
+ * Legt één ingediende verrichting naast de sleutel.
+ * Geeft null terug als er niets na te kijken valt (geen sleutel, niet
+ * afgewerkt), anders { ok: true/false, notitie: "…" }.
+ */
+function controleerItem_(ref, status, lijnen, sleutel) {
+  if (REF_NIET_NAKIJKEN[ref]) return null;
+  var s = sleutel[ref];
+  if (!s) return null;
+  var verschillen = [];
+
+  if (s.soort === "boeking") {
+    if (status !== "geboekt") return null;
+    var geboekt = saldiUitLijnen_(lijnen || []);
+    var nrs = Object.keys(s.saldi);
+    Object.keys(geboekt).forEach(function (nr) { if (nrs.indexOf(nr) === -1) nrs.push(nr); });
+    nrs.forEach(function (nr) {
+      var verwacht = s.saldi[nr] || 0, echt = geboekt[nr] || 0;
+      if (Math.abs(verwacht - echt) < 0.005) return;
+      verschillen.push(nr + ": verwacht " + saldoTekst_(verwacht) + ", geboekt " + saldoTekst_(echt));
+    });
+
+  } else if (s.soort === "getallen") {
+    if (status !== "ingevuld") return null;
+    var ingevuld = {};
+    (lijnen || []).forEach(function (l) {
+      var g = bedragGetal_(l.bedrag);
+      if (l.redenering && g !== null) ingevuld[String(l.redenering).trim()] = g;
+    });
+    var velden = Object.keys(s.getallen);
+    // Nog niet alles ingevuld? Dan is het onafgewerkt: niet beoordelen.
+    if (velden.some(function (v) { return !(v in ingevuld); })) return null;
+    velden.forEach(function (v) {
+      if (Math.abs(s.getallen[v] - ingevuld[v]) >= 0.005) {
+        verschillen.push(v + ": verwacht " + bedragTekst_(s.getallen[v]) + ", ingevuld " + bedragTekst_(ingevuld[v]));
+      }
+    });
+
+  } else {
+    if (status !== "ingevuld") return null;
+    // Per rubriek: in welk vak hoort ze, en waar ligt ze?
+    var hoort = {}, ligt = {};
+    Object.keys(s.vakken).forEach(function (vak) { s.vakken[vak].forEach(function (rb) { hoort[rb] = vak; }); });
+    (lijnen || []).forEach(function (l) {
+      var vak = String(l.rekening || "").trim();
+      rubriekLijst_(l.redenering).forEach(function (rb) { ligt[rb] = vak; });
+    });
+    var rubrieken = Object.keys(hoort);
+    Object.keys(ligt).forEach(function (rb) { if (rubrieken.indexOf(rb) === -1) rubrieken.push(rb); });
+    rubrieken.sort().forEach(function (rb) {
+      if (hoort[rb] === ligt[rb]) return;
+      if (!ligt[rb]) verschillen.push("rubriek " + rb + ": niet geplaatst (hoort bij " + hoort[rb] + ")");
+      else if (!hoort[rb]) verschillen.push("rubriek " + rb + ": ligt bij " + ligt[rb] + ", maar staat niet in de sleutel");
+      else verschillen.push("rubriek " + rb + ": ligt bij " + ligt[rb] + ", hoort bij " + hoort[rb]);
+    });
+  }
+
+  return verschillen.length
+    ? { ok: false, notitie: "✗ " + verschillen.join("\n") }
+    : { ok: true, notitie: "✓ klopt met de sleutel" };
+}
+
+// Zet de uitkomst in de nieuwe rijen van een inzending. Enkel beoordeling en
+// de kolom automatische controle; "klaar" blijft uit.
+function nakijkenEnSchrijven_(blad, eersteRij, items) {
+  var sleutel = sleutelLezen_();
+  if (!Object.keys(sleutel).length || !items.length) return;
+  zorgVoorKopAutomatisch_(blad);
+
+  var beoordelingen = [], notities = [], iets = false;
+  items.forEach(function (it) {
+    var res = controleerItem_(String(it.ref || ""), it.status || "", it.lijnen || [], sleutel);
+    if (res) iets = true;
+    beoordelingen.push([res ? (res.ok ? BEOORDELINGEN[0] : BEOORDELINGEN[1]) : ""]);
+    notities.push([res ? res.notitie : ""]);
+  });
+  if (!iets) return;
+  blad.getRange(eersteRij, K_BEOORDELING, items.length, 1).setValues(beoordelingen);
+  blad.getRange(eersteRij, K_AUTOMATISCH, items.length, 1).setValues(notities);
+}
+
+// Sheets die al bestonden vóór deze versie hebben de kolom nog niet.
+function zorgVoorKopAutomatisch_(blad) {
+  var kop = blad.getRange(1, K_AUTOMATISCH);
+  if (!kop.getValue()) {
+    kop.setValue(KOP_INZENDINGEN[K_AUTOMATISCH - 1]).setFontWeight("bold").setBackground("#e9eaf7");
+  }
+}
+
+// Alle rijen uit Detail, gegroepeerd per leerling, inzending en ref:
+//   { "<leerling>|<inzending>|<ref>": [ {lijn, bedrag, rekening, dc, redenering}, … ] }
+// De leerling hoort mee in de sleutel: kopieer je in de Sheet rijen van de
+// ene leerling naar een andere (bv. om te testen), dan houden die hun oude
+// inzendingscode. Zonder de naam werden hun lijnen dan samengeteld.
+function detailSleutel_(leerling, inzending, ref) {
+  return normaliseerNaam_(leerling) + "|" + String(inzending) + "|" + String(ref);
+}
+function detailPerInzending_(filterLeerling) {
+  var blad = bladOfNiets_(BLAD_DETAIL);
+  var uit = {};
+  if (!blad || blad.getLastRow() < 2) return uit;
+  var rijen = blad.getRange(2, 1, blad.getLastRow() - 1, KOP_DETAIL.length).getValues();
+  var gezocht = filterLeerling ? normaliseerNaam_(filterLeerling) : null;
+  rijen.forEach(function (r) {
+    // tijdstip, leerling, inzending, ref, lijn, bedrag, rekening, omschrijving, D/C, relatie, redenering
+    if (gezocht && normaliseerNaam_(r[1]) !== gezocht) return;
+    var sleutel = detailSleutel_(r[1], r[2], r[3]);
+    if (!uit[sleutel]) uit[sleutel] = [];
+    uit[sleutel].push({
+      tijdstip: r[0], inzending: String(r[2]), ref: String(r[3]), lijn: Number(r[4]) || 0,
+      bedrag: r[5], rekening: r[6], dc: r[8], redenering: r[10],
+    });
+  });
+  Object.keys(uit).forEach(function (k) { uit[k].sort(function (a, b) { return a.lijn - b.lijn; }); });
+  return uit;
+}
+
+/**
+ * Menu: neemt de laatste inzending van één leerling (standaard "test") over
+ * als oplossingssleutel. Per verrichting telt de recentste inzending.
+ */
+function sleutelOvernemen() {
+  var ui = SpreadsheetApp.getUi();
+  var vraag = ui.prompt("Sleutel overnemen",
+    "Van welke leerling neem je de inzendingen over als oplossingssleutel?\n" +
+    "Laat leeg voor '" + SLEUTEL_LEERLING + "'.", ui.ButtonSet.OK_CANCEL);
+  if (vraag.getSelectedButton() !== ui.Button.OK) return;
+  var naam = String(vraag.getResponseText() || "").trim() || SLEUTEL_LEERLING;
+
+  var perInzending = detailPerInzending_(naam);
+  // Per ref de recentste inzending.
+  var recentst = {};
+  Object.keys(perInzending).forEach(function (k) {
+    var lijnen = perInzending[k], ref = lijnen[0].ref;
+    var t = new Date(lijnen[0].tijdstip).getTime() || 0;
+    if (!recentst[ref] || t > recentst[ref].t) recentst[ref] = { t: t, lijnen: lijnen };
+  });
+  var refs = Object.keys(recentst).filter(function (ref) { return !REF_NIET_NAKIJKEN[ref]; });
+  if (!refs.length) {
+    ui.alert("Geen inzendingen gevonden van '" + naam + "' in het tabblad Detail.");
+    return;
+  }
+
+  // De volgorde blijft die van het tabblad Detail: zo staat de sleutel in
+  // dezelfde volgorde als de app (BB, AK01, AK02 …).
+  var rijen = [];
+  refs.forEach(function (ref) {
+    var lijnen = recentst[ref].lijnen, soort = soortVoorRef_(ref);
+    if (soort === "boeking") {
+      var saldi = saldiUitLijnen_(lijnen);
+      Object.keys(saldi).forEach(function (nr) {
+        rijen.push([ref, nr, saldi[nr] > 0 ? "D" : "C", Math.abs(saldi[nr]), ""]);
+      });
+    } else if (soort === "getallen") {
+      lijnen.forEach(function (l) {
+        var g = bedragGetal_(l.bedrag);
+        if (l.redenering && g !== null) rijen.push([ref, String(l.redenering), "", g, ""]);
+      });
+    } else {
+      lijnen.forEach(function (l) {
+        if (l.rekening) rijen.push([ref, String(l.rekening), "", rubriekLijst_(l.redenering).join(", "), ""]);
+      });
+    }
+  });
+
+  var ok = ui.alert("Sleutel overnemen",
+    "Van '" + naam + "' worden " + refs.length + " verrichtingen overgenomen (" + rijen.length + " regels).\n\n" +
+    "Wat nu in het tabblad Sleutel staat, wordt vervangen. Doorgaan?", ui.ButtonSet.YES_NO);
+  if (ok !== ui.Button.YES) return;
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var blad = maakBlad_(ss, BLAD_SLEUTEL, KOP_SLEUTEL);
+  if (blad.getLastRow() > 1) blad.getRange(2, 1, blad.getLastRow() - 1, KOP_SLEUTEL.length).clearContent();
+  // Kolom D als tekst: anders maakt de Sheet van "22, 23, 24" soms iets anders.
+  blad.getRange(2, 4, Math.max(rijen.length, 1), 1).setNumberFormat("@");
+  blad.getRange(2, 1, rijen.length, KOP_SLEUTEL.length).setValues(rijen.map(function (r) {
+    return [r[0], r[1], r[2], typeof r[3] === "number" ? bedragTekst_(r[3]) : r[3], r[4]];
+  }));
+
+  ui.alert("Klaar. Het tabblad Sleutel bevat nu de oplossing van '" + naam + "'.\n\n" +
+    "Nieuwe inzendingen worden vanaf nu automatisch nagekeken. Voor wat er al binnen is: " +
+    "Boekhoudapp → Open inzendingen automatisch nakijken.");
+}
+
+/**
+ * Menu: kijkt alle nieuwste inzendingen na die nog geen beoordeling hebben.
+ * Handig voor wat er binnenkwam vóór de sleutel er was, of na een
+ * aanpassing aan de sleutel (maak dan eerst de beoordelingen leeg).
+ */
+function nakijkenOpenInzendingen() {
+  var ui = SpreadsheetApp.getUi();
+  var sleutel = sleutelLezen_();
+  if (!Object.keys(sleutel).length) {
+    ui.alert("Het tabblad Sleutel is nog leeg. Kies eerst Boekhoudapp → Sleutel overnemen uit een inzending.");
+    return;
+  }
+  var blad = blad_(BLAD_INZENDINGEN);
+  if (blad.getLastRow() < 2) { ui.alert("Er zijn nog geen inzendingen."); return; }
+  zorgVoorKopAutomatisch_(blad);
+
+  var n = blad.getLastRow() - 1;
+  var rijen = blad.getRange(2, 1, n, K_AUTOMATISCH).getValues();
+  var detail = detailPerInzending_(null);
+  var beoordelingBereik = blad.getRange(2, K_BEOORDELING, n, 1);
+  var autoBereik = blad.getRange(2, K_AUTOMATISCH, n, 1);
+  var beoordelingen = beoordelingBereik.getValues();
+  var notities = autoBereik.getValues();
+  var inOrde = 0, teRemedieren = 0;
+
+  for (var i = 0; i < n; i++) {
+    var r = rijen[i];
+    if (r[K_IS_LAATSTE - 1] !== "JA") continue;
+    if (String(r[K_BEOORDELING - 1] || "").trim()) continue;
+    var ref = String(r[K_REF - 1]);
+    var lijnen = detail[detailSleutel_(r[K_LEERLING - 1], r[K_INZENDING - 1], ref)] || [];
+    var res = controleerItem_(ref, String(r[K_STATUS_LEERLING - 1] || ""), lijnen, sleutel);
+    if (!res) continue;
+    beoordelingen[i][0] = res.ok ? BEOORDELINGEN[0] : BEOORDELINGEN[1];
+    notities[i][0] = res.notitie;
+    if (res.ok) inOrde++; else teRemedieren++;
+  }
+  beoordelingBereik.setValues(beoordelingen);
+  autoBereik.setValues(notities);
+  ui.alert("Klaar: " + inOrde + " keer '" + BEOORDELINGEN[0] + "' en " + teRemedieren + " keer '" +
+    BEOORDELINGEN[1] + "' ingevuld.\n\nNiets is vrijgegeven: zet zelf het vinkje 'klaar' aan.");
 }
 
 /* ==========================================================================
@@ -601,6 +960,9 @@ function onOpen() {
     .createMenu("Boekhoudapp")
     .addItem("Feedback vrijgeven voor deze leerling", "geefVrijVoorLeerling")
     .addItem("Feedback intrekken voor deze leerling", "trekInVoorLeerling")
+    .addSeparator()
+    .addItem("Sleutel overnemen uit een inzending…", "sleutelOvernemen")
+    .addItem("Open inzendingen automatisch nakijken", "nakijkenOpenInzendingen")
     .addSeparator()
     .addItem("Codes genereren voor lege vakjes", "genereerCodes")
     .addItem("Expertcode instellen…", "zetExpertcode")
@@ -867,6 +1229,16 @@ function installeer() {
     taken.setColumnWidth(1, 240).setColumnWidth(2, 520).setColumnWidth(3, 300);
   });
 
+  stap("breedte kolom automatische controle", function () {
+    inz.setColumnWidth(K_AUTOMATISCH, 380);
+    inz.getRange(2, K_AUTOMATISCH, inz.getMaxRows() - 1, 1).setWrap(true).setVerticalAlignment("top");
+  });
+
+  var sl = maakBlad_(ss, BLAD_SLEUTEL, KOP_SLEUTEL);
+  stap("breedtes tabblad Sleutel", function () {
+    sl.setColumnWidth(1, 150).setColumnWidth(2, 240).setColumnWidth(3, 50).setColumnWidth(4, 160).setColumnWidth(5, 300);
+  });
+
   var det = maakBlad_(ss, BLAD_DETAIL, KOP_DETAIL);
   stap("breedtes tabblad Detail", function () {
     det.setColumnWidth(1, 130).setColumnWidth(2, 140).setColumnWidth(3, 170);
@@ -875,32 +1247,17 @@ function installeer() {
   // De mappen meteen aanmaken, zodat de eerste leerling niet moet wachten.
   stap("map in Drive", function () { werkMap_(); versieMap_(); });
 
+  // Bewust kort: collega's lezen dit, en de meeste instellingen passen ze
+  // aan via het tabblad Beheer in de app. De technische gegevens (vestiging,
+  // sleutelwoord, map) staan in HANDLEIDING-koppeling.md.
   SpreadsheetApp.getUi().alert(
     "Klaar.\n\n" +
-    "Vestiging van deze Sheet: " + (VESTIGING || "(niet ingevuld)") + "\n" +
-    "Werkbestanden komen in: " + werkMapNaam_() + "\n" +
-    "Sleutelwoord van dit script: " + SLEUTEL + "\n" +
-    "Vestiging en sleutelwoord moeten exact overeenkomen met wat er bij deze " +
-    "vestiging staat in js/config-koppeling.js.\n\n" +
-    "1. Menu Boekhoudapp → Expertcode instellen (nodig voor het beheertabblad in de app).\n" +
-    "2. Vul de namen van je leerlingen in: in het tabblad Klas, of vanuit het beheertabblad in de app.\n" +
-    "3. Menu Boekhoudapp → Codes genereren voor lege vakjes.\n" +
-    "4. Zet in het tabblad Taken bij elke categorie de link naar de taak in Classroom.\n" +
-    "5. Publiceer het script (Implementeren → Nieuwe implementatie → Web-app) " +
-    "en zet de URL in js/config-koppeling.js.\n\n" +
-    "Nakijken doe je in het tabblad Inzendingen: filter op 'is laatste' = JA." +
+    "• Code voor Beheer aanpassen: cel B2 in het tabblad Instellingen.\n" +
+    "• Nakijken doe je in het tabblad Inzendingen: filter op 'is laatste' = JA.\n" +
+    "• Er wordt automatisch gecontroleerd of de inzending klopt met de sleutel.\n" +
+    "• Feedback gegeven? Vink 'klaar' aan in kolom I." +
     (opmerkingen.length ? "\n\nNiet alles lukte, maar de installatie is wel doorgelopen:\n" + opmerkingen.join("\n") : "")
   );
-}
-
-// Enkel voor de melding na de installatie: de naam van de map waarin dit
-// script schrijft. Lukt het niet, dan mag dat de installatie niet stoppen.
-function werkMapNaam_() {
-  try {
-    return werkMap_().getName() + (MAP_ID_GEDEELD ? " (gedeelde map)" : " (eigen Drive)");
-  } catch (err) {
-    return "NIET BEREIKBAAR — kijk MAP_ID_GEDEELD na (" + err.message + ")";
-  }
 }
 
 function maakBlad_(ss, naam, koppen) {

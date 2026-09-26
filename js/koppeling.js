@@ -642,8 +642,15 @@
       lijst.push(maakCategorie(cat, refs, geboekt, stukken));
     });
 
+    // De resultaatverwerking: de vijf berekende getallen én de boekingen
+    // BELASTING en RESULTAAT. Die twee staan niet in CATEGORIE_VOLGORDE (ze
+    // hebben een eigen pagina), dus zonder dit gingen ze nooit mee.
     var resIngevuld = Object.keys(st.resultaat.stap || {}).some(function (k) { return st.resultaat.stap[k]; });
-    lijst.push(maakCategorie("Resultaatverwerking", ["RESULTAATVERWERKING"], resIngevuld ? 1 : 0));
+    var resRefs = ["RESULTAATVERWERKING", "BELASTING", "RESULTAAT"];
+    var resGeboekt = (resIngevuld ? 1 : 0) + ["BELASTING", "RESULTAAT"].filter(function (r) {
+      return st.boekingen[r] && st.boekingen[r].geboekt;
+    }).length;
+    lijst.push(maakCategorie("Resultaatverwerking", resRefs, resGeboekt));
     lijst.push(maakCategorie("Eindbalans", ["EINDBALANS"], Object.keys(st.eindbalans || {}).length ? 1 : 0));
     return lijst;
   }
