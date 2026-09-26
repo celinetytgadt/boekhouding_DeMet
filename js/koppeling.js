@@ -354,7 +354,7 @@
   /**
    * Na een geslaagde aanmelding: het lokale werk van deze browser en het
    * bewaarde werk in de Drive naast elkaar leggen. Er wordt nooit zomaar
-   * overschreven — bij twijfel kiest de leerling zelf.
+   * overschreven zonder datumvergelijking — de recentste versie wint.
    */
   function naAanmelding() {
     // Twee vestigingen kunnen een gelijknamige leerling hebben. De
@@ -368,7 +368,9 @@
     haal(metAanmelding({ actie: "werk" }))
       .then(function (r) {
         if (!r || !r.ok) { status(foutTekst(r), "fout"); return; }
-        if (!r.gevonden) { status("Aangemeld — nog niets bewaard op de server.", "ok"); startAutoBewaren(); return; }
+        // Geen melding over welke versie het wordt: de recentste wint gewoon,
+        // en "Aangemeld." blijft staan.
+        if (!r.gevonden) { startAutoBewaren(); return; }
 
         var lokaal = APP.getState();
         var lokaalLeeg = !Object.keys(lokaal.boekingen || {}).length;
@@ -376,11 +378,14 @@
 
         if (lokaalLeeg) { neemOver(r); return; }
         if (lokaalGewijzigd && r.gewijzigd && new Date(lokaalGewijzigd) >= new Date(r.gewijzigd)) {
-          status("Aangemeld — je werk op deze computer is het recentste.", "ok");
           startAutoBewaren();
           return;
         }
-        toonKeuzeVenster(lokaalGewijzigd, r);
+        // De versie op de server is de jongste (bv. verder gewerkt op een
+        // andere computer): die nemen we zonder te vragen. De leerling koos
+        // toch altijd het recentste, en de oudere versie kan de vakexpert
+        // nog terugzetten.
+        neemOver(r);
       })
       .catch(function (err) {
         status("Geen verbinding — je werk blijft in deze browser bewaard.", "fout");
@@ -395,40 +400,7 @@
     APP.setState(r.state, aanmelding.naam);
     APP.saveState();
     APP.renderAlles();
-    status("Je werk is opgehaald (van " + datumTekst(r.gewijzigd) + ").", "ok");
     startAutoBewaren();
-  }
-
-  /**
-   * Twee versies, en de versie op de server is de jongste. Dat gebeurt als
-   * een leerling op een andere computer verder gewerkt heeft. Zelf laten
-   * kiezen, met beide datums erbij — nooit stilzwijgend overschrijven.
-   */
-  function toonKeuzeVenster(lokaalGewijzigd, r) {
-    var html =
-      "<p>Er staat werk van jou op twee plaatsen, en ze verschillen. Welke wil je verder gebruiken?</p>" +
-      '<div class="keuze-blok">' +
-      '<button type="button" data-keuze="server" class="btn-keuze">' +
-      "<strong>Het werk van de server</strong><span>laatst bewaard op " + esc(datumTekst(r.gewijzigd)) + "</span></button>" +
-      '<button type="button" data-keuze="lokaal" class="btn-keuze">' +
-      "<strong>Het werk op deze computer</strong><span>laatst bewaard op " + esc(datumTekst(lokaalGewijzigd)) + "</span></button>" +
-      "</div>" +
-      "<p class=\"keuze-nota\">Twijfel je? Kies het recentste. De andere versie gaat niet verloren: je vakexpert kan die terugzetten.</p>";
-
-    maakModal("Welke versie wil je?", html, function (venster, sluit) {
-      venster.querySelectorAll("[data-keuze]").forEach(function (knop) {
-        knop.addEventListener("click", function () {
-          if (knop.dataset.keuze === "server") {
-            neemOver(r);
-          } else {
-            status("Je werkt verder met de versie van deze computer.", "ok");
-            teBewaren = true;
-            startAutoBewaren();
-          }
-          sluit();
-        });
-      });
-    });
   }
 
   /* ======================================================================

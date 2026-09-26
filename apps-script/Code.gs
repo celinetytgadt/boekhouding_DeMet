@@ -760,8 +760,8 @@ function zetVersieTerug() {
   }
 
   ui.alert("Klaar.\n\n" +
-    "Laat " + naam + " zich opnieuw aanmelden in de app. Staat er op die computer nog ander " +
-    "werk, dan vraagt de app welke versie ze wil — ze kiest dan 'het werk van de server'.");
+    "Laat " + naam + " zich opnieuw aanmelden in de app. De teruggezette versie is nu de " +
+    "recentste, dus de app neemt ze vanzelf over.");
 }
 
 /**

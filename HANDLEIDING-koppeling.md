@@ -236,8 +236,9 @@ browser onthoudt het.
 **Bewaren.** Het werk blijft in de browser staan én gaat elke twee minuten
 stilletjes naar een map in jouw Drive. Meldt een leerling zich later op een
 andere computer aan, dan staat alles er weer. Verschilt wat er lokaal staat
-van wat op de server staat, dan kiest de leerling zelf welke versie het wordt
-— er wordt nooit zomaar overschreven.
+van wat op de server staat, dan neemt de app automatisch de recentste versie.
+De andere gaat niet verloren: de server houdt vorige versies bij (zie *Werk
+terugzetten*).
 
 **Indienen.** Met de knop *Indienen* kiest de leerling per categorie
 (Aankopen, Verkopen, Financiële verrichtingen …) wat er nagekeken mag worden.
@@ -366,8 +367,8 @@ Heeft een leerling iets kapotgeklikt, gebruik dan **Boekhoudapp → Werk
 terugzetten uit een versie…**. Je tikt de naam van de leerling, het script
 zoekt de nieuwste bewaarde versie, zet het huidige werk eerst als extra versie
 apart en schrijft de oude versie terug. Laat de leerling zich daarna opnieuw
-aanmelden; heeft ze op die computer nog ander werk staan, dan vraagt de app
-welke versie het wordt — ze kiest dan *het werk van de server*.
+aanmelden. De teruggezette versie krijgt de datum van het terugzetten, dus de
+app neemt ze vanzelf over, ook als er op die computer nog ander werk staat.
 
 Wil je het met de hand doen: kopieer de inhoud van het versiebestand naar
 `werk_<vestiging>_<naam>.json` in de gewone map. Het bestand moet **exact** zo
