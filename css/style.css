@@ -528,6 +528,51 @@ table.redeneerschema tr.rij-onvolledig td.kol-bedrag { box-shadow: inset 3px 0 0
 }
 
 .relatie-input { margin-top: 4px; width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid var(--kleur-rand); border-radius: 4px; font-family: inherit; }
+/* Naamveld klant/leverancier met eigen keuzelijst (toont altijd alle namen). */
+.relatie-wrap { position: relative; display: flex; align-items: center; gap: 4px; }
+.relatie-wrap .relatie-input { flex: 1; min-width: 0; }
+.btn-relatie-keuzes {
+  margin-top: 4px;
+  border: 1px solid var(--kleur-rand);
+  background: var(--kleur-paneel);
+  color: var(--kleur-primair);
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.relatie-keuzelijst {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 260px;
+  z-index: 20;
+  margin-top: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--kleur-paneel);
+  border: 1px solid var(--kleur-rand);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 7, 145, 0.12);
+}
+.relatie-keuze {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--kleur-tekst);
+  cursor: pointer;
+}
+.relatie-keuze:hover { background: #e9eaf7; }
+.relatie-keuze-past { font-weight: 600; }
+.relatie-keuze-huidig { background: #e9eaf7; font-weight: 600; }
+.relatie-keuze-leeg { padding: 6px 8px; font-size: 12px; color: var(--kleur-tekst-zacht); font-style: italic; }
 
 .redeneerschema-acties {
   display: flex;
@@ -702,6 +747,9 @@ table.saldibalans tfoot td { font-weight: 700; border-top: 2px solid var(--kleur
 }
 .controle-rij:last-child { border-bottom: none; }
 .controle-vraag { flex: 1; font-size: 13px; }
+/* Meerdere documenten naast één controle (bv. de twee aflossingstabellen). */
+.controle-docs { display: flex; flex-direction: column; gap: 10px; }
+.controle-doc-titel { font-size: 11.5px; color: var(--kleur-tekst-zacht); margin-bottom: 3px; }
 .controle-status-auto {
   font-size: 12px;
   font-weight: 600;

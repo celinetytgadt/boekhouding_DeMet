@@ -135,10 +135,26 @@ const CATEGORIE_BETALINGEN = [
 // Een korte tip die net boven het redeneerschema verschijnt (geen popup, ze
 // moeten ze zien staan). Wil je er één bij een andere opdracht, zet dan
 // gewoon een veld "tip" bij dat item in de lijst hierboven.
+//
+// Het saldo klopt enkel als de stukken in volgorde geboekt worden: gaat een
+// leerling later terug om een ouder afschrift te verbeteren, dan zitten de
+// latere boekingen al mee in het saldo van de T-rekening.
+const TIP_VOLGORDE =
+  " Let op: dit klopt enkel als je in volgorde boekt. Ga je later terug om een vorig stuk te verbeteren, " +
+  "dan zitten de boekingen van daarna al in het saldo van de T-rekening.";
+
 const TIP_BANK =
   "Klopt je saldo op de T-rekening van de bank met het bankafschrift? " +
-  "Check dat vóór én na je boeking — zo weet je zeker dat je wijziging op de bankrekening juist geboekt is.";
+  "Check dat vóór én na je boeking — zo weet je zeker dat je wijziging op de bankrekening juist geboekt is." +
+  TIP_VOLGORDE;
+
+const TIP_KAS =
+  "Klopt je saldo op de T-rekening van de kas met het kasblad? " +
+  "Check dat vóór én na je boeking — zo weet je zeker dat je wijziging in de kas juist geboekt is." +
+  TIP_VOLGORDE;
 
 OPDRACHTEN.forEach(function (o) {
-  if (String(o.ref).indexOf("BANK") === 0 && !o.tip) o.tip = TIP_BANK;
+  if (o.tip) return;
+  if (String(o.ref).indexOf("BANK") === 0) o.tip = TIP_BANK;
+  else if (String(o.ref).indexOf("KAS") === 0) o.tip = TIP_KAS;
 });

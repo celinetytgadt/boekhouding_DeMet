@@ -278,6 +278,9 @@
     // wordt bij elke toetsaanslag opnieuw opgebouwd; zonder dit zou een
     // ingeklapte tabel telkens terugspringen.
     openDocumenten: {},
+    // Welke keuzelijst bij klant/leverancier openstaat (focus-id van het
+    // naamveld), of null.
+    relatieOpen: null,
   };
   var docImgTeller = 0;
 
@@ -627,6 +630,25 @@
     '<path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4a1 1 0 1 1 0 2h-1v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7H4a1 1 0 0 1 0-2h4V4a1 1 0 0 1 1-1zm1 2h4V5h-4zM7 7v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7zm3 3a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1z"/>' +
     "</svg>";
 
+  // De uitklaplijst onder het naamveld: altijd álle gekende namen. Namen die
+  // passen bij wat er al getypt is, komen bovenaan.
+  function htmlRelatieKeuzelijst(soort, ref, idx, huidig) {
+    var namen = verzamelRelatieNamen(soort, ref, idx);
+    if (!namen.length) return '<div class="relatie-keuzelijst"><div class="relatie-keuze-leeg">Nog geen namen gebruikt — typ de naam zelf.</div></div>';
+    var zoek = normaliseerNaam(huidig || "");
+    var past = [], rest = [];
+    namen.forEach(function (n) {
+      (zoek && normaliseerNaam(n).indexOf(zoek) !== -1 ? past : rest).push(n);
+    });
+    return '<div class="relatie-keuzelijst" role="listbox">' +
+      past.concat(rest).map(function (n) {
+        return '<button type="button" tabindex="-1" class="relatie-keuze' +
+          (n === huidig ? " relatie-keuze-huidig" : (past.indexOf(n) !== -1 ? " relatie-keuze-past" : "")) + '" ' +
+          'data-role="relatie-kies" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-naam="' + escapeAttr(n) + '">' +
+          escapeAttr(n) + "</button>";
+      }).join("") + "</div>";
+  }
+
   // relatieBewerkbaar: de boeking is geboekt én in orde bevonden, maar de
   // naam van de klant of leverancier mag nog aangepast worden.
   function htmlRedeneerschemaRij(ref, row, idx, geboekt, relatieBewerkbaar) {
@@ -640,13 +662,26 @@
 
     var relatieHtml = "";
     if (relatieSoort) {
-      var datalistId = relatieSoort === "klanten" ? "datalist-klanten" : "datalist-leveranciers";
+      // Eigen keuzelijst in plaats van een <datalist>: die toont enkel namen
+      // die passen bij wat er al getypt is, zodat een verkeerd gekozen naam
+      // eerst helemaal gewist moest worden. Deze lijst toont altijd alle
+      // namen; wat past bij de getypte tekst staat bovenaan.
+      var relatieFocusId = focusId(ref, idx, "relatie");
+      var relatieActief = !(geboekt && !relatieBewerkbaar);
+      var lijstOpen = relatieActief && uiState.relatieOpen === relatieFocusId;
       relatieHtml =
-        '<input type="text" class="relatie-input" list="' + datalistId + '" ' +
+        '<div class="relatie-wrap">' +
+        '<input type="text" class="relatie-input" autocomplete="off" ' +
         'placeholder="' + (relatieSoort === "klanten" ? "naam klant…" : "naam leverancier…") + '" ' +
         'title="Optioneel: bij wie hoort dit? Zo kan je later zien welke facturen nog openstaan." ' +
-        'data-focus-id="' + focusId(ref, idx, "relatie") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="relatie" ' +
-        'value="' + escapeAttr(row.relatie) + '" ' + (geboekt && !relatieBewerkbaar ? "disabled" : "") + ">";
+        'data-focus-id="' + relatieFocusId + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="relatie" ' +
+        'value="' + escapeAttr(row.relatie) + '" ' + (relatieActief ? "" : "disabled") + ">" +
+        (relatieActief
+          ? '<button type="button" class="btn-relatie-keuzes" tabindex="-1" data-role="relatie-keuzes" data-open-id="' + relatieFocusId + '" ' +
+            'title="Kies uit de namen die je al gebruikte" aria-label="Kies een naam">▾</button>'
+          : "") +
+        (lijstOpen ? htmlRelatieKeuzelijst(relatieSoort, ref, idx, row.relatie) : "") +
+        "</div>";
       // Bijna dezelfde naam als een eerdere boeking (enkel hoofdletters,
       // spaties of leestekens verschillen)? Waarschuw meteen, anders worden
       // het twee aparte relaties in het overzicht.
@@ -699,7 +734,8 @@
     var boeking = boekingVoor(ref);
     var geboekt = boeking.geboekt;
     var totalen = berekenTotalen(boeking.rows);
-    var gelijk = Math.abs(totalen.totaalDebet - totalen.totaalCredit) < 0.005 && totalen.totaalDebet > 0;
+    var verschil = Math.abs(round2(totalen.totaalDebet - totalen.totaalCredit));
+    var gelijk = verschil < 0.005 && totalen.totaalDebet > 0;
     var klaar = boekingKlaarOmTeBoeken(boeking.rows);
     var inOrde = isInOrde(ref);
 
@@ -724,6 +760,7 @@
       "<span>Totaal debet: <strong>" + formatBedrag(totalen.totaalDebet) + "</strong></span>" +
       "<span>Totaal credit: <strong>" + formatBedrag(totalen.totaalCredit) + "</strong></span>" +
       '<span class="' + (gelijk ? "balans-ok" : "balans-fout") + '">' + (gelijk ? "D = C ✓" : "D ≠ C") + "</span>" +
+      (verschil > 0.005 ? '<span class="balans-fout">Verschil: ' + formatBedrag(verschil) + "</span>" : "") +
       "</div>";
     html += "</div>";
 
@@ -1030,7 +1067,14 @@
     // wisselen. Deze cijfers komen uit hun eigen boekingen.
     if (c.relatieSoort) html += htmlControleRelatieTabel(c.relatieSoort);
     html += "</div>";
-    if (doc) html += "<div>" + htmlDocumentAfbeelding(doc, true) + "</div>";
+    if (c.docs && c.docs.length) {
+      html += '<div class="controle-docs">' + c.docs.map(function (d) {
+        return '<div class="controle-doc"><div class="controle-doc-titel">' + escapeAttr(d.titel || d.doc) + "</div>" +
+          htmlDocumentAfbeelding(d.doc, true) + "</div>";
+      }).join("") + "</div>";
+    } else if (doc) {
+      html += "<div>" + htmlDocumentAfbeelding(doc, true) + "</div>";
+    }
     html += "</div>";
     return html;
   }
@@ -1761,6 +1805,9 @@
 
     html += '<div class="paneel"><h2>BELASTING — Vennootschapsbelasting ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>" + htmlRedeneerschema("BELASTING") + "</div>";
     html += '<div class="paneel"><h2>RESULTAAT — Toewijzing van het resultaat ' + htmlInfoKnop("redeneerschema", "Hoe vul je dit in?") + "</h2>Het resultaat wordt, na eventuele allocatie aan de reserves, overgedragen naar volgend jaar. Bereken zelf of er nog reserves moeten toegewezen worden." + htmlRedeneerschema("RESULTAAT") + "</div>";
+    // De beginbalans erbij: daarop staan de reserves, zodat de leerling kan
+    // berekenen of er nog iets aan de reserves toegewezen moet worden.
+    html += htmlUitklapbaarDocument("hulp-RESULTAAT-beginbalans", "Beginbalans (voor de reserves)", "BEGINBALANS", true);
 
     return html;
   }
@@ -1881,14 +1928,17 @@
   // Suggesties voor het relatieveld (klant/leverancier): het optionele
   // startlijstje uit data-relaties.js, aangevuld met namen die de leerling
   // zelf al eerder intikte bij andere boekingen op dezelfde rekening.
-  function verzamelRelatieNamen(soort) {
+  // zonderRef/zonderIdx (optioneel): sla die ene lijn over — de naam die daar
+  // net getypt wordt, hoort zelf niet in de keuzelijst.
+  function verzamelRelatieNamen(soort, zonderRef, zonderIdx) {
     var nrDoel = soort === "klanten" ? "400000" : "440000";
     var namen = {};
     (RELATIES[soort] || []).forEach(function (n) { if (n) namen[n] = true; });
     Object.keys(state.boekingen).forEach(function (ref) {
       var b = state.boekingen[ref];
       if (!b || !b.rows) return;
-      b.rows.forEach(function (row) {
+      b.rows.forEach(function (row, idx) {
+        if (ref === zonderRef && idx === zonderIdx) return;
         var mar = marBij(row.rekening);
         if (row.relatie && mar && String(mar.nr) === nrDoel) namen[row.relatie] = true;
       });
@@ -1896,54 +1946,61 @@
     return Object.keys(namen).sort();
   }
 
-  function updateRelatieDatalists() {
-    ["klanten", "leveranciers"].forEach(function (soort) {
-      var el = document.getElementById(soort === "klanten" ? "datalist-klanten" : "datalist-leveranciers");
-      if (!el) return;
-      el.innerHTML = verzamelRelatieNamen(soort).map(function (n) { return '<option value="' + escapeAttr(n) + '">'; }).join("");
-    });
-  }
-
   /* ========================================================================
      8b. Filters op klasse en rubriek (T-paneel + zoekscherm)
      ======================================================================== */
 
-  function klassenMetRekeningen() {
+  // apko (optioneel): enkel klassen en rubrieken tonen waarin rekeningen van
+  // die soort zitten. Kies je K, dan blijft er bv. enkel klasse 6 over.
+  function klassenMetRekeningen(apko) {
     return MAR_INDELING.filter(function (kl) {
-      return MAR.some(function (a) { return a.klasse === kl.klasse; });
+      return MAR.some(function (a) { return a.klasse === kl.klasse && (!apko || a.apko === apko); });
     });
   }
 
-  function rubriekenVoorKlasse(klasse) {
+  function rubriekenVoorKlasse(klasse, apko) {
     var lijst = [];
     MAR_INDELING.forEach(function (kl) {
       if (klasse && kl.klasse !== klasse) return;
       kl.rubrieken.forEach(function (r) {
-        if (!MAR.some(function (a) { return a.rubriek === r.rubriek; })) return;
+        if (!MAR.some(function (a) { return a.rubriek === r.rubriek && (!apko || a.apko === apko); })) return;
         lijst.push({ rubriek: r.rubriek, oms: r.oms, klasse: kl.klasse });
       });
     });
     return lijst;
   }
 
-  function vulKlasseSelect(selectEl, gekozen) {
+  function vulKlasseSelect(selectEl, gekozen, apko) {
     if (!selectEl) return;
     var html = '<option value="">alle klassen</option>';
-    klassenMetRekeningen().forEach(function (kl) {
+    klassenMetRekeningen(apko).forEach(function (kl) {
       html += '<option value="' + kl.klasse + '"' + (kl.klasse === gekozen ? " selected" : "") + ">klasse " + kl.klasse + " — " + escapeAttr(kl.oms) + "</option>";
     });
     selectEl.innerHTML = html;
   }
 
-  function vulRubriekSelect(selectEl, klasse, gekozen) {
+  function vulRubriekSelect(selectEl, klasse, gekozen, apko) {
     if (!selectEl) return;
-    var rubrieken = rubriekenVoorKlasse(klasse);
+    var rubrieken = rubriekenVoorKlasse(klasse, apko);
     var html = '<option value="">alle rubrieken</option>';
     rubrieken.forEach(function (r) {
       html += '<option value="' + r.rubriek + '"' + (r.rubriek === gekozen ? " selected" : "") + ">" + r.rubriek + " — " + escapeAttr(r.oms) + "</option>";
     });
     selectEl.innerHTML = html;
     selectEl.disabled = rubrieken.length === 0;
+  }
+
+  // Na een klik op A/P/K/O: de klasse- en rubriekkeuze opnieuw vullen met
+  // enkel wat bij die soort past. Een gekozen klasse of rubriek die er niet
+  // meer bij hoort, valt weg — anders blijft de lijst leeg zonder dat
+  // duidelijk is waarom.
+  function pasKlasseRubriekAanApko(filter, klasseId, rubriekId) {
+    var klassen = klassenMetRekeningen(filter.apko).map(function (kl) { return kl.klasse; });
+    if (filter.klasse && klassen.indexOf(filter.klasse) === -1) { filter.klasse = ""; filter.rubriek = ""; }
+    var rubrieken = rubriekenVoorKlasse(filter.klasse, filter.apko).map(function (r) { return r.rubriek; });
+    if (filter.rubriek && rubrieken.indexOf(filter.rubriek) === -1) filter.rubriek = "";
+    vulKlasseSelect(document.getElementById(klasseId), filter.klasse, filter.apko);
+    vulRubriekSelect(document.getElementById(rubriekId), filter.klasse, filter.rubriek, filter.apko);
   }
 
   function rekeningPastBijFilter(a, filter) {
@@ -2210,7 +2267,6 @@
     });
     renderTpanel();
     renderVoortgang();
-    updateRelatieDatalists();
     updateOpslaanStatus();
   }
 
@@ -2250,6 +2306,8 @@
       var t = e.target;
       if (t.dataset && t.dataset.scope !== undefined && t.dataset.row !== undefined && t.dataset.field) {
         opState(t.dataset.scope, parseInt(t.dataset.row, 10), t.dataset.field, t.value);
+        // Wie een naam typt, krijgt de keuzelijst er meteen bij.
+        if (t.dataset.field === "relatie") uiState.relatieOpen = t.dataset.focusId;
         saveState();
         renderAlles();
         return;
@@ -2267,6 +2325,58 @@
         state.relatieVragen[t.dataset.veld] = t.value;
         saveState();
       }
+    });
+
+    // Keuzelijst bij klant/leverancier. Een klik op het knopje of in een
+    // naam mag de cursor niet uit het naamveld halen: anders vuurt dat veld
+    // eerst "change", wordt de pagina herbouwd en komt de klik nergens aan.
+    paginaEl.addEventListener("mousedown", function (e) {
+      var k = e.target.closest ? e.target.closest('[data-role="relatie-kies"], [data-role="relatie-keuzes"]') : null;
+      if (k) e.preventDefault();
+    });
+    paginaEl.addEventListener("click", function (e) {
+      var t = e.target;
+      if (t.dataset && t.dataset.field === "relatie" && !t.disabled && uiState.relatieOpen !== t.dataset.focusId) {
+        uiState.relatieOpen = t.dataset.focusId;
+        renderAlles();
+      }
+    });
+    // Klik ernaast, Escape of Tab: lijst dicht. Zonder de pagina te
+    // herbouwen, zodat de focus gewoon verder kan springen.
+    function sluitRelatieLijst() {
+      if (!uiState.relatieOpen) return;
+      uiState.relatieOpen = null;
+      Array.prototype.forEach.call(document.querySelectorAll(".relatie-keuzelijst"), function (l) { l.parentNode.removeChild(l); });
+    }
+    document.addEventListener("click", function (e) {
+      if (!uiState.relatieOpen) return;
+      if (e.target.closest && e.target.closest(".relatie-wrap")) return;
+      sluitRelatieLijst();
+    });
+    paginaEl.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" || e.key === "Tab") sluitRelatieLijst();
+    });
+
+    // Tab in het laatste veld (D/C) van de laatste lijn = een nieuwe lijn
+    // erbij, met de cursor meteen in het bedrag. Sneller dan telkens naar
+    // "+ rij toevoegen" te grijpen. Shift+Tab blijft gewoon terugspringen.
+    paginaEl.addEventListener("keydown", function (e) {
+      var t = e.target;
+      if (e.key !== "Tab" || e.shiftKey || e.ctrlKey || e.altKey) return;
+      if (!t.dataset || t.dataset.field !== "dc" || t.dataset.scope === undefined) return;
+      var scope = t.dataset.scope;
+      var boeking = boekingVoor(scope);
+      if (boeking.geboekt || isInOrde(scope)) return;
+      if (parseInt(t.dataset.row, 10) !== boeking.rows.length - 1) return;
+      e.preventDefault();
+      // Een keuze die nog niet via "change" binnen was, eerst bewaren.
+      opState(scope, parseInt(t.dataset.row, 10), "dc", t.value);
+      boeking.rows.push(maakLegeRij());
+      saveState();
+      renderAlles();
+      var nieuw = null;
+      try { nieuw = document.querySelector('[data-focus-id="' + CSS.escape(focusId(scope, boeking.rows.length - 1, "bedrag")) + '"]'); } catch (e2) {}
+      if (nieuw) nieuw.focus();
     });
 
     // <details> stuurt geen bubbelend event, vandaar de derde parameter.
@@ -2344,6 +2454,14 @@
         // bekeken zijn na een wijziging. Het waarschuwingsblokje verdwijnt
         // dan, ook bij het indienen.
         delete state.controlesHerbekijken[knop.dataset.cat];
+        saveState(); renderAlles();
+      } else if (role === "relatie-keuzes") {
+        var openId = knop.dataset.openId;
+        uiState.relatieOpen = uiState.relatieOpen === openId ? null : openId;
+        renderAlles();
+      } else if (role === "relatie-kies") {
+        opState(knop.dataset.scope, parseInt(knop.dataset.row, 10), "relatie", knop.dataset.naam);
+        uiState.relatieOpen = null;
         saveState(); renderAlles();
       } else if (role === "rij-toevoegen") {
         boekingVoor(knop.dataset.scope).rows.push(maakLegeRij());
@@ -2475,12 +2593,13 @@
       if (!b) return;
       marModal.apko = b.dataset.apko;
       renderFilterKnoppen("mar-modal-apko-knoppen", marModal.apko);
+      pasKlasseRubriekAanApko(marModal, "mar-modal-klasse", "mar-modal-rubriek");
       renderMarModalLijst();
     });
     document.getElementById("mar-modal-klasse").addEventListener("change", function (e) {
       marModal.klasse = e.target.value;
       marModal.rubriek = "";
-      vulRubriekSelect(document.getElementById("mar-modal-rubriek"), marModal.klasse, "");
+      vulRubriekSelect(document.getElementById("mar-modal-rubriek"), marModal.klasse, "", marModal.apko);
       renderMarModalLijst();
     });
     document.getElementById("mar-modal-rubriek").addEventListener("change", function (e) {
@@ -2525,6 +2644,7 @@
       if (type === "opdracht") uiState.huidigePagina = { type: type, ref: t.dataset.pageRef };
       else if (type === "controle") uiState.huidigePagina = { type: type, cat: t.dataset.pageCat };
       else uiState.huidigePagina = { type: type };
+      uiState.relatieOpen = null;
       document.getElementById("layout").classList.remove("sidebar-open");
       renderAlles();
       document.getElementById("main-content").scrollTop = 0;
@@ -2541,12 +2661,16 @@
       if (!b) return;
       uiState.tpanelApko = b.dataset.apko;
       renderFilterKnoppen("tpanel-apko-knoppen", uiState.tpanelApko);
+      var tf = { apko: uiState.tpanelApko, klasse: uiState.tpanelKlasse, rubriek: uiState.tpanelRubriek };
+      pasKlasseRubriekAanApko(tf, "tpanel-klasse", "tpanel-rubriek");
+      uiState.tpanelKlasse = tf.klasse;
+      uiState.tpanelRubriek = tf.rubriek;
       renderTpanel();
     });
     document.getElementById("tpanel-klasse").addEventListener("change", function (e) {
       uiState.tpanelKlasse = e.target.value;
       uiState.tpanelRubriek = "";
-      vulRubriekSelect(document.getElementById("tpanel-rubriek"), uiState.tpanelKlasse, "");
+      vulRubriekSelect(document.getElementById("tpanel-rubriek"), uiState.tpanelKlasse, "", uiState.tpanelApko);
       renderTpanel();
     });
     document.getElementById("tpanel-rubriek").addEventListener("change", function (e) {

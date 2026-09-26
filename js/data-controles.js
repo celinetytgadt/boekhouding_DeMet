@@ -33,9 +33,6 @@ const CONTROLE_CONFIG = {
   voorraadRef: "VR",
   loonRef: "LOON",
   beginbalansRef: "BB",
-  // De aflossingstabel is geen opdracht maar een hulpdocument, dus hier
-  // staat rechtstreeks de bestandsnaam uit de map documenten/.
-  leningRef: "LENING2",
 };
 
 // Rekeningen waarvan de verwachte saldokant afwijkt van de gewone regel
@@ -109,6 +106,9 @@ const CATEGORIE_CONTROLES = {
 //   filterTip    welke filter er in het T-paneel gezet kan worden om dit na
 //                te kijken
 //   docConfig    sleutel uit CONTROLE_CONFIG — welk document ernaast komt
+//   docs         meerdere documenten ernaast, rechtstreeks met hun
+//                bestandsnaam: [ { doc: "LENING1", titel: "…" }, … ]
+//                (gebruik dan docConfig niet)
 //   relatieSoort "klanten" of "leveranciers" — toont onder de vraag een
 //                tabelletje met per relatie het bedrag dat nog openstaat
 //                (uit het tabblad Klanten & leveranciers), zodat de leerling
@@ -159,13 +159,26 @@ const HANDMATIGE_CONTROLES = [
     docConfig: "loonRef",
     filterTip: "Filter in het T-paneel op rubriek 62.",
   },
+  // Twee aparte controles: de nettolonen blijven een schuld aan de
+  // werknemers tot de bank ze betaalt, maar de bedrijfsvoorheffing en de RSZ
+  // zijn met AK11 al overgenomen door de leverancier (het sociaal
+  // secretariaat). Die rekeningen horen hier dus al op 0 te staan.
   {
     id: "loonschulden-open",
     categorie: "Loonverwerking",
+    type: "check-met-document",
+    vraag: "Klopt de schuld aan je arbeiders en bedienden met de loonstaat?",
+    toelichting: "De nettolonen worden pas bij de bankafschriften uitbetaald. Op dit moment hoort op deze rekeningen dus nog een creditsaldo te staan, gelijk aan de nettolonen op de loonstaat.",
+    docConfig: "loonRef",
+    filterTip: "Filter in het T-paneel op 455.",
+  },
+  {
+    id: "loonschulden-bv-rsz-weg",
+    categorie: "Loonverwerking",
     type: "check",
-    vraag: "Staan de nettolonen, de bedrijfsvoorheffing en de RSZ nog als schuld geboekt?",
-    toelichting: "De betaling volgt pas bij de bankafschriften. Op dit moment horen deze rekeningen dus nog een creditsaldo te hebben — het bedrijf is dat nog verschuldigd.",
-    filterTip: "Filter in het T-paneel op rubriek 45 (negeer de btw- en belastingrekeningen).",
+    vraag: "Zijn de schulden voor bedrijfsvoorheffing en RSZ weggeboekt?",
+    toelichting: "Met AK11 betaalt de leverancier de bedrijfsvoorheffing en de RSZ voor jou. In de plaats komt een schuld aan die leverancier, dus deze twee rekeningen horen nu op 0 te staan.",
+    filterTip: "Filter in het T-paneel op 453 en daarna op 454.",
   },
 
   /* ---------------- Financiële verrichtingen ---------------- */
@@ -197,7 +210,12 @@ const HANDMATIGE_CONTROLES = [
     type: "check-met-document",
     vraag: "Is de lening bij het verkrijgen juist verdeeld over lange en korte termijn?",
     toelichting: "Kijk in de aflossingstabel hoeveel je in 2026 nog moet aflossen. Dat deel hoort bij de schulden op ten hoogste één jaar, de rest bij de schulden op meer dan één jaar. Die verdeling maak je meteen bij het verkrijgen van de lening — niet op het einde van het kwartaal.",
-    docConfig: "leningRef",
+    // Beide aflossingstabellen staan ernaast: de maandelijkse (LENING1) en
+    // die per jaar (LENING2).
+    docs: [
+      { doc: "LENING1", titel: "Aflossingstabel (p. 1)" },
+      { doc: "LENING2", titel: "Aflossingstabel (p. 2)" },
+    ],
     filterTip: "Filter in het T-paneel op kredietinstellingen.",
   },
   {
@@ -205,8 +223,8 @@ const HANDMATIGE_CONTROLES = [
     categorie: "Financiële verrichtingen",
     type: "check",
     vraag: "Staan de loonschulden terug op 0, nu ze betaald zijn?",
-    toelichting: "Bij de loonstaat kwamen het nettoloon, de bedrijfsvoorheffing en de RSZ credit op deze rekeningen. Bij de uitbetaling via de bank gaan ze er debet weer af.",
-    filterTip: "Filter in het T-paneel op rubriek 45 (negeer de btw- en belastingrekeningen).",
+    toelichting: "Bij de loonstaat kwamen de nettolonen credit op deze rekeningen. Bij de uitbetaling via de bank gaan ze er debet weer af. (De bedrijfsvoorheffing en de RSZ waren al weggeboekt met AK11.)",
+    filterTip: "Filter in het T-paneel op 455.",
   },
   {
     id: "klanten-openstaand-klopt",
