@@ -310,6 +310,9 @@
           if (DOSSIER_CODE) dossierOk = null;
           window.INSTELLINGEN = instellingen;
           vulNamen();
+          // Meteen hertekenen: stond er een open beheertabblad van de vorige
+          // school, dan moet dat nu dicht (beheer.js ziet de wissel).
+          if (window.APP && APP.renderAlles) APP.renderAlles();
           haalInstellingen();
         });
       }
@@ -1232,6 +1235,7 @@
     actief: actief,
     ingesteld: ingesteld,
     vestigingLabel: function () { return vestigingLabel(vestiging); },
+    vestigingCode: function () { return vestiging ? String(vestiging.code) : ""; },
     haal: function (params) { return haal(params); },
     stuur: function (data) { return stuur(data); },
     sleutel: sleutelwoord,
