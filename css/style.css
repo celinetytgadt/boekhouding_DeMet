@@ -1918,3 +1918,8 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 .beheer-ok { color: #0f7a52; }
 .beheer-fout { color: var(--kleur-fout); }
 .beheer-info { color: var(--kleur-tekst-zacht); }
+
+/* De keuze tussen de dossiers op de startpagina. */
+.dossier-keuze { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.dossier-keuze p { margin: 0; }
+.dossier-knop { display: inline-block; text-decoration: none; white-space: nowrap; }

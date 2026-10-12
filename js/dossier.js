@@ -22,6 +22,6 @@ const DOSSIER = {
   opslag: "boekhoudapp",
   documenten: "documenten/",
   kort: "Boekhoudapp Kern 8",
-  titel: "Boekhoudapp Kern 8 — MetWear",
+  titel: "Eindopdracht MetWear",
   ander: { naam: "Oefendossier Fietsatelier Noor", url: "noor.html" },
 };

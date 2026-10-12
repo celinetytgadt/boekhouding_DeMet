@@ -904,8 +904,21 @@
     // Het dossier stelt zich eerst voor (enkel het oefendossier heeft zo'n
     // tekst); daaronder de gewone uitleg over de app.
     if (DOSSIER_INFO.welkomst) html += '<div class="paneel">' + DOSSIER_INFO.welkomst + "</div>";
+    html += htmlDossierKnop();
     html += '<div class="paneel">' + welkomstHtml() + "</div>";
     return html;
+  }
+
+  /* Een duidelijke knop naar het andere dossier, bovenaan de startpagina.
+     Het linkje in de titelbalk is klein en verdwijnt op een smal scherm. */
+  function htmlDossierKnop() {
+    var ander = DOSSIER_INFO.ander;
+    if (!ander || !ander.url) return "";
+    return '<div class="paneel dossier-keuze">' +
+      "<p>Je werkt nu in <strong>" + escapeAttr(DOSSIER_INFO.titel || "dit dossier") + "</strong>. " +
+      "Je werk in het andere dossier blijft gewoon bewaard.</p>" +
+      '<a class="btn-primair dossier-knop" href="' + escapeAttr(ander.url) + '">Naar ' + escapeAttr(ander.naam) + " →</a>" +
+      "</div>";
   }
 
   function welkomstHtml() {
