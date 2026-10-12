@@ -273,6 +273,15 @@ const MAR = [
   "rubriek_oms": "Meubilair & rollend materieel"
  },
 {
+  "nr": 300000,
+  "naam": "Voorraad grondstoffen",
+  "apko": "A",
+  "klasse": "3",
+  "klasse_oms": "Voorraden",
+  "rubriek": "30",
+  "rubriek_oms": "Voorraden"
+ },
+ {
   "nr": 340000,
   "naam": "Voorraad handelsgoederen",
   "apko": "A",
@@ -577,6 +586,15 @@ const MAR = [
   "klasse_oms": "Liquide middelen",
   "rubriek": "58",
   "rubriek_oms": "Interne overboekingen"
+ },
+ {
+  "nr": 600000,
+  "naam": "Aankopen grondstoffen",
+  "apko": "K",
+  "klasse": "6",
+  "klasse_oms": "Kosten",
+  "rubriek": "60",
+  "rubriek_oms": "Handelsgoederen, grond- en hulpstoffen"
  },
  {
   "nr": 604000,
