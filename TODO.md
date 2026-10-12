@@ -14,6 +14,12 @@ Ideeën en wijzigingen die nog moeten gebeuren. Voeg gerust zelf iets toe —
   zijn. Meeveranderen: beginbalans, LOON, het bankafschrift met de betaling,
   oplossingssleutel.
 
+## Oefendossier Fietsatelier Noor (jaar 3)
+
+- [ ] **Jaar 4 — consolidatieopdracht Noor:** alle stukken door elkaar, als
+  eindopdracht in de plaats van MetWear (volgend schooljaar). Kan verder
+  bouwen op `hulpmiddelen/noor/` (bv. 2e kwartaal 2028).
+
 ## Kern 6 — nieuwe app
 
 Pas beginnen als de app voor kern 8 helemaal af is. Zelfde opbouw als deze

@@ -65,6 +65,19 @@ button {
   white-space: nowrap;
 }
 
+/* De link naar het andere dossier (MetWear ↔ oefendossier Noor), naast de
+   naam van de app. */
+#topbar-title .dossier-wissel {
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: 400;
+  font-size: 12px;
+  color: white;
+  opacity: 0.85;
+  text-decoration: underline;
+}
+#topbar-title .dossier-wissel:hover { opacity: 1; }
+
 #topbar-leerling {
   display: flex;
   align-items: center;

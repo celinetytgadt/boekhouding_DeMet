@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oefendossier Fietsatelier Noor — De MET</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div id="topbar-title">
+    <span id="app-naam">Oefendossier Noor</span>
+  </div>
+  <div id="topbar-leerling">
+    <!-- Eerst de vestiging, dan de naam. De keuzelijst met vestigingen
+         verschijnt enkel als er in js/config-koppeling.js meer dan één
+         staat; elke vestiging heeft een eigen Sheet en een eigen
+         klaslijst. -->
+    <select id="vestiging-select" aria-label="School" hidden></select>
+    <label for="leerling-naam-input">Naam:</label>
+    <!-- Twee manieren om je aan te melden. Staat er een klaslijst in
+         js/data-klas.js, dan toont koppeling.js de keuzelijst met het
+         codeveld en verbergt ze het vrije tekstveld. Is die lijst leeg
+         (bv. tijdens het testen met collega's), dan blijft het vrije veld
+         staan en werkt de app zoals vroeger. -->
+    <input type="text" id="leerling-naam-input" placeholder="bv. Julie D.">
+    <select id="leerling-select" hidden></select>
+    <input type="text" id="leerling-code" hidden inputmode="numeric" maxlength="6" placeholder="code" autocomplete="off">
+    <button id="btn-aanmelden" type="button" hidden title="Aanmelden en je werk ophalen">Aanmelden</button>
+    <span id="opslaan-status"></span>
+    <span id="koppeling-status" class="koppeling-status"></span>
+    <!-- De cursus en de handleiding. De vakexpert vult de adressen in bij
+         het beheertabblad; staat er niets, dan blijft de knop verborgen. -->
+    <a id="link-cursus" class="topbar-link" href="#" target="_blank" rel="noopener" title="Je cursus opzoeken" hidden>Cursus</a>
+    <a id="link-handleiding" class="topbar-link" href="#" target="_blank" rel="noopener" title="Handleiding bij de app" hidden>Handleiding</a>
+    <button id="btn-indienen" type="button" class="btn-primair-topbar" title="Stuur je werk door naar je vakexpert">Indienen</button>
+    <!-- Feedback komt vanzelf binnen bij het openen van de app en als je
+         terugkeert naar dit tabblad. Deze knop is er voor wie niet wil
+         wachten, en staat daarom klein. -->
+    <button id="btn-feedback" type="button" class="btn-icoon" title="Feedback nu opnieuw ophalen" aria-label="Feedback nu opnieuw ophalen">↻</button>
+  </div>
+  <button id="btn-nav-toggle" type="button" aria-label="Menu">☰</button>
+  <button id="btn-tpanel-toggle" type="button" aria-label="T-rekeningen">T</button>
+</header>
+
+<div id="voortgang" title="Hoeveel verantwoordingsstukken heb je al geboekt?">
+  <div id="voortgang-balk"><div id="voortgang-vulling"></div></div>
+  <span id="voortgang-tekst"></span>
+</div>
+
+<div id="layout">
+  <nav id="sidebar">
+    <div id="nav-links"></div>
+  </nav>
+
+  <main id="main-content">
+    <div id="pagina-inhoud"></div>
+  </main>
+
+  <aside id="tpanel">
+    <div id="tpanel-header">
+      <strong>T-rekeningen</strong>
+      <button id="tpanel-collapse" type="button" title="T-rekeningen inklappen">«</button>
+    </div>
+    <div id="tpanel-controls">
+      <input type="text" id="tpanel-zoek" placeholder="zoek op nummer of naam…">
+      <div id="tpanel-apko-knoppen" class="filter-knoppen">
+        <button type="button" data-apko="" class="actief">alle</button>
+        <button type="button" data-apko="A">A</button>
+        <button type="button" data-apko="P">P</button>
+        <button type="button" data-apko="K">K</button>
+        <button type="button" data-apko="O">O</button>
+      </div>
+      <div class="filter-rij">
+        <select id="tpanel-klasse" aria-label="Klasse"></select>
+        <select id="tpanel-rubriek" aria-label="Rubriek"></select>
+      </div>
+      <div class="tpanel-vinkjes">
+        <label class="tpanel-detail-toggle">
+          <input type="checkbox" id="tpanel-detail-check">
+          enkel saldi
+        </label>
+        <label class="tpanel-detail-toggle">
+          <input type="checkbox" id="tpanel-leeg-check">
+          lege rekeningen tonen
+        </label>
+      </div>
+      <button type="button" id="tpanel-filter-reset" class="btn-filter-reset">filters wissen</button>
+    </div>
+    <div id="tpanel-lijst"></div>
+  </aside>
+
+  <!-- Verschijnt enkel als het T-paneel ingeklapt is, zodat het altijd
+       terug te halen valt. -->
+  <button id="tpanel-heropen" type="button" title="T-rekeningen terug tonen">
+    <span>T-rekeningen</span> »
+  </button>
+</div>
+
+
+<div id="mar-modal-overlay" class="mar-modal-overlay" hidden>
+  <div class="mar-modal">
+    <div class="mar-modal-header">
+      <strong>Rekening zoeken</strong>
+      <span class="tpanel-header-knoppen">
+        <button type="button" class="btn-info" data-role="info" data-info="rekeningZoeken" title="Hoe zoek je een rekening?" aria-label="Uitleg">i</button>
+        <button type="button" id="mar-modal-sluiten" title="Sluiten">✕</button>
+      </span>
+    </div>
+    <div class="mar-modal-filters">
+      <input type="text" id="mar-modal-zoek" placeholder="zoek op nummer of naam…">
+      <div id="mar-modal-apko-knoppen" class="filter-knoppen">
+        <button type="button" data-apko="" class="actief">alle</button>
+        <button type="button" data-apko="A">A</button>
+        <button type="button" data-apko="P">P</button>
+        <button type="button" data-apko="K">K</button>
+        <button type="button" data-apko="O">O</button>
+      </div>
+      <div class="filter-rij">
+        <select id="mar-modal-klasse" aria-label="Klasse"></select>
+        <select id="mar-modal-rubriek" aria-label="Rubriek"></select>
+      </div>
+    </div>
+    <div id="mar-modal-lijst" class="mar-modal-lijst"></div>
+  </div>
+</div>
+
+<div id="info-modal-overlay" class="mar-modal-overlay" hidden>
+  <div class="mar-modal info-modal">
+    <div class="mar-modal-header">
+      <strong id="info-modal-titel">Uitleg</strong>
+      <button type="button" id="info-modal-sluiten" title="Sluiten">✕</button>
+    </div>
+    <div id="info-modal-inhoud" class="info-modal-inhoud"></div>
+  </div>
+</div>
+
+<!-- Het oefendossier Fietsatelier Noor (1e kwartaal 2028). Zelfde app als
+     index.html (MetWear), maar met de opdrachten, controles, relaties en
+     documenten uit js/noor/ en documenten/noor/, en een eigen opslag. -->
+<script src="js/noor/dossier.js"></script>
+<script src="js/mar.js"></script>
+<script src="js/data-mar-indeling.js"></script>
+<script src="js/noor/data-opdrachten.js"></script>
+<script src="js/noor/data-relaties.js"></script>
+<script src="js/noor/data-controles.js"></script>
+<script src="js/data-balans.js"></script>
+<script src="js/data-info.js"></script>
+<script src="js/config-koppeling.js"></script>
+<script src="js/data-klas.js"></script>
+<script src="js/app.js"></script>
+<!-- Na app.js: koppeling.js gebruikt window.APP. -->
+<script src="js/koppeling.js"></script>
+<!-- Het beheertabblad voor de vakexperten. Laat je dit bestand weg, dan
+     verdwijnt dat tabblad en verandert er verder niets. -->
+<script src="js/beheer.js"></script>
+</body>
+</html>

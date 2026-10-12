@@ -6,6 +6,31 @@ inboeken op basis van verantwoordingsstukken, met permanent zichtbare
 T-rekeningen. Zie `Boekhoudapp - specificatie.md` voor de volledige
 opdracht waaruit deze app gebouwd is.
 
+## Twee dossiers
+
+De app bestaat uit twee pagina's met dezelfde code en dezelfde Sheets:
+
+| pagina | dossier | waarvoor |
+|---|---|---|
+| `index.html` | MetWear bv, 1e kwartaal 2026 | eindopdracht (dit schooljaar) |
+| `noor.html` | Fietsatelier Noor bv, 1e kwartaal 2028 | oefendossier: 5 à 6 stukken per les |
+
+Fietsatelier Noor is de case van het 3e en 4e jaar (BKH3, BKH4), hier in
+jaar 3. Bovenaan elke pagina staat een link naar het andere dossier.
+
+Elk dossier heeft een eigen voorvoegsel in de browser (`DOSSIER.opslag`):
+`boekhoudapp` voor MetWear (zoals het altijd was, zodat er geen werk
+verloren gaat) en `kern8noor` voor Noor. Zo leest het ene dossier nooit het
+werk of de feedback van het andere, en ook niet van de app van het 4e jaar
+(`bkh4`). Enkel de aanmelding (school, naam, code) wordt gedeeld. In de Sheet
+krijgt Noor een eigen werkbestand (`werk_NOOR_LEU_naam.json`) en beginnen de
+refs met `NOOR-` en de categorieën met `Noor · `. De oplossingssleutel van
+Noor zit in `Code.gs` zelf: het nakijkt meteen automatisch.
+
+Alles van het oefendossier: `js/noor/`, `documenten/noor/` en
+`hulpmiddelen/noor/` (de case, de scripts die documenten, opdrachten en
+sleutel maken, en de Excel met jaar 3 erbij — zie `hulpmiddelen/noor/README.md`).
+
 ## Structuur
 
 ```
@@ -18,6 +43,8 @@ js/data-relaties.js       lijst klanten/leveranciers voor 400000/440000 — per 
 js/data-controles.js      controlevragen per categorie, laatste afschrift, afwijkende saldokanten
 js/data-balans.js         de vakken van de eindbalans en de resultatenrekening
 js/data-info.js           de teksten achter de i-icoontjes
+js/dossier.js             welk dossier index.html is (MetWear): opslag, documentenmap
+js/noor/                  het oefendossier Noor: dossier.js, data-opdrachten.js, data-controles.js, data-relaties.js
 js/config-koppeling.js    de vestigingen: code, naam, web-app-URL, sleutelwoord
 js/data-klas.js           noodlijst met namen; normaal leeg — de klaslijst staat in de Sheet
 js/app.js                 alle logica — hoeft normaal niet aangepast te worden

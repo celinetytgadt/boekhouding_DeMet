@@ -69,6 +69,41 @@ var VESTIGING = "LEU";
 // testen, maar dan staat het werk van deze vestiging apart.
 var MAP_ID_GEDEELD = "1gVbFLxA90tzH7uUYS-vBBRV1klXViwPd";
 
+// ---------------------------------------------------------------------------
+// DOSSIERS
+//
+// Eén app, twee dossiers: de eindopdracht MetWear (index.html) en het
+// oefendossier Fietsatelier Noor (noor.html). Ze delen deze Sheet, de
+// klaslijst en de codes, maar niets anders:
+//
+//   werkbestand   MetWear  werk_LEU_lotte.json
+//                 Noor     werk_NOOR_LEU_lotte.json
+//   inzendingen   de ref begint met het dossier (NOOR-AK01), de categorie
+//                 ook ("Noor · Aankopen 1 · kortingen"). De refs van
+//                 MetWear blijven zoals ze waren (AK01).
+//
+// De app stuurt de code van het dossier mee als "dossier". Zonder (oude app,
+// of MetWear) verandert er niets aan hoe het altijd werkte.
+// ---------------------------------------------------------------------------
+var DOSSIERS = ["NOOR"];
+
+// De code van het dossier uit een verzoek, of "" voor MetWear. Enkel codes
+// die hierboven staan: zo kan er nooit een vreemde bestandsnaam ontstaan.
+function dossierUit_(waarde) {
+  var d = String(waarde || "").trim().toUpperCase();
+  return DOSSIERS.indexOf(d) !== -1 ? d : "";
+}
+
+// Een ref zonder het dossier ervoor: "NOOR-RESULTAATVERWERKING" →
+// "RESULTAATVERWERKING". Refs van MetWear blijven ongewijzigd.
+function kaleRef_(ref) {
+  var r = String(ref || "");
+  for (var i = 0; i < DOSSIERS.length; i++) {
+    if (r.indexOf(DOSSIERS[i] + "-") === 0) return r.slice(DOSSIERS[i].length + 1);
+  }
+  return r;
+}
+
 var BLAD_KLAS = "Klas";
 var BLAD_INZENDINGEN = "Inzendingen";
 var BLAD_DETAIL = "Detail";
@@ -122,6 +157,23 @@ var TAAK_CATEGORIEEN = [
   "BTW-verwerking",
   "Eindejaarsverrichtingen",
   "Resultaatverwerking & Eindbalans",
+];
+
+// De taken van het oefendossier Fietsatelier Noor: één per les. Ze beginnen
+// met "Noor · ", zodat ze nooit samenvallen met die van MetWear.
+var TAAK_CATEGORIEEN_NOOR = [
+  "Noor · Beginbalans",
+  "Noor · Aankopen 1 · kortingen",
+  "Noor · Aankopen 2 · kosten, verpakking en investeringen",
+  "Noor · Aankopen 3 · creditnota's en over te dragen kosten",
+  "Noor · Verkopen 1 · handelskorting en kosten",
+  "Noor · Verkopen 2 · verpakking, creditnota's, financiële korting",
+  "Noor · Lonen 1 · loonstaten",
+  "Noor · Lonen 2 · RSZ, voorheffing en personeelskosten",
+  "Noor · Financiële verrichtingen",
+  "Noor · BTW-verwerking",
+  "Noor · Eindejaarsverrichtingen",
+  "Noor · Resultaatverwerking & Eindbalans",
 ];
 
 // De instellingen die de vakexpert vanuit de app kan aanpassen, met de
@@ -187,7 +239,7 @@ function doGet(e) {
     if (p.actie === "werk") {
       var check = controleerAanmelding(p.naam, p.code);
       if (!check.ok) return antwoord(check);
-      return antwoord(haalWerkOp(p.naam));
+      return antwoord(haalWerkOp(p.naam, dossierUit_(p.dossier)));
     }
 
     if (p.actie === "feedback") {
@@ -240,7 +292,7 @@ function doPost(e) {
     if (!check.ok) return antwoord(check);
 
     if (data.actie === "bewaren") {
-      return antwoord(bewaarWerk(data.naam, data.state));
+      return antwoord(bewaarWerk(data.naam, data.state, dossierUit_(data.dossier)));
     }
     if (data.actie === "indienen") {
       if (!neemSlot()) return antwoord({ ok: false, fout: "te druk, probeer opnieuw" });
@@ -308,10 +360,10 @@ function normaliseerNaam_(n) {
  * onder jouw account en geeft alleen het bestand terug dat bij hun eigen
  * aanmelding hoort.
  */
-function bewaarWerk(naam, stateObj) {
+function bewaarWerk(naam, stateObj, dossier) {
   if (!stateObj) return { ok: false, fout: "geen werk meegestuurd" };
   var map = werkMap_();
-  var bestandsnaam = werkBestandsnaam_(naam);
+  var bestandsnaam = werkBestandsnaam_(naam, dossier);
   var inhoud = JSON.stringify({
     leerling: naam,
     gewijzigd: new Date().toISOString(),
@@ -321,7 +373,7 @@ function bewaarWerk(naam, stateObj) {
   var bestaande = map.getFilesByName(bestandsnaam);
   if (bestaande.hasNext()) {
     var bestand = bestaande.next();
-    bewaarVersie_(naam, bestand);
+    bewaarVersie_(naam, bestand, dossier);
     bestand.setContent(inhoud);
   } else {
     map.createFile(bestandsnaam, inhoud, MimeType.PLAIN_TEXT);
@@ -333,9 +385,17 @@ function bewaarWerk(naam, stateObj) {
  * De naam van het werkbestand van één leerling. De code van de vestiging
  * staat erin, zodat de drie vestigingen samen in dezelfde map op de gedeelde
  * Drive kunnen staan — ook als er in twee scholen een Lotte zit.
+ *
+ * Het oefendossier staat vóór de vestiging (werk_NOOR_LEU_lotte.json). Zo
+ * begint het nooit met werk_LEU_lotte_ en ziet niets van MetWear het ooit
+ * voor een versie van het eigen werk aan.
  */
-function werkBestandsnaam_(naam) {
-  return "werk_" + vestigingDeel_() + normaliseerNaam_(naam) + ".json";
+function werkBestandsnaam_(naam, dossier) {
+  return "werk_" + werkSlug_(naam, dossier) + ".json";
+}
+
+function werkSlug_(naam, dossier) {
+  return (dossier ? dossier + "_" : "") + vestigingDeel_() + normaliseerNaam_(naam);
 }
 
 function vestigingDeel_() {
@@ -343,9 +403,9 @@ function vestigingDeel_() {
   return v ? v + "_" : "";
 }
 
-function haalWerkOp(naam) {
+function haalWerkOp(naam, dossier) {
   var map = werkMap_();
-  var bestanden = map.getFilesByName(werkBestandsnaam_(naam));
+  var bestanden = map.getFilesByName(werkBestandsnaam_(naam, dossier));
   if (!bestanden.hasNext()) return { ok: true, gevonden: false };
   try {
     var pakket = JSON.parse(bestanden.next().getBlob().getDataAsString());
@@ -365,9 +425,9 @@ function haalWerkOp(naam) {
  * elke leerling — de hele versiemap doorlopen, en die map groeit alsmaar aan.
  * Dat was het traagste stuk van het bewaren.
  */
-function bewaarVersie_(naam, bestand) {
+function bewaarVersie_(naam, bestand, dossier) {
   try {
-    var slug = vestigingDeel_() + normaliseerNaam_(naam);
+    var slug = werkSlug_(naam, dossier);
     var props = PropertiesService.getScriptProperties();
     var sleutelLaatste = "VERSIE_" + slug;
     var laatste = Number(props.getProperty(sleutelLaatste) || 0);
@@ -619,8 +679,9 @@ function rubriekLijst_(v) {
 }
 
 function soortVoorRef_(ref) {
-  if (ref === REF_GETALLEN) return "getallen";
-  if (ref === REF_BALANS) return "balans";
+  var kaal = kaleRef_(ref);
+  if (kaal === REF_GETALLEN) return "getallen";
+  if (kaal === REF_BALANS) return "balans";
   return "boeking";
 }
 
@@ -649,8 +710,16 @@ function saldiUitLijnen_(lijnen) {
  */
 function sleutelLezen_() {
   var blad = bladOfNiets_(BLAD_SLEUTEL);
-  if (!blad || blad.getLastRow() < 2) return {};
-  var rijen = blad.getRange(2, 1, blad.getLastRow() - 1, 4).getValues();
+  var rijen = blad && blad.getLastRow() >= 2 ? blad.getRange(2, 1, blad.getLastRow() - 1, 4).getValues() : [];
+  var sleutel = sleutelUitRijen_(rijen);
+  // De sleutel van het oefendossier zit in dit script zelf (onderaan). Wat
+  // in het tabblad staat, wint: zo kan je een ref daar altijd overschrijven.
+  var ingebouwd = sleutelUitRijen_(typeof SLEUTEL_NOOR !== "undefined" ? SLEUTEL_NOOR : []);
+  Object.keys(ingebouwd).forEach(function (ref) { if (!sleutel[ref]) sleutel[ref] = ingebouwd[ref]; });
+  return sleutel;
+}
+
+function sleutelUitRijen_(rijen) {
   var sleutel = {};
   rijen.forEach(function (r) {
     var ref = String(r[0] || "").trim();
@@ -680,7 +749,7 @@ function sleutelLezen_() {
  * afgewerkt), anders { ok: true/false, notitie: "…" }.
  */
 function controleerItem_(ref, status, lijnen, sleutel) {
-  if (REF_NIET_NAKIJKEN[ref]) return null;
+  if (REF_NIET_NAKIJKEN[kaleRef_(ref)]) return null;
   var s = sleutel[ref];
   if (!s) return null;
   var verschillen = [];
@@ -811,7 +880,7 @@ function sleutelOvernemen() {
     var t = new Date(lijnen[0].tijdstip).getTime() || 0;
     if (!recentst[ref] || t > recentst[ref].t) recentst[ref] = { t: t, lijnen: lijnen };
   });
-  var refs = Object.keys(recentst).filter(function (ref) { return !REF_NIET_NAKIJKEN[ref]; });
+  var refs = Object.keys(recentst).filter(function (ref) { return !REF_NIET_NAKIJKEN[kaleRef_(ref)]; });
   if (!refs.length) {
     ui.alert("Geen inzendingen gevonden van '" + naam + "' in het tabblad Detail.");
     return;
@@ -1038,7 +1107,9 @@ function toonWerkMap() {
     while (it.hasNext()) {
       var naam = it.next().getName();
       if (naam.indexOf("werk_") !== 0) continue;
-      if (naam.indexOf("werk_" + vestigingDeel_()) === 0) eigen.push(naam);
+      var vanHier = naam.indexOf("werk_" + vestigingDeel_()) === 0 ||
+        DOSSIERS.some(function (d) { return naam.indexOf("werk_" + d + "_" + vestigingDeel_()) === 0; });
+      if (vanHier) eigen.push(naam);
       else andere++;
     }
     eigen.sort();
@@ -1070,12 +1141,20 @@ function toonWerkMap() {
 function zetVersieTerug() {
   var ui = SpreadsheetApp.getUi();
   var vraag = ui.prompt("Werk terugzetten",
-    "Van welke leerling? Schrijf de naam zoals in het tabblad Klas.", ui.ButtonSet.OK_CANCEL);
+    "Van welke leerling? Schrijf de naam zoals in het tabblad Klas.\n\n" +
+    "Gaat het om het oefendossier Fietsatelier Noor, zet dan NOOR voor de naam (bv. NOOR Lotte V.).",
+    ui.ButtonSet.OK_CANCEL);
   if (vraag.getSelectedButton() !== ui.Button.OK) return;
   var naam = String(vraag.getResponseText() || "").trim();
+  var dossier = "";
+  var metDossier = naam.match(/^([A-Za-z0-9]+)[\s:]+(.+)$/);
+  if (metDossier && dossierUit_(metDossier[1])) {
+    dossier = dossierUit_(metDossier[1]);
+    naam = metDossier[2].trim();
+  }
   if (!naam) return;
 
-  var slug = vestigingDeel_() + normaliseerNaam_(naam);
+  var slug = werkSlug_(naam, dossier);
   var versies = [];
   var it = versieMap_().getFiles();
   while (it.hasNext()) {
@@ -1111,14 +1190,14 @@ function zetVersieTerug() {
 
   var map = werkMap_();
   var stempel = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmm");
-  var bestaande = map.getFilesByName(werkBestandsnaam_(naam));
+  var bestaande = map.getFilesByName(werkBestandsnaam_(naam, dossier));
   if (bestaande.hasNext()) {
     var huidig = bestaande.next();
     versieMap_().createFile("werk_" + slug + "_" + stempel + "-voor-terugzetten.json",
       huidig.getBlob().getDataAsString(), MimeType.PLAIN_TEXT);
     huidig.setContent(inhoud);
   } else {
-    map.createFile(werkBestandsnaam_(naam), inhoud, MimeType.PLAIN_TEXT);
+    map.createFile(werkBestandsnaam_(naam, dossier), inhoud, MimeType.PLAIN_TEXT);
   }
 
   ui.alert("Klaar.\n\n" +
@@ -1394,6 +1473,9 @@ function instellingenPubliek_() {
     taken: taken,
     klas: klasLezen_().map(function (l) { return l.naam; }),
     beheerMogelijk: !!String(inst.expertcode || "").trim(),
+    // Zonder dit vinkje bewaart en dient het oefendossier (noor.html) niets
+    // in: een oud script zou het werk in het bestand van MetWear schrijven.
+    dossiers: DOSSIERS,
   };
 }
 
@@ -1599,7 +1681,7 @@ function zorgVoorTaken_(blad) {
     if (s) aanwezig[s] = true;
   });
   var iets = false;
-  TAAK_CATEGORIEEN.forEach(function (cat) {
+  TAAK_CATEGORIEEN.concat(TAAK_CATEGORIEEN_NOOR).forEach(function (cat) {
     if (aanwezig[cat]) return;
     waarden.push([cat, "", ""]);
     iets = true;
@@ -1635,3 +1717,272 @@ function zetExpertcode() {
   }
   ui.alert("Het tabblad Instellingen is niet in orde. Voer eerst Boekhoudapp → Eerste installatie uit.");
 }
+
+/* ==========================================================================
+   SLEUTEL VAN HET OEFENDOSSIER FIETSATELIER NOOR
+
+   Gemaakt door hulpmiddelen/noor/maak-data.js uit de case — niet met de hand
+   aanpassen. Elke rij: ref, rekening (of veld), D/C, bedrag (of rubrieken).
+   Wil je een ref anders nakijken, zet ze dan in het tabblad Sleutel: wat
+   daar staat, gaat voor.
+   ========================================================================== */
+// SLEUTEL_NOOR_BEGIN
+var SLEUTEL_NOOR = [
+  ["NOOR-BB","100000","C","20.000"],
+  ["NOOR-BB","140000","C","40.445"],
+  ["NOOR-BB","173000","C","25.500"],
+  ["NOOR-BB","230000","D","1.500"],
+  ["NOOR-BB","230009","C","600"],
+  ["NOOR-BB","232000","D","500"],
+  ["NOOR-BB","232009","C","200"],
+  ["NOOR-BB","240200","D","2.100"],
+  ["NOOR-BB","240209","C","1.400"],
+  ["NOOR-BB","241000","D","30.000"],
+  ["NOOR-BB","241009","C","7.200"],
+  ["NOOR-BB","340000","D","13.650"],
+  ["NOOR-BB","411000","D","1.803"],
+  ["NOOR-BB","418000","D","250"],
+  ["NOOR-BB","550000","D","44.997"],
+  ["NOOR-BB","570000","D","545"],
+  ["NOOR-AK01","604000","D","10.000"],
+  ["NOOR-AK01","604020","C","1.000"],
+  ["NOOR-AK01","411100","D","1.890"],
+  ["NOOR-AK01","440000","C","10.890"],
+  ["NOOR-AK02","604000","D","1.000"],
+  ["NOOR-AK02","604020","C","100"],
+  ["NOOR-AK02","411100","D","189"],
+  ["NOOR-AK02","440000","C","1.089"],
+  ["NOOR-AK03","604000","D","1.000"],
+  ["NOOR-AK03","604020","C","100"],
+  ["NOOR-AK03","411100","D","189"],
+  ["NOOR-AK03","440000","C","1.089"],
+  ["NOOR-AK04","604000","D","10.000"],
+  ["NOOR-AK04","604020","C","2.000"],
+  ["NOOR-AK04","411100","D","1.596"],
+  ["NOOR-AK04","440000","C","9.596"],
+  ["NOOR-AK05","604000","D","14.000"],
+  ["NOOR-AK05","411100","D","2.793"],
+  ["NOOR-AK05","440000","C","16.793"],
+  ["NOOR-AK06","604000","D","5.000"],
+  ["NOOR-AK06","411100","D","1.029"],
+  ["NOOR-AK06","440000","C","6.029"],
+  ["NOOR-AK07","604000","D","4.200"],
+  ["NOOR-AK07","604030","D","200"],
+  ["NOOR-AK07","418000","D","200"],
+  ["NOOR-AK07","411100","D","924"],
+  ["NOOR-AK07","440000","C","5.524"],
+  ["NOOR-AK08","604000","D","400"],
+  ["NOOR-AK08","604030","D","100"],
+  ["NOOR-AK08","418000","D","100"],
+  ["NOOR-AK08","411100","D","105"],
+  ["NOOR-AK08","440000","C","705"],
+  ["NOOR-AK09","612700","D","800"],
+  ["NOOR-AK09","411100","D","168"],
+  ["NOOR-AK09","440000","C","968"],
+  ["NOOR-AK10","616520","D","400"],
+  ["NOOR-AK10","612000","D","200"],
+  ["NOOR-AK10","411100","D","126"],
+  ["NOOR-AK10","440000","C","726"],
+  ["NOOR-AK11","232000","D","2.200"],
+  ["NOOR-AK11","411100","D","462"],
+  ["NOOR-AK11","440000","C","2.662"],
+  ["NOOR-AK12","240200","D","1.200"],
+  ["NOOR-AK12","411100","D","252"],
+  ["NOOR-AK12","440000","C","1.452"],
+  ["NOOR-AK13","604010","C","3.000"],
+  ["NOOR-AK13","604020","D","300"],
+  ["NOOR-AK13","451200","C","567"],
+  ["NOOR-AK13","440000","D","3.267"],
+  ["NOOR-AK14","418000","C","100"],
+  ["NOOR-AK14","440000","D","100"],
+  ["NOOR-AK15","604010","C","800"],
+  ["NOOR-AK15","418000","C","100"],
+  ["NOOR-AK15","451200","C","168"],
+  ["NOOR-AK15","440000","D","1.068"],
+  ["NOOR-AK16","614400","D","300"],
+  ["NOOR-AK16","490000","D","900"],
+  ["NOOR-AK16","440000","C","1.200"],
+  ["NOOR-AK17","611000","D","1.000"],
+  ["NOOR-AK17","490000","D","500"],
+  ["NOOR-AK17","440000","C","1.500"],
+  ["NOOR-VK01","704000","C","8.100"],
+  ["NOOR-VK01","700000","C","1.500"],
+  ["NOOR-VK01","451100","C","1.791"],
+  ["NOOR-VK01","400000","D","11.391"],
+  ["NOOR-VK02","700000","C","1.800"],
+  ["NOOR-VK02","704000","C","1.000"],
+  ["NOOR-VK02","451100","C","318"],
+  ["NOOR-VK02","400000","D","3.118"],
+  ["NOOR-VK03","704000","C","8.000"],
+  ["NOOR-VK03","704020","D","400"],
+  ["NOOR-VK03","451100","C","1.596"],
+  ["NOOR-VK03","400000","D","9.196"],
+  ["NOOR-VK04","704000","C","8.200"],
+  ["NOOR-VK04","746000","C","120"],
+  ["NOOR-VK04","704020","D","820"],
+  ["NOOR-VK04","451100","C","1.575"],
+  ["NOOR-VK04","400000","D","9.075"],
+  ["NOOR-VK05","704000","C","7.800"],
+  ["NOOR-VK05","746000","C","200"],
+  ["NOOR-VK05","451100","C","1.680"],
+  ["NOOR-VK05","400000","D","9.680"],
+  ["NOOR-VK06","704000","C","14.000"],
+  ["NOOR-VK06","746000","C","100"],
+  ["NOOR-VK06","704020","D","700"],
+  ["NOOR-VK06","451100","C","2.814"],
+  ["NOOR-VK06","400000","D","16.214"],
+  ["NOOR-VK07","704000","C","4.600"],
+  ["NOOR-VK07","488000","C","200"],
+  ["NOOR-VK07","451100","C","966"],
+  ["NOOR-VK07","400000","D","5.766"],
+  ["NOOR-VK08","704010","D","2.000"],
+  ["NOOR-VK08","704020","C","200"],
+  ["NOOR-VK08","411200","D","378"],
+  ["NOOR-VK08","400000","C","2.178"],
+  ["NOOR-VK09","488000","D","200"],
+  ["NOOR-VK09","400000","C","200"],
+  ["NOOR-VK10","704000","C","10.000"],
+  ["NOOR-VK10","451100","C","2.058"],
+  ["NOOR-VK10","400000","D","12.058"],
+  ["NOOR-VK11","704000","C","2.500"],
+  ["NOOR-VK11","451100","C","504"],
+  ["NOOR-VK11","400000","D","3.004"],
+  ["NOOR-ONTV01","400000","D","8.458"],
+  ["NOOR-ONTV01","704000","C","4.800"],
+  ["NOOR-ONTV01","700000","C","2.500"],
+  ["NOOR-ONTV01","451100","C","1.158"],
+  ["NOOR-LOON01","620300","D","2.600"],
+  ["NOOR-LOON01","621000","D","650"],
+  ["NOOR-LOON01","455300","C","1.900"],
+  ["NOOR-LOON01","453000","C","360,18"],
+  ["NOOR-LOON01","454000","C","989,82"],
+  ["NOOR-LOON02","620200","D","1.600"],
+  ["NOOR-LOON02","621000","D","400"],
+  ["NOOR-LOON02","455200","C","1.250"],
+  ["NOOR-LOON02","453000","C","140,88"],
+  ["NOOR-LOON02","454000","C","609,12"],
+  ["NOOR-LOON03","620300","D","2.800"],
+  ["NOOR-LOON03","621000","D","700"],
+  ["NOOR-LOON03","455300","C","2.020"],
+  ["NOOR-LOON03","453000","C","414,04"],
+  ["NOOR-LOON03","454000","C","1.065,96"],
+  ["NOOR-LOON04","620200","D","1.800"],
+  ["NOOR-LOON04","621000","D","450"],
+  ["NOOR-LOON04","455200","C","1.370"],
+  ["NOOR-LOON04","453000","C","194,74"],
+  ["NOOR-LOON04","454000","C","685,26"],
+  ["NOOR-LOON05","620300","D","2.700"],
+  ["NOOR-LOON05","621000","D","675"],
+  ["NOOR-LOON05","455300","C","1.960"],
+  ["NOOR-LOON05","453000","C","387,11"],
+  ["NOOR-LOON05","454000","C","1.027,89"],
+  ["NOOR-LOON06","620200","D","1.700"],
+  ["NOOR-LOON06","621000","D","425"],
+  ["NOOR-LOON06","455200","C","1.320"],
+  ["NOOR-LOON06","453000","C","157,81"],
+  ["NOOR-LOON06","454000","C","647,19"],
+  ["NOOR-AK18","454000","D","1.598,94"],
+  ["NOOR-AK18","453000","D","501,06"],
+  ["NOOR-AK18","440000","C","2.100"],
+  ["NOOR-AK19","454000","D","1.751,22"],
+  ["NOOR-AK19","453000","D","608,78"],
+  ["NOOR-AK19","440000","C","2.360"],
+  ["NOOR-AK20","454000","D","1.675,08"],
+  ["NOOR-AK20","453000","D","544,92"],
+  ["NOOR-AK20","440000","C","2.220"],
+  ["NOOR-AK21","613300","D","200"],
+  ["NOOR-AK21","411100","D","42"],
+  ["NOOR-AK21","440000","C","242"],
+  ["NOOR-AK22","623000","D","150"],
+  ["NOOR-AK22","490000","D","450"],
+  ["NOOR-AK22","440000","C","600"],
+  ["NOOR-AK23","623000","D","140"],
+  ["NOOR-AK23","440000","C","140"],
+  ["NOOR-BANK01","440000","D","1.800"],
+  ["NOOR-BANK01","550000","C","1.800"],
+  ["NOOR-BANK02","550000","D","1.711"],
+  ["NOOR-BANK02","400000","C","11.391"],
+  ["NOOR-BANK02","440000","D","9.680"],
+  ["NOOR-BANK03","455300","D","1.900"],
+  ["NOOR-BANK03","455200","D","1.250"],
+  ["NOOR-BANK03","550000","C","6.545"],
+  ["NOOR-BANK03","440000","D","1.640"],
+  ["NOOR-BANK03","173000","D","1.500"],
+  ["NOOR-BANK03","650000","D","255"],
+  ["NOOR-BANK04","550000","C","18.826"],
+  ["NOOR-BANK04","400000","C","3.118"],
+  ["NOOR-BANK04","440000","D","22.644"],
+  ["NOOR-BANK04","757000","C","700"],
+  ["NOOR-BANK05","550000","C","158"],
+  ["NOOR-BANK05","400000","C","16.093"],
+  ["NOOR-BANK05","440000","D","16.351"],
+  ["NOOR-BANK05","757000","C","100"],
+  ["NOOR-BANK06","455300","D","2.020"],
+  ["NOOR-BANK06","455200","D","1.370"],
+  ["NOOR-BANK06","550000","D","2.176"],
+  ["NOOR-BANK06","400000","C","5.566"],
+  ["NOOR-BANK07","550000","D","14.722"],
+  ["NOOR-BANK07","400000","C","21.738"],
+  ["NOOR-BANK07","440000","D","6.816"],
+  ["NOOR-BANK07","657000","D","200"],
+  ["NOOR-KAS01","570000","D","5.458"],
+  ["NOOR-KAS01","400000","C","5.458"],
+  ["NOOR-KAS02","580000","D","3.500"],
+  ["NOOR-KAS02","570000","C","3.500"],
+  ["NOOR-BANK08","440000","D","2.057"],
+  ["NOOR-BANK08","550000","D","4.443"],
+  ["NOOR-BANK08","400000","C","3.000"],
+  ["NOOR-BANK08","580000","C","3.500"],
+  ["NOOR-BANK09","550000","C","276"],
+  ["NOOR-BANK09","400000","C","3.004"],
+  ["NOOR-BANK09","455300","D","1.960"],
+  ["NOOR-BANK09","455200","D","1.320"],
+  ["NOOR-BTW","451100","D","14.460"],
+  ["NOOR-BTW","451200","D","735"],
+  ["NOOR-BTW","411100","C","9.765"],
+  ["NOOR-BTW","411200","C","378"],
+  ["NOOR-BTW","411000","C","1.803"],
+  ["NOOR-BTW","451000","C","3.249"],
+  ["NOOR-AFSCHR","630200","D","210"],
+  ["NOOR-AFSCHR","630300","D","1.775"],
+  ["NOOR-AFSCHR","230009","C","75"],
+  ["NOOR-AFSCHR","232009","C","135"],
+  ["NOOR-AFSCHR","240209","C","275"],
+  ["NOOR-AFSCHR","241009","C","1.500"],
+  ["NOOR-LENING","173000","D","6.000"],
+  ["NOOR-LENING","423000","C","6.000"],
+  ["NOOR-VR","609400","D","3.970"],
+  ["NOOR-VR","340000","C","3.970"],
+  ["NOOR-BELASTING","670200","D","1.400"],
+  ["NOOR-BELASTING","450000","C","1.400"],
+  ["NOOR-RESULTAAT","692000","D","280"],
+  ["NOOR-RESULTAAT","693000","D","5.320"],
+  ["NOOR-RESULTAAT","130000","C","280"],
+  ["NOOR-RESULTAAT","140000","C","5.320"],
+  ["NOOR-RESULTAATVERWERKING","Opbrengsten","","72.300"],
+  ["NOOR-RESULTAATVERWERKING","Kosten","","65.300"],
+  ["NOOR-RESULTAATVERWERKING","Winst","","7.000"],
+  ["NOOR-RESULTAATVERWERKING","Belasting","","1.400"],
+  ["NOOR-RESULTAATVERWERKING","Winst na belasting","","5.600"],
+  ["NOOR-EINDBALANS","Kapitaal","","10"],
+  ["NOOR-EINDBALANS","Reserves","","13"],
+  ["NOOR-EINDBALANS","Overgedragen resultaat","","14"],
+  ["NOOR-EINDBALANS","Schulden op meer dan 1 jaar","","17"],
+  ["NOOR-EINDBALANS","Materiële vaste activa","","23, 24"],
+  ["NOOR-EINDBALANS","Voorraden","","34"],
+  ["NOOR-EINDBALANS","Vorderingen op ten hoogste 1 jaar","","40, 41"],
+  ["NOOR-EINDBALANS","Schulden op ten hoogste 1 jaar","","42, 44, 45"],
+  ["NOOR-EINDBALANS","Overlopende rekeningen","","49"],
+  ["NOOR-EINDBALANS","Liquide middelen","","55, 57"],
+  ["NOOR-EINDBALANS","Handelsgoederen, grond- en hulpstoffen","","60"],
+  ["NOOR-EINDBALANS","Diensten en diverse goederen","","61"],
+  ["NOOR-EINDBALANS","Bezoldigingen en sociale lasten","","62"],
+  ["NOOR-EINDBALANS","Afschrijvingen","","63"],
+  ["NOOR-EINDBALANS","Financiële kosten","","65"],
+  ["NOOR-EINDBALANS","Belastingen op het resultaat","","67"],
+  ["NOOR-EINDBALANS","Resultaatverwerking","","69"],
+  ["NOOR-EINDBALANS","Omzet","","70"],
+  ["NOOR-EINDBALANS","Andere bedrijfsopbrengsten","","74"],
+  ["NOOR-EINDBALANS","Financiële opbrengsten","","75"],
+];
+// SLEUTEL_NOOR_EINDE

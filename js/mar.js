@@ -518,7 +518,7 @@ const MAR = [
 {
   "nr": 490000,
   "naam": "Over te dragen kosten",
-  "apko": "P",
+  "apko": "A",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
   "rubriek": "49",
@@ -527,7 +527,7 @@ const MAR = [
  {
   "nr": 491000,
   "naam": "Verkregen opbrengsten",
-  "apko": "P",
+  "apko": "A",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
   "rubriek": "49",
@@ -1117,6 +1117,15 @@ const MAR = [
   "klasse_oms": "Kosten",
   "rubriek": "69",
   "rubriek_oms": "Resultaatverwerking"
+ },
+ {
+  "nr": 700000,
+  "naam": "Verkopen en dienstprestaties",
+  "apko": "O",
+  "klasse": "7",
+  "klasse_oms": "Opbrengsten",
+  "rubriek": "70",
+  "rubriek_oms": "Omzet"
  },
  {
   "nr": 704000,
