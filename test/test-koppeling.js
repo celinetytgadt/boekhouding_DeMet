@@ -854,7 +854,7 @@ function vinkIn(venster, naam) {
   await new Promise((r) => setTimeout(r, 120));
   const wo = domOud.window;
   const opdrN = wo.eval("OPDRACHTEN.map(function (o) { return o.ref; })");
-  check("oefendossier laadt zijn eigen opdrachten", opdrN.length === 59 && opdrN[0] === "BB" && opdrN.indexOf("LOON06") !== -1, opdrN.length);
+  check("oefendossier laadt zijn eigen opdrachten", opdrN.length === 60 && opdrN[0] === "BB" && opdrN.indexOf("LOON06") !== -1, opdrN.length);
   check("gedeelde aanmelding: Lotte is meteen aangemeld", wo.APP.getState().student === "Lotte V.", wo.APP.getState().student);
   check("het werk van MetWear staat er niet in", !wo.APP.getState().boekingen.AK01, Object.keys(wo.APP.getState().boekingen));
   check("oud script: melding dat het oefendossier nog niet ingesteld is",

@@ -356,11 +356,11 @@ const AK15 = factuur({ id: "J3CA3", ref: "AK15", categorie: C_AK3, soort: "CN-AK
 const AK16 = factuur({ id: "J3A16", ref: "AK16", categorie: C_AK3, soort: "AK", datum: "2028-01-02", nr: "GZ-28-00871", van: GERZO,
   termijn: 15, periode: "1 januari 2028 tot en met 31 december 2028",
   lijnen: [{ oms: "Jaarpremie verzekering bestelwagen (BA en omnium), periode 01/01/2028 - 31/12/2028", bedrag: 1200, btw: 0,
-    rek: [{ rek: "614400", bedrag: 300 }, { rek: "490000", bedrag: 900 }] }] });
+    rek: "614400" }], otk: { rek: "614400", maanden: 9, van: 12 } });
 const AK17 = factuur({ id: "J3A17", ref: "AK17", categorie: C_AK3, soort: "AK", datum: "2028-02-01", nr: "IV-2028-02", van: VAART,
   termijn: 0, periode: "1 februari 2028 tot en met 30 april 2028",
   lijnen: [{ oms: "Huur opslagruimte Vaartkom 30, periode 01/02/2028 - 30/04/2028 (3 maanden x 500)", n: 3, prijs: 500, bedrag: 1500, btw: 0,
-    rek: [{ rek: "611000", bedrag: 1000 }, { rek: "490000", bedrag: 500 }] }] });
+    rek: "611000" }], otk: { rek: "611000", maanden: 1, van: 3 } });
 
 // ---- Les 5 · Verkopen: basis, handelskorting, doorgerekende kosten ----
 const VK01 = factuur({ id: "J3V01", ref: "VK01", categorie: C_VK1, soort: "VK", datum: "2028-01-08", nr: "2028-001", aan: "Snelpost bv",
@@ -419,7 +419,7 @@ const AK21 = factuur({ id: "J3A21", ref: "AK21", categorie: C_L2, soort: "AK", d
 const AK22 = factuur({ id: "J3A22", ref: "AK22", categorie: C_L2, soort: "AK", datum: "2028-01-02", nr: "GZ-28-00872", van: GERZO,
   termijn: 15, periode: "1 januari 2028 tot en met 31 december 2028",
   lijnen: [{ oms: "Jaarpremie verzekering arbeidsongevallen, periode 01/01/2028 - 31/12/2028", bedrag: 600, btw: 0,
-    rek: [{ rek: "623000", bedrag: 150 }, { rek: "490000", bedrag: 450 }] }] });
+    rek: "623000" }], otk: { rek: "623000", maanden: 9, van: 12 } });
 const AK23 = factuur({ id: "J3A23", ref: "AK23", categorie: C_L2, soort: "AK", datum: "2028-01-10", nr: "PV-28-1022", van: PREV,
   lijnen: [{ oms: "Aansluiting externe preventiedienst 2028 (2 werknemers)", bedrag: 100, btw: 0, rek: "623000" },
     { oms: "Medisch onderzoek bij indiensttreding (2 werknemers)", n: 2, prijs: 20, bedrag: 40, btw: 0, rek: "623000" }] });
@@ -628,6 +628,26 @@ ACTIVA.forEach((a) => { a.jaar = r2(a.waarde / a.jaren); a.kwartaal = r2(a.jaar 
   Object.keys(tot).forEach((afs) => { kosten[kost(afs)] = r2((kosten[kost(afs)] || 0) + tot[afs]); });
   boek(doc, Object.keys(kosten).sort().map((k) => ({ rek: k, dc: "D", bedrag: kosten[k] }))
     .concat(Object.keys(tot).sort().map((k) => ({ rek: k, dc: "C", bedrag: tot[k] }))));
+}
+
+// ---- Over te dragen kosten ----
+// De facturen die verder lopen dan 31 maart staan volledig in de kosten
+// (AK16, AK17, AK22). Pas bij de afsluiting gaat het deel van na 31 maart
+// naar 490000.
+{
+  const stukken = documenten.filter((x) => x.otk);
+  const doc = { id: "J3OTK", ref: "OTK", categorie: C_EJ, soort: "OTK", datum: "2028-03-31",
+    boekOms: "Over te dragen kosten op 31 maart 2028", stukken: [] };
+  const r = [];
+  stukken.forEach((x) => {
+    const deel = r2(x.totaal * x.otk.maanden / x.otk.van);
+    if (Math.abs(deel - Math.round(deel)) > 0.005) fout(x.ref + ": over te dragen deel met centen");
+    doc.stukken.push({ ref: x.ref, nr: x.nr, rek: x.otk.rek, totaal: x.totaal, maanden: x.otk.maanden, van: x.otk.van, bedrag: deel });
+    r.push({ rek: x.otk.rek, dc: "C", bedrag: deel, oms: "Over te dragen deel van " + x.ref + " (" + x.otk.maanden + "/" + x.otk.van + ")" });
+  });
+  const tot = r2(r.reduce((t, x) => t + x.bedrag, 0));
+  documenten.push(doc);
+  boek(doc, [{ rek: "490000", dc: "D", bedrag: tot }].concat(r));
 }
 
 // ---- Lening: het deel dat binnen het jaar vervalt ----

@@ -87,7 +87,7 @@ for x in docs:
     if x.get("fk"):
         opm.append("financiële korting " + ("binnen de termijn betaald" if x.get("fkBetaald") else "te laat betaald, geen korting"))
     if x.get("periode") and x["soort"] in ("AK",):
-        opm.append("over te dragen kosten: periode " + x["periode"])
+        opm.append("periode " + x["periode"] + ": volledig als kost, over te dragen deel bij de afsluiting (OTK)")
     rijen.append([
         x["ref"], x["id"], x["categorie"], x["soort"], d(x.get("datum")), d(x.get("vervaldag")), str(x.get("nr", "")),
         x.get("van"), x.get("aan"), x.get("verwijst"), x.get("reden") or x.get("periode") or x.get("boekOms"),
@@ -220,8 +220,8 @@ if not any(ws.cell(r, 1).value == "Jaar 3 = 2028 (3e graad, oefenen)" for r in r
     ws.cell(6, 2).value = "Nog te maken: alle stukken door elkaar, als eindopdracht (vanaf volgend schooljaar in de plaats van MetWear)."
     ws.cell(7, 1).value = "Afspraken jaar 3"
     ws.cell(7, 2).value = (
-        "MAR van de 3e graad (js/mar.js) plus 700000 voor herstellingen. Over te dragen kosten worden bij de aankoop meteen gesplitst "
-        "(kost tot 31/3, rest op 490000). Lonen: RSZ werknemer 13,07%, werkgever 25%; RSZ en voorheffing via factuur van Loonwijs (440000). "
+        "MAR van de 3e graad (js/mar.js) plus 700000 voor herstellingen. Over te dragen kosten: de factuur volledig als kost, "
+        "bij de afsluiting het deel na 31/3 naar 490000 (OTK). Lonen: RSZ werknemer 13,07%, werkgever 25%; RSZ en voorheffing via factuur van Loonwijs (440000). "
         "Afschrijvingen: een kwart van de jaarafschrijving. Lening: deel dat binnen 12 maanden vervalt naar 423000. "
         "Belasting 20%, wettelijke reserve 5% van de winst na belasting.")
     for r in (5, 6, 7):

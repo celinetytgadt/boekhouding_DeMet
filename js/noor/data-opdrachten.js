@@ -33,8 +33,8 @@ const OPDRACHTEN = [
   {"ref": "AK13", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK13", "doc": "AK13"},
   {"ref": "AK14", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK14", "doc": "AK14"},
   {"ref": "AK15", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK15", "doc": "AK15"},
-  {"ref": "AK16", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK16", "doc": "AK16", "tip": "Dit document loopt verder dan 31 maart 2028, het einde van de periode in dit dossier. Welk deel is een kost van het 1e kwartaal, en welk deel hoort bij later?"},
-  {"ref": "AK17", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK17", "doc": "AK17", "tip": "Dit document loopt verder dan 31 maart 2028, het einde van de periode in dit dossier. Welk deel is een kost van het 1e kwartaal, en welk deel hoort bij later?"},
+  {"ref": "AK16", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK16", "doc": "AK16", "tip": "Deze factuur loopt verder dan 31 maart 2028. Boek ze nu volledig als kost: het deel dat bij later hoort, regel je pas bij de afsluiting (over te dragen kosten)."},
+  {"ref": "AK17", "categorie": "Aankopen 3 · creditnota's en over te dragen kosten", "titel": "Aankoop AK17", "doc": "AK17", "tip": "Deze factuur loopt verder dan 31 maart 2028. Boek ze nu volledig als kost: het deel dat bij later hoort, regel je pas bij de afsluiting (over te dragen kosten)."},
 
   // Verkopen 1 · handelskorting en kosten
   {"ref": "VK01", "categorie": "Verkopen 1 · handelskorting en kosten", "titel": "Verkoop VK01", "doc": "VK01"},
@@ -65,7 +65,7 @@ const OPDRACHTEN = [
   {"ref": "AK19", "categorie": "Lonen 2 · RSZ, voorheffing en personeelskosten", "titel": "Aankoop AK19", "doc": "AK19"},
   {"ref": "AK20", "categorie": "Lonen 2 · RSZ, voorheffing en personeelskosten", "titel": "Aankoop AK20", "doc": "AK20"},
   {"ref": "AK21", "categorie": "Lonen 2 · RSZ, voorheffing en personeelskosten", "titel": "Aankoop AK21", "doc": "AK21"},
-  {"ref": "AK22", "categorie": "Lonen 2 · RSZ, voorheffing en personeelskosten", "titel": "Aankoop AK22", "doc": "AK22", "tip": "Dit document loopt verder dan 31 maart 2028, het einde van de periode in dit dossier. Welk deel is een kost van het 1e kwartaal, en welk deel hoort bij later?"},
+  {"ref": "AK22", "categorie": "Lonen 2 · RSZ, voorheffing en personeelskosten", "titel": "Aankoop AK22", "doc": "AK22", "tip": "Deze factuur loopt verder dan 31 maart 2028. Boek ze nu volledig als kost: het deel dat bij later hoort, regel je pas bij de afsluiting (over te dragen kosten)."},
   {"ref": "AK23", "categorie": "Lonen 2 · RSZ, voorheffing en personeelskosten", "titel": "Aankoop AK23", "doc": "AK23"},
 
   // Financiële verrichtingen
@@ -86,6 +86,7 @@ const OPDRACHTEN = [
 
   // Eindejaarsverrichtingen
   {"ref": "AFSCHR", "categorie": "Eindejaarsverrichtingen", "titel": "Afschrijvingen 1e kwartaal 2028", "doc": "AFSCHR"},
+  {"ref": "OTK", "categorie": "Eindejaarsverrichtingen", "titel": "Over te dragen kosten", "geenDocument": true, "hulpdocs": [{"doc": "AK16", "titel": "Aankoop AK16"},{"doc": "AK17", "titel": "Aankoop AK17"},{"doc": "AK22", "titel": "Aankoop AK22"}], "instructie": "Drie facturen lopen verder dan 31 maart 2028: AK16, AK17 en AK22. Je boekte ze volledig als kost. Het deel dat bij de periode ná 31 maart hoort, is nog geen kost van dit boekjaar: boek het over naar de over te dragen kosten. Reken per factuur uit hoeveel maanden er na 31 maart vallen."},
   {"ref": "LENING", "categorie": "Eindejaarsverrichtingen", "titel": "Lening: deel dat binnen het jaar vervalt", "doc": "LENING", "instructie": "Op 31 maart 2028 moet het kapitaal dat in de komende twaalf maanden (tot en met 31 maart 2029) afgelost wordt, bij de schulden op ten hoogste één jaar staan. Zoek die aflossingen op in de tabel en boek ze over."},
   {"ref": "VR", "categorie": "Eindejaarsverrichtingen", "titel": "Voorraadtelling 31 maart 2028", "doc": "VR"},
 

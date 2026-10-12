@@ -43,7 +43,7 @@ Met de hand gemaakt en niet door een script overschreven:
 | Lonen 1 · loonstaten | LOON01–LOON06 (januari–maart, arbeiders en bedienden apart) |
 | Lonen 2 · RSZ, voorheffing en personeelskosten | AK18–AK23 |
 | Financiële verrichtingen | BANK01–BANK09, KAS01–KAS02 |
-| BTW-verwerking, eindejaar, resultaat | BTW, AFSCHR, LENING, VR, BELASTING, RESULTAAT |
+| BTW-verwerking, eindejaar, resultaat | BTW, AFSCHR, OTK, LENING, VR, BELASTING, RESULTAAT |
 
 ## Afspraken in de sleutel
 
@@ -52,9 +52,10 @@ Met de hand gemaakt en niet door een script overschreven:
 - Financiële korting: factuur zonder korting, btw op het bedrag na korting;
   de korting komt bij de betaling op 757000/657000 als er binnen 10 dagen
   betaald is.
-- Over te dragen kosten: bij de aankoop meteen gesplitst in de kost tot
-  31 maart en 490000 voor de rest (verzekering bestelwagen, huur
-  opslagruimte, verzekering arbeidsongevallen).
+- Over te dragen kosten: bij de aankoop staat de factuur volledig in de
+  kosten (verzekering bestelwagen, huur opslagruimte, verzekering
+  arbeidsongevallen). Pas bij de afsluiting gaat het deel van na 31 maart
+  naar 490000 (opdracht OTK bij de eindejaarsverrichtingen).
 - Lonen: RSZ werknemer 13,07 %, werkgever 25 % (zoals MetWear). RSZ en
   voorheffing gaan via een factuur van Loonwijs naar 440000.
 - Afsluiting op 31 maart: een kwart van de jaarafschrijving, de lening die

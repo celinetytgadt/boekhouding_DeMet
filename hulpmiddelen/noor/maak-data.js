@@ -51,6 +51,13 @@ const EXTRA = {
       "Let op: op de beginbalans staat nog een btw-tegoed van het 4e kwartaal 2027 op 411000. Dat tegoed verreken je mee.",
   },
   AFSCHR: { titel: "Afschrijvingen 1e kwartaal 2028", doc: "AFSCHR" },
+  OTK: {
+    titel: "Over te dragen kosten", geenDocument: true,
+    hulpdocs: [{ doc: "AK16", titel: "Aankoop AK16" }, { doc: "AK17", titel: "Aankoop AK17" }, { doc: "AK22", titel: "Aankoop AK22" }],
+    instructie: "Drie facturen lopen verder dan 31 maart 2028: AK16, AK17 en AK22. Je boekte ze volledig als kost. " +
+      "Het deel dat bij de periode ná 31 maart hoort, is nog geen kost van dit boekjaar: boek het over naar de over te dragen kosten. " +
+      "Reken per factuur uit hoeveel maanden er na 31 maart vallen.",
+  },
   LENING: {
     titel: "Lening: deel dat binnen het jaar vervalt", doc: "LENING",
     instructie: "Op 31 maart 2028 moet het kapitaal dat in de komende twaalf maanden (tot en met 31 maart 2029) afgelost wordt, " +
@@ -64,7 +71,7 @@ const EXTRA = {
       "tot die 10% van het kapitaal bereikt. De rest wordt overgedragen naar volgend jaar.",
   },
 };
-const TIP_OTK = "Dit document loopt verder dan 31 maart 2028, het einde van de periode in dit dossier. Welk deel is een kost van het 1e kwartaal, en welk deel hoort bij later?";
+const TIP_OTK = "Deze factuur loopt verder dan 31 maart 2028. Boek ze nu volledig als kost: het deel dat bij later hoort, regel je pas bij de afsluiting (over te dragen kosten).";
 const TIP_FK = "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling.";
 const TIPS = { AK16: TIP_OTK, AK17: TIP_OTK, AK22: TIP_OTK };
 
@@ -86,7 +93,7 @@ function opdrachten() {
       const o = { ref: d.ref, categorie: cat, titel: e.titel || (TITEL[d.soort] ? TITEL[d.soort](d.ref) : d.ref) };
       if (e.geenDocument) o.geenDocument = true;
       else o.doc = e.doc || d.ref;
-      ["hulpdoc", "hulpdocTitel", "instructie"].forEach((k) => { if (e[k]) o[k] = e[k]; });
+      ["hulpdoc", "hulpdocTitel", "hulpdocs", "instructie"].forEach((k) => { if (e[k]) o[k] = e[k]; });
       if (TIPS[d.ref]) o.tip = TIPS[d.ref];
       else if (d.fk && /AK|VK/.test(d.soort)) o.tip = TIP_FK;
       lijst.push(o);

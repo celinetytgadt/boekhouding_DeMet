@@ -101,12 +101,12 @@ const HANDMATIGE_CONTROLES = [
     filterTip: "Filter in het T-paneel op 451200.",
   },
   {
-    id: "noor-ak3-over-te-dragen",
+    id: "noor-ak3-volledig-kost",
     categorie: "Aankopen 3 · creditnota's en over te dragen kosten",
     type: "check",
-    vraag: "Staat op 490000 enkel het deel van de kosten dat ná 31 maart 2028 valt?",
-    toelichting: "Dit dossier sluit af op 31 maart. Een premie of huur die verder loopt, hoort maar voor een deel bij dit kwartaal. Tel per document de maanden: de maanden tot en met maart zijn kost, de rest is over te dragen.",
-    filterTip: "Filter in het T-paneel op 490000.",
+    vraag: "Staan de verzekering (AK16) en de huur (AK17) volledig in de kosten, en nog niets op 490000?",
+    toelichting: "Ook al loopt een factuur verder dan 31 maart: bij de aankoop boek je het hele bedrag als kost. Het deel dat bij later hoort, haal je er pas bij de afsluiting uit (Eindejaarsverrichtingen).",
+    filterTip: "Filter in het T-paneel op rubriek 61.",
   },
 
   /* ---------------- Verkopen 1 ---------------- */
@@ -257,6 +257,14 @@ const HANDMATIGE_CONTROLES = [
     toelichting: "Tel in de aflossingstabel de kapitaalaflossingen van 1 april 2028 tot en met 31 maart 2029. Dat deel is een schuld op ten hoogste één jaar; de rest blijft op 173000.",
     docs: [{ doc: "LENING", titel: "Aflossingstabel" }],
     filterTip: "Filter in het T-paneel op kredietinstellingen.",
+  },
+  {
+    id: "noor-over-te-dragen",
+    categorie: "Eindejaarsverrichtingen",
+    type: "check",
+    vraag: "Staat op 490000 enkel het deel van de kosten dat ná 31 maart 2028 valt?",
+    toelichting: "Tel per factuur (AK16, AK17 en AK22) de maanden na 31 maart. Dat deel gaat van de kostenrekening naar 490000; wat overblijft op de kostenrekening is de kost van dit kwartaal.",
+    filterTip: "Filter in het T-paneel op 490000.",
   },
   {
     id: "noor-voorraad-klopt",
