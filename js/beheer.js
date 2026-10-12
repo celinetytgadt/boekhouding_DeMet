@@ -29,6 +29,9 @@
   // twee horen in Classroom bij één taak.
   var SAMEN = "Resultaatverwerking & Eindbalans";
 
+  // Zo beginnen de taken van het oefendossier Fietsatelier Noor in de Sheet.
+  var NOOR_VOORVOEGSEL = "Noor · ";
+
   var ontgrendeld = false;
   var expertcode = "";
   var bezig = false;
@@ -44,6 +47,33 @@
   // pagina soms opnieuw op (bv. als er intussen feedback binnenkomt), en dan
   // mag er niets ingetikts verloren gaan.
   var model = { instellingen: {}, taken: [], klas: [] };
+
+  // De school waarvoor het tabblad nu open staat (of waarvoor er een code
+  // ingetikt wordt). Kiest iemand bovenaan een andere school, dan gaat het
+  // tabblad dicht: de instellingen van Leuven horen niet onder Tielt-Winge.
+  var vestigingVanBeheer = null;
+
+  function huidigeVestiging() {
+    var a = api();
+    return a && a.vestigingCode ? a.vestigingCode() : "";
+  }
+
+  function sluitBijWissel() {
+    var nu = huidigeVestiging();
+    if (vestigingVanBeheer === nu) return;
+    vestigingVanBeheer = nu;
+    ontgrendeld = false;
+    expertcode = "";
+    bezig = false;
+    melding = null;
+    model = { instellingen: {}, taken: [], klas: [] };
+  }
+
+  /* Staat het oefendossier aan voor deze school? Leeg telt als ja. Bij nee
+     verdwijnt alles van Noor uit het beheer, behalve de keuze zelf. */
+  function noorZichtbaar() {
+    return String(model.instellingen.oefendossier || "").trim().toLowerCase() !== "nee";
+  }
 
   function api() { return window.KOPPELING_API || null; }
 
@@ -164,7 +194,12 @@
   }
 
   function htmlTaken() {
-    var rijen = taakCategorieen().map(function (cat) {
+    // Verborgen taken van Noor blijven gewoon in de Sheet staan: bewaar()
+    // stuurt ze ongewijzigd mee. Ze staan enkel niet op het scherm.
+    var zichtbaar = taakCategorieen().filter(function (cat) {
+      return noorZichtbaar() || cat.indexOf(NOOR_VOORVOEGSEL) !== 0;
+    });
+    var rijen = zichtbaar.map(function (cat) {
       var t = taakVoor(cat);
       return "<tr><th>" + esc(cat) + "</th>" +
         '<td><input type="text" data-role="taak" data-cat="' + esc(cat) + '" value="' + esc(t.link) + '" ' +
@@ -222,7 +257,7 @@
       veld("handleidingUrl", "Link naar de handleiding",
         "Komt als knop <em>Handleiding</em> bovenaan te staan. Leeg = geen knop.",
         "https://…") +
-      "</div>" + htmlOefendossier();
+      "</div>";
   }
 
   /* Het oefendossier Fietsatelier Noor (noor.html) aan of uit voor deze
@@ -237,7 +272,8 @@
       '<option value="nee"' + (nu === "nee" ? " selected" : "") + ">nee, verbergen</option>" +
       "</select>" +
       '<span class="beheer-uitleg">Bij <em>ja</em> staat in MetWear een knop naar het oefendossier. Bij <em>nee</em> is die knop weg, ' +
-      "en wie het oefendossier toch opent, leest dat het voor deze school niet openstaat. Het werk van de leerlingen blijft altijd bewaard.</span></label>" +
+      "en wie het oefendossier toch opent, leest dat het voor deze school niet openstaat. Bij <em>nee</em> verdwijnen ook de taken van Noor uit dit beheer. " +
+      "Het werk van de leerlingen en de ingevulde links blijven altijd bewaard. Vergeet niet onderaan op <em>Bewaren</em> te klikken.</span></label>" +
       "</div>";
   }
 
@@ -246,7 +282,7 @@
     return '<h1 class="pagina-titel">Beheer</h1>' +
       '<p class="pagina-subtitel">' + esc(a ? a.vestigingLabel() : "") +
       " — deze instellingen gelden enkel voor deze vestiging</p>" +
-      htmlKlas() + htmlTaken() + htmlTeksten() +
+      htmlOefendossier() + htmlKlas() + htmlTaken() + htmlTeksten() +
       '<div class="paneel beheer-voet">' +
       '<button type="button" class="btn-primair" data-role="bewaren"' + (bezig ? " disabled" : "") + ">" +
       (bezig ? "Bezig met bewaren…" : "Bewaren") + "</button> " +
@@ -271,10 +307,12 @@
       return;
     }
     bezig = true;
+    var voor = huidigeVestiging();
     zegBezig("Even geduld — het script van Google moet eerst wakker worden. De eerste keer duurt dat vlot tien seconden.");
     herteken();
     a.haal({ actie: "beheer", sleutel: a.sleutel(), expertcode: code })
       .then(function (r) {
+        if (huidigeVestiging() !== voor) return;   // intussen een andere school
         bezig = false;
         if (!r || !r.ok) {
           zegFout(r && r.uitleg ? r.uitleg : "Die code klopt niet.");
@@ -287,6 +325,7 @@
         herteken();
       })
       .catch(function (err) {
+        if (huidigeVestiging() !== voor) return;
         bezig = false;
         console.error(err);
         zegFout(a.foutUitleg(err));
@@ -308,6 +347,7 @@
     var a = api();
     if (!a || bezig) return;                 // één keer tegelijk, nooit meer
     bezig = true;
+    var voor = huidigeVestiging();
     zegBezig("Bezig met bewaren…");
     herteken();
 
@@ -329,6 +369,9 @@
       klas: klas,
     })
       .then(function (r) {
+        // Intussen een andere school gekozen: dit antwoord hoort bij de
+        // vorige. Bewaard is het daar wel; het scherm is al dicht.
+        if (huidigeVestiging() !== voor) return;
         bezig = false;
         if (!r || !r.ok) {
           zegFout(r && r.uitleg ? r.uitleg : "Bewaren lukte niet. Probeer het opnieuw.");
@@ -354,6 +397,7 @@
         // bewaard is: Apps Script schrijft gewoon door en laat soms enkel het
         // antwoord vallen. Voor we iets beweren, gaan we in de Sheet kijken.
         console.error(err);
+        if (huidigeVestiging() !== voor) return;
         zegBezig("De verbinding viel weg. Even nakijken of het toch bewaard is…");
         herteken();
         kijkNaOfHetBewaardIs(klas, taken);
@@ -365,9 +409,12 @@
   function kijkNaOfHetBewaardIs(klas, taken) {
     var a = api();
     if (!a) { bezig = false; return; }
+    var voor = huidigeVestiging();
     setTimeout(function () {
+      if (huidigeVestiging() !== voor) return;
       a.haal({ actie: "beheer", sleutel: a.sleutel(), expertcode: expertcode })
         .then(function (r) {
+          if (huidigeVestiging() !== voor) return;
           bezig = false;
           if (r && r.ok && komtOvereen(r, klas, taken)) {
             neemOver(r);
@@ -379,6 +426,7 @@
           herteken();
         })
         .catch(function (err) {
+          if (huidigeVestiging() !== voor) return;
           bezig = false;
           console.error(err);
           zegFout(a.foutUitleg(err) + " Kijk in de Sheet na of je wijziging er toch staat voor je opnieuw op Bewaren klikt.");
@@ -418,6 +466,7 @@
     },
 
     html: function () {
+      sluitBijWissel();
       return ontgrendeld ? htmlOpen() : htmlSlot();
     },
 
@@ -447,7 +496,11 @@
       el.addEventListener("change", function (e) {
         if (!opBeheerpagina()) return;
         var t = e.target;
-        if (t.tagName === "SELECT" && t.dataset && t.dataset.role === "inst") model.instellingen[t.dataset.sleutel] = t.value;
+        if (t.tagName === "SELECT" && t.dataset && t.dataset.role === "inst") {
+          model.instellingen[t.dataset.sleutel] = t.value;
+          // Bij nee meteen alles van Noor van het scherm halen (en bij ja terug).
+          if (t.dataset.sleutel === "oefendossier") herteken();
+        }
       });
 
       el.addEventListener("keydown", function (e) {

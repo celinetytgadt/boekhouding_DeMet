@@ -975,6 +975,62 @@ function vinkIn(venster, naam) {
   check("nee: noor.html zegt dat het niet openstaat", /niet open/.test(domNeeN.window.document.getElementById("pagina-inhoud").textContent));
   zetOefen("ja");
 
+  // In Beheer: bij nee verdwijnt alles van Noor, behalve de keuze zelf.
+  const ontgrendelBeheer = async (w) => {
+    w.document.querySelector('[data-page-type="beheer"]').click();
+    await new Promise((r) => setTimeout(r, 40));
+    const v = w.document.querySelector('[data-role="expertcode"]');
+    v.value = "EXPERT1";
+    v.dispatchEvent(new w.Event("input", { bubbles: true }));
+    w.document.querySelector('[data-role="ontgrendel"]').click();
+    await new Promise((r) => setTimeout(r, 80));
+  };
+  const noorTaken = (w) => [...w.document.querySelectorAll('[data-role="taak"]')].filter((i) => /^Noor · /.test(i.dataset.cat)).length;
+  const domB = await start(APP, "index.html", vooraf);
+  const wB = domB.window;
+  await ontgrendelBeheer(wB);
+  const keuze = () => wB.document.querySelector('[data-role="inst"][data-sleutel="oefendossier"]');
+  check("Beheer: keuze oefendossier staat er", !!keuze());
+  check("ja: taken van Noor in Beheer", noorTaken(wB) > 0, noorTaken(wB));
+  keuze().value = "nee";
+  keuze().dispatchEvent(new wB.Event("change", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 20));
+  check("nee: geen taken van Noor meer in Beheer", noorTaken(wB) === 0, noorTaken(wB));
+  check("nee: de keuze zelf blijft staan", !!keuze() && keuze().value === "nee");
+  check("nee: verder geen Noor in Beheer",
+    !/Noor/.test(wB.document.getElementById("pagina-inhoud").textContent
+      .replace(keuze().closest(".paneel").textContent, "")));
+  wB.document.querySelector('[data-role="bewaren"]').click();
+  await new Promise((r) => setTimeout(r, 120));
+  check("nee is bewaard in de Sheet",
+    sheets.Instellingen.rijen.some((r) => r[0] === "oefendossier" && r[1] === "nee"));
+  check("de taken van Noor blijven in de Sheet staan",
+    sheets.Taken.rijen.some((r) => /^Noor · /.test(String(r[0]))));
+  wB.document.querySelector('[data-page-type="start"]') && wB.document.querySelector('[data-page-type="start"]').click();
+  await new Promise((r) => setTimeout(r, 20));
+  check("na bewaren: geen knop en geen link naar Noor op het startscherm", !knopNaarNoor(wB) && !linkNaarNoor(wB));
+  zetOefen("ja");
+
+  // Een andere school kiezen sluit het beheer van de vorige.
+  const domW = await start("/tmp/t3");
+  const wW = domW.window;
+  const vsW = wW.document.getElementById("vestiging-select");
+  vsW.value = "LEU";
+  vsW.dispatchEvent(new wW.Event("change"));
+  await new Promise((r) => setTimeout(r, 40));
+  await ontgrendelBeheer(wW);
+  check("Leuven: beheer open", !!wW.document.querySelector('[data-role="klas-naam"]'));
+  vsW.value = "TW";
+  vsW.dispatchEvent(new wW.Event("change"));
+  await new Promise((r) => setTimeout(r, 40));
+  check("andere school: beheer weer dicht",
+    !wW.document.querySelector('[data-role="klas-naam"]') && !!wW.document.querySelector('[data-role="expertcode"]'));
+  check("en de expertcode is leeg", wW.document.querySelector('[data-role="expertcode"]').value === "");
+  vsW.value = "LEU";
+  vsW.dispatchEvent(new wW.Event("change"));
+  await new Promise((r) => setTimeout(r, 40));
+  check("terug naar Leuven: ook dicht", !wW.document.querySelector('[data-role="klas-naam"]'));
+
   console.log("\n21. Namenlijst meteen zichtbaar, ook als Google traag is");
   const kopie = domJa.window.localStorage.getItem("boekhoudapp_instellingen_LEU");
   check("de klaslijst staat na het ophalen in de browser", !!kopie && JSON.parse(kopie).klas.length > 0, kopie);
