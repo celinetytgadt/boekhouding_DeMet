@@ -3,7 +3,8 @@
 //
 // De namen van de leerlingen staan sinds september 2026 in het tabblad
 // "Klas" van de Google Sheet van de vestiging, samen met hun persoonlijke
-// code. De app haalt ze daar op zodra de leerling een school gekozen heeft.
+// code. De app haalt de namen van alle vestigingen op zodra ze opent, en de
+// browser onthoudt de laatst opgehaalde lijst voor het volgende bezoek.
 // Een vakexpert voegt ze toe via het tabblad Beheer in de app (of gewoon
 // rechtstreeks in de Sheet).
 //

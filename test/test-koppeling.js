@@ -15,6 +15,8 @@ const { JSDOM } = require("/tmp/node_modules/jsdom");
  *   /tmp/t2   zonder klaslijst en zonder koppeling       (valt terug op
  *             het vrije naamveld, knoppen verborgen)
  *   /tmp/t3   twee vestigingen                           (de keuzelijst)
+ *   /tmp/t4   één vestiging, koppeling maar geen reservelijst in
+ *             data-klas.js — zoals in het echt (namen laden)
  */
 const BRON = path.join(__dirname, "..");
 const APP = "/tmp/t";
@@ -62,6 +64,12 @@ kopieerApp("/tmp/t2", {
 kopieerApp("/tmp/t3", {
   "js/config-koppeling.js": config([VEST_LEU, VEST_TW]),
   "js/data-klas.js": klas({ LEU: ["Lotte V.", "Youssef B."], TW: ["Amal T."] }),
+  "apps-script/Code.gs": CODE_GS,
+});
+
+kopieerApp("/tmp/t4", {
+  "js/config-koppeling.js": config([VEST_LEU]),
+  "js/data-klas.js": klas({ LEU: [] }),
   "apps-script/Code.gs": CODE_GS,
 });
 
@@ -235,8 +243,9 @@ function server(url, opts) {
 // De scripts worden zelf ingeladen (en niet door jsdom), zodat de pagina op
 // een https-adres draait. Enkel dan geeft jsdom een werkende localStorage —
 // en net die willen we testen.
-async function start(map) {
+async function start(map, opties) {
   map = map || APP;
+  opties = opties || {};
   const html = fs.readFileSync(path.join(map, "index.html"), "utf8");
   const bronnen = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
   const dom = new JSDOM(html.replace(/<script src="[^"]+"><\/script>/g, ""), {
@@ -244,7 +253,8 @@ async function start(map) {
     url: "https://test.local/",
     pretendToBeVisual: true,
   });
-  dom.window.fetch = server;
+  dom.window.fetch = opties.fetch || server;
+  if (opties.opslag) Object.keys(opties.opslag).forEach((k) => dom.window.localStorage.setItem(k, opties.opslag[k]));
   dom.window.navigator.sendBeacon = () => true;
 
   // Als <script>-element invoegen en niet met eval: enkel zo komen de
@@ -668,8 +678,14 @@ function vinkIn(venster, naam) {
   check("vestigingskeuze zichtbaar", !!vs && vs.hidden === false);
   check("één regel per vestiging, met een lege beginkeuze", vs.options.length === 3,
     [...vs.options].map((o) => o.value));
-  check("nog geen namenlijst vóór de keuze",
-    w3.document.getElementById("leerling-select").hidden === true);
+  const sel3 = w3.document.getElementById("leerling-select");
+  check("vóór de keuze: eerst de school, geen namen en geen vrij naamveld",
+    sel3.disabled && sel3.options.length === 1 && /kies eerst je school/.test(sel3.textContent) &&
+    w3.document.getElementById("leerling-naam-input").hidden === true, sel3.textContent);
+  const opgehaald3 = Object.keys(JSON.parse(JSON.stringify(w3.localStorage)))
+    .filter((k) => /^boekhoudapp_instellingen_/.test(k)).sort();
+  check("de namen van alle vestigingen zijn al opgehaald vóór de keuze",
+    opgehaald3.join() === "boekhoudapp_instellingen_LEU,boekhoudapp_instellingen_TW", opgehaald3);
 
   vs.value = "TW";
   vs.dispatchEvent(new w3.Event("change"));
@@ -684,6 +700,39 @@ function vinkIn(venster, naam) {
   const namenLeu = [...w3.document.getElementById("leerling-select").options].map((o) => o.value);
   check("en omgekeerd ook", namenLeu.includes("Lotte V.") && !namenLeu.includes("Amal T."), namenLeu);
 
+
+  console.log("\n15. Namen laden bij een trage server");
+  // Een server die pas antwoordt als de test dat zegt.
+  let laatLos = [];
+  const traag = (url, opts) => new Promise((res) => laatLos.push(() => res(server(url, opts))));
+  const domT = await start("/tmp/t4", { fetch: traag });
+  const selT = domT.window.document.getElementById("leerling-select");
+  check("tijdens het laden staat er 'Namen laden…' in de keuzelijst",
+    selT.hidden === false && selT.disabled && /Namen laden/.test(selT.textContent), selT.textContent);
+  check("en niet het vrije naamveld",
+    domT.window.document.getElementById("leerling-naam-input").hidden === true);
+  laatLos.forEach((f) => f()); laatLos = [];
+  await new Promise((r) => setTimeout(r, 40));
+  check("na het laden staan de namen er",
+    !selT.disabled && [...selT.options].map((o) => o.value).includes("Lotte V."),
+    [...selT.options].map((o) => o.value));
+
+  // Tweede bezoek: de lijst die de browser onthield, staat er meteen, ook al
+  // antwoordt de server nog niet.
+  const onthouden = { "boekhoudapp_instellingen_LEU": JSON.stringify({ instellingen: {}, taken: {}, klas: ["Onthouden O."] }) };
+  const domC = await start("/tmp/t4", { fetch: traag, opslag: onthouden });
+  const selC = domC.window.document.getElementById("leerling-select");
+  check("vanaf het tweede bezoek staat de onthouden lijst er meteen",
+    !selC.disabled && [...selC.options].map((o) => o.value).includes("Onthouden O."),
+    [...selC.options].map((o) => o.value));
+  laatLos.forEach((f) => f()); laatLos = [];
+  await new Promise((r) => setTimeout(r, 40));
+  const namenC = [...selC.options].map((o) => o.value);
+  check("en wordt op de achtergrond vernieuwd",
+    namenC.includes("Lotte V.") && !namenC.includes("Onthouden O."), namenC);
+  check("de vernieuwde lijst wordt onthouden, zonder codes",
+    /Lotte V\./.test(domC.window.localStorage.getItem("boekhoudapp_instellingen_LEU")) &&
+    !/"code"/.test(domC.window.localStorage.getItem("boekhoudapp_instellingen_LEU")));
 
   console.log("\n16. Instellingen en het beheertabblad");
   // De expertcode zet je in de Sheet (menu Boekhoudapp → Expertcode

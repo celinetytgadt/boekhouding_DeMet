@@ -225,6 +225,13 @@ Bovenaan kiest de leerling de vestiging (enkel als er meer dan één in
 `config-koppeling.js` staat) en daarna de naam uit de klaslijst, met de
 persoonlijke code uit het tabblad Klas. Zonder klaslijst blijft het vrije
 naamveld staan (voornaam, eventueel met de eerste letter van de achternaam).
+
+De namen van alle vestigingen worden opgehaald zodra de app opent, in één
+keer. Zolang ze onderweg zijn, staat er "Namen laden…" in de keuzelijst (en
+niet het vrije naamveld). De browser onthoudt de laatst opgehaalde lijst
+(enkel de namen, nooit de codes): vanaf het tweede bezoek op die computer
+staat ze er meteen, en wordt ze op de achtergrond vernieuwd.
+
 Vestiging + naam bepalen samen de bewaarsleutel in de browser, zodat
 gelijknamige leerlingen van twee scholen op een gedeelde computer niet in
 elkaars werk komen.
