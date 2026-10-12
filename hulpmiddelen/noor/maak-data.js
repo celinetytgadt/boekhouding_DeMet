@@ -43,7 +43,6 @@ const TITEL = {
 // Extra's per opdracht: hulpdocumenten, tips en de stukken zonder document.
 const EXTRA = {
   BB: { ref: "BB", navLabel: "BEGINBALANS (BB)", titel: "Beginbalans 1 januari 2028 (BB)", doc: "BEGINBALANS" },
-  BANK03: { hulpdoc: "LENING", hulpdocTitel: "Aflossingstabel lening " + CASE.lening.nr },
   BTW: {
     titel: "Btw-verwerking 1e kwartaal 2028", geenDocument: true,
     instructie: "Kijk in de T-rekeningen rechts naar het saldo van de tussentijdse btw-rekeningen (de 411- en 451-rekeningen die niet op 000 eindigen). " +
@@ -73,6 +72,10 @@ const EXTRA = {
 };
 const TIP_OTK = "Deze factuur loopt verder dan 31 maart 2028. Boek ze nu volledig als kost: het deel dat bij later hoort, regel je pas bij de afsluiting (over te dragen kosten).";
 const TIPS = { AK16: TIP_OTK, AK17: TIP_OTK, AK22: TIP_OTK };
+
+// De aflossingstabel hoort bij het uittreksel waarop de aflossing staat.
+const bankMetAflossing = CASE.documenten.find((d) => d.soort === "BANK" && d.lijnen.some((l) => /^Aflossing lening/.test(l.oms)));
+if (bankMetAflossing) EXTRA[bankMetAflossing.ref] = { hulpdoc: "LENING", hulpdocTitel: "Aflossingstabel lening " + CASE.lening.nr };
 
 const docRef = {};
 CASE.documenten.forEach((d) => { docRef[d.id] = d.ref; });

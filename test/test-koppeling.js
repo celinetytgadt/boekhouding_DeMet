@@ -173,6 +173,7 @@ const omgeving = {
   SpreadsheetApp: {
     getActiveSpreadsheet: () => ss,
     getActiveSheet: () => sheets.Inzendingen,
+    flush: () => {},
     getUi: () => ({
       // Eén argument = gewone melding; drie = een ja/nee-venster.
       alert: (t, b, c) => { laatsteAlert = c === undefined ? t : t + "\n" + b; return antwoordKnop; },
@@ -298,9 +299,14 @@ function vinkIn(venster, naam) {
   omgeving.installeer();
   check("tweede installatie loopt door ondanks een bestaande filter",
     /Klaar\./.test(laatsteAlert) && !/Niet alles lukte/.test(laatsteAlert), laatsteAlert.slice(0, 120));
-  check("sleutelwoord staat in de melding", /CELINET|TEST/.test(laatsteAlert));
-  check("de melding noemt de map waarin geschreven wordt",
-    /Werkbestanden komen in: Boekhoudapp werkbestanden \(gedeelde map\)/.test(laatsteAlert),
+  // De melding na de installatie is bewust kort (collega's lezen ze); de map
+  // en het sleutelwoord staan in de handleiding en in het menu
+  // "Waar staan de werkbestanden?".
+  check("de melding wijst naar het tabblad Inzendingen", /tabblad Inzendingen/.test(laatsteAlert), laatsteAlert.slice(0, 200));
+  laatsteAlert = "";
+  omgeving.toonWerkMap();
+  check("het menu noemt de map waarin geschreven wordt",
+    /Map: Boekhoudapp werkbestanden/.test(laatsteAlert) && /Gekozen via MAP_ID_GEDEELD/.test(laatsteAlert),
     laatsteAlert.slice(0, 200));
 
   console.log("\n2. Aanmelden");

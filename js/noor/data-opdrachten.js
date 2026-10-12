@@ -70,8 +70,8 @@ const OPDRACHTEN = [
 
   // Financiële verrichtingen
   {"ref": "BANK01", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK01", "doc": "BANK01"},
-  {"ref": "BANK02", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK02", "doc": "BANK02"},
-  {"ref": "BANK03", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK03", "doc": "BANK03", "hulpdoc": "LENING", "hulpdocTitel": "Aflossingstabel lening 2027-0042"},
+  {"ref": "BANK02", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK02", "doc": "BANK02", "hulpdoc": "LENING", "hulpdocTitel": "Aflossingstabel lening 2027-0042"},
+  {"ref": "BANK03", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK03", "doc": "BANK03"},
   {"ref": "BANK04", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK04", "doc": "BANK04"},
   {"ref": "KAS01", "categorie": "Financiële verrichtingen", "titel": "Kasstuk KAS01", "doc": "KAS01"},
   {"ref": "KAS02", "categorie": "Financiële verrichtingen", "titel": "Kasstuk KAS02", "doc": "KAS02"},
