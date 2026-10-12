@@ -19,7 +19,8 @@ Daarna, vanuit deze map:
 
 Het harnas maakt zijn eigen testkopieën van de app in `/tmp/t` (één
 vestiging, met klaslijst en koppeling), `/tmp/t2` (zonder klaslijst, zonder
-koppeling) en `/tmp/t3` (twee vestigingen). Je hoeft dus zelf niets klaar te
+koppeling), `/tmp/t3` (twee vestigingen) en `/tmp/t4` (zonder reservelijst,
+om het laden van de namen te testen). Je hoeft dus zelf niets klaar te
 zetten; die kopieën worden bij elke run overschreven.
 
 Alles goed? Dan eindigt het met "Alle controles geslaagd."

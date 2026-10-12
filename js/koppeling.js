@@ -42,6 +42,10 @@
   var vestiging = vestigingen.length === 1 ? vestigingen[0] : null;
 
   var AANMELD_KEY = "boekhoudapp_aanmelding";
+  // De laatst opgehaalde instellingen en namenlijst, per vestiging. Zo staat
+  // de lijst er vanaf het tweede bezoek meteen, en wordt ze op de
+  // achtergrond vernieuwd.
+  var INSTELLINGEN_KEY_PREFIX = "boekhoudapp_instellingen_";
   var FEEDBACK_KEY_PREFIX = "boekhoudapp_feedback_";
 
   // Wat de vakexpert als "in orde" aanduidt, gaat op slot: het wordt niet
@@ -64,10 +68,15 @@
   // standaardteksten in app.js.
   var instellingen = {};
   var taken = {};
-  var klasServer = null;        // { code: "LEU", namen: [...] }
+  // Alles wat de server per vestiging gaf (of wat de browser er nog van
+  // onthield): { LEU: { instellingen, taken, klas: [namen] }, … }.
+  // De drie vestigingen worden bij het openen van de app in één keer
+  // opgehaald, zodat de lijst er al is zodra de leerling een school kiest.
+  var perVestiging = {};
+  var bezigVoor = {};           // { LEU: true } zolang die ophaalronde loopt
+  var naLaden = {};             // { LEU: [functies] } die wachten op het antwoord
   var vulNamenFn = null;        // bouwAanmeldUI zet die hier klaar
   var laatsteFeedbackTijd = 0;
-  var instellingenBezig = false;   // er loopt al een ophaalronde
 
   /* ======================================================================
      Kleine hulpjes
@@ -101,9 +110,8 @@
     // De Sheet is de enige plaats waar de klaslijst bijgehouden wordt: daar
     // staan de namen én de codes bij elkaar. js/data-klas.js blijft als
     // noodoplossing bestaan voor als de server onbereikbaar is.
-    if (klasServer && klasServer.code === code && klasServer.namen.length) {
-      return klasServer.namen;
-    }
+    var bekend = perVestiging[code];
+    if (bekend && bekend.klas && bekend.klas.length) return bekend.klas;
     if (typeof KLASLIJSTEN !== "undefined" && KLASLIJSTEN && KLASLIJSTEN[code]) {
       return KLASLIJSTEN[code] || [];
     }
@@ -217,8 +225,10 @@
     return "Geen verbinding met de server.";
   }
 
-  function haal(params) {
-    var url = webAppUrl() + "?" + Object.keys(params).map(function (k) {
+  // Zonder v gaat het verzoek naar de gekozen vestiging. De instellingen
+  // worden voor alle vestigingen tegelijk opgehaald, en geven er dus één mee.
+  function haal(params, v) {
+    var url = (v ? v.webAppUrl : webAppUrl()) + "?" + Object.keys(params).map(function (k) {
       return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
     }).join("&");
     return verzoek(url, { method: "GET" });
@@ -282,11 +292,10 @@
           vestiging = vestigingMet(vestSelect.value);
           status("");
           // Elke vestiging heeft haar eigen Sheet, en dus haar eigen
-          // klaslijst, teksten en taken.
-          instellingen = {}; taken = {}; klasServer = null;
-          window.INSTELLINGEN = instellingen;
-          vulNamen();
-          haalInstellingen();
+          // klaslijst, teksten en taken. Die zijn normaal al opgehaald bij
+          // het openen; lukte dat toen niet, dan nu nog eens proberen.
+          toonVestiging();
+          if (vestiging && !perVestiging[vestiging.code]) haalInstellingen(vestiging);
         });
       }
     }
@@ -300,17 +309,30 @@
 
     /* De namenlijst hangt af van de gekozen vestiging, dus ze wordt telkens
        opnieuw opgebouwd. Zonder klaslijst blijft het vrije naamveld van
-       app.js in dienst — handig zolang er met collega's getest wordt. */
+       app.js in dienst — handig zolang er met collega's getest wordt.
+
+       Zolang de namen nog onderweg zijn, staat er "Namen laden…" in de
+       keuzelijst. Anders kreeg de leerling bij een trage server eerst het
+       vrije naamveld te zien, en tikte die daar zijn naam in. Hetzelfde als
+       er nog geen school gekozen is: dan eerst de school. */
     function vulNamen() {
       var lijst = vestiging ? klaslijstVoor(vestiging.code) : [];
       var metLijst = lijst.length > 0;
+      var wacht = "";
+      if (!metLijst && ingesteld()) {
+        if (!vestiging) wacht = "— kies eerst je school —";
+        else if (bezigVoor[vestiging.code]) wacht = "Namen laden…";
+      }
+      var keuzelijst = metLijst || !!wacht;
 
-      select.hidden = !metLijst;
+      select.hidden = !keuzelijst;
+      select.disabled = !!wacht;
       codeVeld.hidden = !metLijst;
       knop.hidden = !metLijst;
-      naamInput.hidden = metLijst;
+      naamInput.hidden = keuzelijst;
       var label = document.querySelector('label[for="leerling-naam-input"], label[for="leerling-select"]');
-      if (label) label.setAttribute("for", metLijst ? "leerling-select" : "leerling-naam-input");
+      if (label) label.setAttribute("for", keuzelijst ? "leerling-select" : "leerling-naam-input");
+      if (wacht) { select.innerHTML = '<option value="">' + esc(wacht) + "</option>"; return; }
       if (!metLijst) { select.innerHTML = ""; return; }
 
       select.innerHTML = '<option value="">— kies je naam —</option>' +
@@ -470,48 +492,88 @@
      aangemeld is: de namenlijst is er nu net voor nodig.
      ====================================================================== */
 
-  function haalInstellingen(daarna) {
-    if (!actief()) { if (daarna) daarna(); return; }
+  /* Alle vestigingen tegelijk, bij het openen van de app. Zo moet een
+     leerling die nog een school moet kiezen daarna niet meer wachten. */
+  function haalAlleInstellingen() {
+    vestigingen.forEach(function (v) { if (v.webAppUrl) haalInstellingen(v); });
+  }
+
+  function haalInstellingen(v, daarna) {
+    if (!v || !v.webAppUrl) { if (daarna) daarna(); return; }
+    var code = v.code;
+    if (daarna) (naLaden[code] = naLaden[code] || []).push(daarna);
     // Loopt er al een ronde, dan is een tweede verspilling: Google krijgt
     // twee keer dezelfde vraag en de app moet twee keer wachten.
-    if (instellingenBezig) { if (daarna) daarna(); return; }
-    instellingenBezig = true;
-    var voorVestiging = vestiging.code;
-    haal({ actie: "instellingen", sleutel: sleutelwoord() })
+    if (bezigVoor[code]) return;
+    bezigVoor[code] = true;
+    if (vestiging && vestiging.code === code && vulNamenFn) vulNamenFn();
+
+    haal({ actie: "instellingen", sleutel: v.sleutel || "" }, v)
       .then(function (r) {
-        instellingenBezig = false;
-        // Intussen een andere school gekozen? Dan is dit antwoord verouderd.
-        if (!vestiging || vestiging.code !== voorVestiging) return;
-        if (!r || !r.ok) { if (daarna) daarna(); return; }
-        zetInstellingen(voorVestiging, r.instellingen, r.taken, r.klas);
-        if (daarna) daarna();
+        bezigVoor[code] = false;
+        if (r && r.ok) zetInstellingen(code, r.instellingen, r.taken, r.klas);
+        else if (vestiging && vestiging.code === code && vulNamenFn) vulNamenFn();
+        klaarMetLaden(code);
       })
       .catch(function (err) {
-        instellingenBezig = false;
-        // Onbereikbaar? Dan valt de app terug op js/data-klas.js en op de
-        // standaardteksten. Geen foutmelding: de leerling kan hier niets aan
-        // doen en de app werkt gewoon verder.
+        bezigVoor[code] = false;
+        // Onbereikbaar? Dan blijft de onthouden lijst staan, of valt de app
+        // terug op js/data-klas.js en op de standaardteksten. Geen
+        // foutmelding: de leerling kan hier niets aan doen en de app werkt
+        // gewoon verder.
         console.error(err);
-        if (daarna) daarna();
+        if (vestiging && vestiging.code === code && vulNamenFn) vulNamenFn();
+        klaarMetLaden(code);
       });
   }
 
-  /* Instellingen, taken en klaslijst van één vestiging in de app zetten en
-     het scherm bijwerken. Wordt gevoed vanuit twee kanten: de gewone
-     ophaalronde hierboven, en het beheertabblad dat net bewaard heeft (die
-     kreeg alles al terug van de server en hoeft het dus niet nog eens op te
-     halen).
+  function klaarMetLaden(code) {
+    var wachtend = naLaden[code] || [];
+    naLaden[code] = [];
+    wachtend.forEach(function (fn) { fn(); });
+  }
+
+  /* Instellingen, taken en klaslijst van één vestiging bijhouden, in de
+     browser onthouden, en het scherm bijwerken als het om de gekozen
+     vestiging gaat. Wordt gevoed vanuit twee kanten: de gewone ophaalronde
+     hierboven, en het beheertabblad dat net bewaard heeft (die kreeg alles
+     al terug van de server en hoeft het dus niet nog eens op te halen).
 
      De twee antwoorden zien er lichtjes anders uit: het publieke antwoord
      geeft de taken als { categorie: link } en de klas als lijst namen, het
      beheerantwoord geeft rijen met meer erin. Allebei worden ze hier op
-     dezelfde vorm gebracht. */
+     dezelfde vorm gebracht. Enkel de namen worden onthouden, nooit codes. */
   function zetInstellingen(code, nieuweInstellingen, nieuweTaken, nieuweKlas) {
-    instellingen = nieuweInstellingen || {};
-    taken = takenAlsMap(nieuweTaken);
-    klasServer = { code: code, namen: (nieuweKlas || []).map(function (l) {
-      return typeof l === "string" ? l : String((l && l.naam) || "");
-    }).filter(Boolean) };
+    perVestiging[code] = {
+      instellingen: nieuweInstellingen || {},
+      taken: takenAlsMap(nieuweTaken),
+      klas: (nieuweKlas || []).map(function (l) {
+        return typeof l === "string" ? l : String((l && l.naam) || "");
+      }).filter(Boolean),
+    };
+    schrijf(INSTELLINGEN_KEY_PREFIX + code, JSON.stringify(perVestiging[code]));
+    if (vestiging && vestiging.code === code) toonVestiging();
+  }
+
+  // Wat de browser de vorige keer onthield, meteen klaarzetten. De
+  // ophaalronde daarna vervangt het door de nieuwste versie.
+  function leesOnthoudenInstellingen() {
+    vestigingen.forEach(function (v) {
+      try {
+        var ruw = lees(INSTELLINGEN_KEY_PREFIX + v.code);
+        var o = ruw ? JSON.parse(ruw) : null;
+        if (o && Array.isArray(o.klas)) {
+          perVestiging[v.code] = { instellingen: o.instellingen || {}, taken: o.taken || {}, klas: o.klas };
+        }
+      } catch (e) { /* onleesbaar: dan gewoon opnieuw ophalen */ }
+    });
+  }
+
+  // De gekozen vestiging in beeld brengen: teksten, knoppen, namenlijst.
+  function toonVestiging() {
+    var bekend = vestiging ? perVestiging[vestiging.code] : null;
+    instellingen = (bekend && bekend.instellingen) || {};
+    taken = (bekend && bekend.taken) || {};
     window.INSTELLINGEN = instellingen;
     zetTopbarLinks();
     if (vulNamenFn) vulNamenFn();
@@ -1164,7 +1226,9 @@
       aanmelding.vestiging = vestigingen[0].code;
     }
 
+    leesOnthoudenInstellingen();
     bouwAanmeldUI();
+    if (vestiging && perVestiging[vestiging.code]) toonVestiging();
 
     var btnIndienen = document.getElementById("btn-indienen");
     var btnFeedback = document.getElementById("btn-feedback");
@@ -1179,9 +1243,10 @@
     }
 
     // De instellingen (teksten, links, klaslijst, taken) horen bij de
-    // vestiging en worden dus opgehaald zodra die bekend is — nog vóór de
-    // leerling aangemeld is, want de namenlijst komt er ook uit.
-    haalInstellingen();
+    // vestiging. Die van alle vestigingen worden meteen opgehaald — nog vóór
+    // de leerling aangemeld is of een school koos, want de namenlijst komt
+    // er ook uit.
+    haalAlleInstellingen();
 
     // Feedback stil verversen als de leerling terugkomt naar dit tabblad.
     // Hoogstens één keer per twee minuten, en niet terwijl er beheerd wordt.
@@ -1194,10 +1259,17 @@
 
     if (aanmelding && aanmelding.naam && actief()) {
       naAanmelding();
-    } else if (vestiging && !klaslijstVoor(vestiging.code).length && APP.getState().student) {
+    } else if (vestiging) {
       // Testopstelling zonder klaslijst: de naam uit het vrije veld volstaat.
-      aanmelding = { naam: APP.getState().student, code: "" };
-      naAanmelding();
+      // Pas beslissen als de namen binnen zijn, anders lijkt elke trage
+      // server op een vestiging zonder klaslijst.
+      var vrijeNaam = function () {
+        if (aanmelding || klaslijstVoor(vestiging.code).length || !APP.getState().student) return;
+        aanmelding = { naam: APP.getState().student, code: "" };
+        naAanmelding();
+      };
+      if (bezigVoor[vestiging.code]) (naLaden[vestiging.code] = naLaden[vestiging.code] || []).push(vrijeNaam);
+      else vrijeNaam();
     }
   }
 
