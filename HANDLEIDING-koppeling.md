@@ -9,6 +9,28 @@ werkbestanden.
 
 ---
 
+## Twee dossiers: MetWear en het oefendossier Noor
+
+Sinds oktober 2026 heeft de app een tweede pagina, `noor.html`: het
+oefendossier Fietsatelier Noor. Het gebruikt dezelfde Sheet, dezelfde
+klaslijst en dezelfde codes als MetWear. Wat je moet doen:
+
+1. **Plak de nieuwe `Code.gs` in elke Sheet** en implementeer een nieuwe
+   versie (zie het kader hieronder). Zolang het script van een vestiging
+   niet bijgewerkt is, bewaart en dient het oefendossier daar niets in: de
+   leerling krijgt de melding dat het oefendossier nog niet ingesteld is,
+   en het werk blijft in de browser. MetWear werkt gewoon door.
+2. **Boekhoudapp → Eerste installatie** opnieuw: dan komen de taken van
+   Noor in het tabblad Taken (ze beginnen met `Noor · `, één per les). Of
+   vul ze in via het tabblad Beheer in `noor.html`.
+3. Nakijken gebeurt in hetzelfde tabblad Inzendingen. De refs van Noor
+   beginnen met `NOOR-` (NOOR-AK01), de categorieën met `Noor · `. De
+   sleutel van Noor zit in het script zelf, dus het automatisch nakijken
+   werkt meteen; wat je in het tabblad Sleutel zet, gaat voor.
+4. Werk terugzetten voor Noor: tik `NOOR` voor de naam (bv. `NOOR Lotte V.`).
+
+De werkbestanden van Noor staan in dezelfde map: `werk_NOOR_LEU_lottev.json`.
+
 ## Drie vestigingen, één app
 
 De app zelf staat **één keer** op GitHub Pages. Elke vestiging (LEU, SKW, TW)

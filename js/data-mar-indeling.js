@@ -49,10 +49,10 @@ const MAR_INDELING = [
     rubrieken: [
       { rubriek: "40", oms: "Handelsvorderingen" },
       { rubriek: "41", oms: "Overige vorderingen" },
-      { rubriek: "42", oms: "Schulden op maar dan 1 jaar die binnen het jaar vervallen" },
+      { rubriek: "42", oms: "Schulden op meer dan 1 jaar die binnen het jaar vervallen" },
       { rubriek: "43", oms: "Financiële schulden" },
       { rubriek: "44", oms: "Handelsschulden" },
-      { rubriek: "45", oms: "Schulden mbt belastingen, ..." },
+      { rubriek: "45", oms: "Schulden m.b.t. belastingen, bezoldigingen en sociale lasten" },
       { rubriek: "47", oms: "Schulden uit bestemming resultaat" },
       { rubriek: "48", oms: "Diverse schulden" },
       { rubriek: "49", oms: "Overlopende rekeningen" },

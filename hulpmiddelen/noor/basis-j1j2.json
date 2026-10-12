@@ -1,0 +1,779 @@
+{
+ "bron": "case_fietsatelier_noor (Excel), jaar 1 en 2",
+ "bedrijven": [
+  {
+   "code": "NOOR",
+   "naam": "Fietsatelier Noor bv",
+   "rol": "eigen bedrijf",
+   "adres": "Fietsstraat 12",
+   "gemeente": "3000 Leuven",
+   "btw": "BE 0999.000.101",
+   "iban": "BE00 0000 0000 0101",
+   "wat": "fietsenwinkel en -herstelling, zaakvoerder Noor Benali"
+  },
+  {
+   "code": "VELO",
+   "naam": "Velomax bv",
+   "rol": "leverancier",
+   "adres": "Industrieweg 8",
+   "gemeente": "9000 Gent",
+   "btw": "BE 0999.000.201",
+   "iban": "BE00 0000 0000 0201",
+   "wat": "groothandel fietsen"
+  },
+  {
+   "code": "SPAAK",
+   "naam": "Spaakwerk bv",
+   "rol": "leverancier",
+   "adres": "Zandstraat 22",
+   "gemeente": "3500 Hasselt",
+   "btw": "BE 0999.000.202",
+   "iban": "BE00 0000 0000 0202",
+   "wat": "groothandel onderdelen"
+  },
+  {
+   "code": "HELM",
+   "naam": "HelmHuis bv",
+   "rol": "leverancier",
+   "adres": "Kortrijksesteenweg 101",
+   "gemeente": "8500 Kortrijk",
+   "btw": "BE 0999.000.203",
+   "iban": "BE00 0000 0000 0203",
+   "wat": "groothandel helmen en sloten"
+  },
+  {
+   "code": "STROOM",
+   "naam": "Stroomkracht nv",
+   "rol": "leverancier",
+   "adres": "Energielaan 1",
+   "gemeente": "1000 Brussel",
+   "btw": "BE 0999.000.204",
+   "iban": "BE00 0000 0000 0204",
+   "wat": "energieleverancier"
+  },
+  {
+   "code": "NET",
+   "naam": "Netlink bv",
+   "rol": "leverancier",
+   "adres": "Antwerpsesteenweg 5",
+   "gemeente": "2800 Mechelen",
+   "btw": "BE 0999.000.205",
+   "iban": "BE00 0000 0000 0205",
+   "wat": "internet en telefonie"
+  },
+  {
+   "code": "PEET",
+   "naam": "Drukkerij Peeters bv",
+   "rol": "leverancier",
+   "adres": "Diestsestraat 77",
+   "gemeente": "3000 Leuven",
+   "btw": "BE 0999.000.206",
+   "iban": "BE00 0000 0000 0206",
+   "wat": "drukwerk en reclame"
+  },
+  {
+   "code": "NOWAK",
+   "naam": "Boekhoudkantoor Nowak",
+   "rol": "leverancier",
+   "adres": "Tiensesteenweg 150",
+   "gemeente": "3010 Kessel-Lo",
+   "btw": "BE 0999.000.207",
+   "iban": "BE00 0000 0000 0207",
+   "wat": "boekhouder (Marta Nowak)"
+  },
+  {
+   "code": "DEPREZ",
+   "naam": "Deprez Werkplaatsinrichting bv",
+   "rol": "leverancier",
+   "adres": "Ninoofsesteenweg 40",
+   "gemeente": "1700 Dilbeek",
+   "btw": "BE 0999.000.208",
+   "iban": "BE00 0000 0000 0208",
+   "wat": "werkbanken en montagestandaards"
+  },
+  {
+   "code": "KASSA",
+   "naam": "Kassatech bv",
+   "rol": "leverancier",
+   "adres": "Researchpark 3",
+   "gemeente": "3001 Heverlee",
+   "btw": "BE 0999.000.209",
+   "iban": "BE00 0000 0000 0209",
+   "wat": "kassasystemen en computers"
+  },
+  {
+   "code": "MOREAU",
+   "naam": "Garage Moreau bv",
+   "rol": "leverancier",
+   "adres": "Waversesteenweg 200",
+   "gemeente": "3090 Overijse",
+   "btw": "BE 0999.000.210",
+   "iban": "BE00 0000 0000 0210",
+   "wat": "bestelwagens"
+  },
+  {
+   "code": "SNEL",
+   "naam": "Snelpost bv",
+   "rol": "klant",
+   "adres": "Havenlaan 40",
+   "gemeente": "2000 Antwerpen",
+   "btw": "BE 0999.000.301",
+   "iban": "BE00 0000 0000 0301",
+   "wat": "koeriersbedrijf met fietskoeriers"
+  },
+  {
+   "code": "LINDE",
+   "naam": "Hotel De Linde bv",
+   "rol": "klant",
+   "adres": "Grote Markt 5",
+   "gemeente": "3290 Diest",
+   "btw": "BE 0999.000.302",
+   "iban": "BE00 0000 0000 0302",
+   "wat": "hotel met fietsverhuur"
+  },
+  {
+   "code": "VELOC",
+   "naam": "Velocity Deelfietsen bv",
+   "rol": "klant",
+   "adres": "Stationsplein 1",
+   "gemeente": "3000 Leuven",
+   "btw": "BE 0999.000.303",
+   "iban": "BE00 0000 0000 0303",
+   "wat": "deelfietsen"
+  },
+  {
+   "code": "JANS",
+   "naam": "Bouwbedrijf Janssens & Zonen bv",
+   "rol": "klant",
+   "adres": "Industriezone 14",
+   "gemeente": "3200 Aarschot",
+   "btw": "BE 0999.000.304",
+   "iban": "BE00 0000 0000 0304",
+   "wat": "bouwbedrijf, fietsen voor personeel"
+  },
+  {
+   "code": "DUBOIS",
+   "naam": "Architectenbureau Dubois srl",
+   "rol": "klant",
+   "adres": "Rue de Namur 10",
+   "gemeente": "1300 Wavre",
+   "btw": "BE 0999.000.305",
+   "iban": "BE00 0000 0000 0305",
+   "wat": "architectenbureau (Élise Dubois)"
+  },
+  {
+   "code": "SILVA",
+   "naam": "Koffiebar Da Silva",
+   "rol": "klant",
+   "adres": "Muntstraat 9",
+   "gemeente": "3000 Leuven",
+   "btw": "BE 0999.000.306",
+   "iban": "BE00 0000 0000 0306",
+   "wat": "koffiebar (Rui Da Silva)"
+  },
+  {
+   "code": "BYTE",
+   "naam": "Bytewise bv",
+   "rol": "klant",
+   "adres": "Kapeldreef 60",
+   "gemeente": "3001 Heverlee",
+   "btw": "BE 0999.000.307",
+   "iban": "BE00 0000 0000 0307",
+   "wat": "IT-bedrijf"
+  },
+  {
+   "code": "VLIND",
+   "naam": "Camping De Vlinder bv",
+   "rol": "klant",
+   "adres": "Kempenweg 2",
+   "gemeente": "2400 Mol",
+   "btw": "BE 0999.000.308",
+   "iban": "BE00 0000 0000 0308",
+   "wat": "camping met fietsverhuur"
+  },
+  {
+   "code": "KOWAL",
+   "naam": "Studio Kowalski bv",
+   "rol": "klant",
+   "adres": "Bondgenotenlaan 100",
+   "gemeente": "3000 Leuven",
+   "btw": "BE 0999.000.309",
+   "iban": "BE00 0000 0000 0309",
+   "wat": "ontwerpbureau (Piotr Kowalski)"
+  },
+  {
+   "code": "ACKER",
+   "naam": "Brouwerij Van Acker bv",
+   "rol": "klant",
+   "adres": "Brouwerijstraat 3",
+   "gemeente": "3150 Haacht",
+   "btw": "BE 0999.000.310",
+   "iban": "BE00 0000 0000 0310",
+   "wat": "brouwerij"
+  },
+  {
+   "code": "ZONNE",
+   "naam": "Woonzorgcentrum Zonnehof vzw",
+   "rol": "klant",
+   "adres": "Kloosterweg 3",
+   "gemeente": "3020 Herent",
+   "btw": "BE 0999.000.311",
+   "iban": "BE00 0000 0000 0311",
+   "wat": "woonzorgcentrum"
+  },
+  {
+   "code": "BANK",
+   "naam": "Banco Leuven",
+   "rol": "bank",
+   "adres": "Ladeuzeplein 1",
+   "gemeente": "3000 Leuven",
+   "btw": "",
+   "iban": "",
+   "wat": "bank van Noor, ook kredietgever"
+  }
+ ],
+ "artikelen": [
+  {
+   "code": "STAD",
+   "oms": "Stadsfiets City, 7 versnellingen",
+   "aankoop": 400,
+   "verkoop": 600,
+   "btw": 0.21
+  },
+  {
+   "code": "EBIKE",
+   "oms": "E-bike Comfort, 500 Wh",
+   "aankoop": 1400,
+   "verkoop": 2000,
+   "btw": 0.21
+  },
+  {
+   "code": "BAK",
+   "oms": "Bakfiets Cargo, 2 wielen",
+   "aankoop": 1800,
+   "verkoop": 2600,
+   "btw": 0.21
+  },
+  {
+   "code": "KIND",
+   "oms": "Kinderfiets 20 inch",
+   "aankoop": 150,
+   "verkoop": 250,
+   "btw": 0.21
+  },
+  {
+   "code": "HELM",
+   "oms": "Fietshelm Urban",
+   "aankoop": 30,
+   "verkoop": 50,
+   "btw": 0.21
+  },
+  {
+   "code": "SLOT",
+   "oms": "Plooislot",
+   "aankoop": 20,
+   "verkoop": 35,
+   "btw": 0.21
+  },
+  {
+   "code": "BAND",
+   "oms": "Buitenband 28 inch",
+   "aankoop": 15,
+   "verkoop": 25,
+   "btw": 0.21
+  },
+  {
+   "code": "KET",
+   "oms": "Fietsketting 8 speed",
+   "aankoop": 10,
+   "verkoop": 20,
+   "btw": 0.21
+  },
+  {
+   "code": "LAMP",
+   "oms": "Verlichtingsset LED",
+   "aankoop": 25,
+   "verkoop": 40,
+   "btw": 0.21
+  },
+  {
+   "code": "HERST",
+   "oms": "Herstelling (arbeid, per stuk)",
+   "aankoop": 0,
+   "verkoop": 50,
+   "btw": 0.06
+  },
+  {
+   "code": "ONDH",
+   "oms": "Onderhoudsbeurt (arbeid, per fiets)",
+   "aankoop": 0,
+   "verkoop": 60,
+   "btw": 0.06
+  }
+ ],
+ "j2": {
+  "proefbalans": [
+   {
+    "rekening": "100000",
+    "naam": "Geplaatst kapitaal",
+    "apko": "P",
+    "slot": -20000
+   },
+   {
+    "rekening": "140000",
+    "naam": "Overgedragen winst",
+    "apko": "P",
+    "slot": -40445
+   },
+   {
+    "rekening": "141000",
+    "naam": "Overgedragen verlies (-)",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "173000",
+    "naam": "Schulden aan kredietinstellingen",
+    "apko": "P",
+    "slot": -25500
+   },
+   {
+    "rekening": "221000",
+    "naam": "Gebouwen",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "221009",
+    "naam": "Afschrijvingen op gebouwen (-)",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "230000",
+    "naam": "Installaties",
+    "apko": "A",
+    "slot": 1500
+   },
+   {
+    "rekening": "230009",
+    "naam": "Afschrijvingen op installaties (-)",
+    "apko": "A",
+    "slot": -600
+   },
+   {
+    "rekening": "232000",
+    "naam": "Uitrusting",
+    "apko": "A",
+    "slot": 500
+   },
+   {
+    "rekening": "232009",
+    "naam": "Afschrijvingen op uitrusting (-)",
+    "apko": "A",
+    "slot": -200
+   },
+   {
+    "rekening": "240000",
+    "naam": "Meubilair",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "240009",
+    "naam": "Afschrijvingen op meubilair (-)",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "240200",
+    "naam": "Computers",
+    "apko": "A",
+    "slot": 2100
+   },
+   {
+    "rekening": "240209",
+    "naam": "Afschrijvingen op computers (-)",
+    "apko": "A",
+    "slot": -1400
+   },
+   {
+    "rekening": "241000",
+    "naam": "Rollend materieel",
+    "apko": "A",
+    "slot": 30000
+   },
+   {
+    "rekening": "241009",
+    "naam": "Afschrijvingen op rollend materieel (-)",
+    "apko": "A",
+    "slot": -7200
+   },
+   {
+    "rekening": "340000",
+    "naam": "Voorraad handelsgoederen",
+    "apko": "A",
+    "slot": 13650
+   },
+   {
+    "rekening": "400000",
+    "naam": "Handelsdebiteuren",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "411000",
+    "naam": "Terug te vorderen btw-saldo",
+    "apko": "A",
+    "slot": 1803
+   },
+   {
+    "rekening": "411100",
+    "naam": "Aftrekbare btw",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "411200",
+    "naam": "Aftrekbare btw op uitgaande creditnota’s",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "418000",
+    "naam": "Terug te vorderen verpakking",
+    "apko": "A",
+    "slot": 250
+   },
+   {
+    "rekening": "423000",
+    "naam": "Binnen het jaar vervallende schulden aan kredietinstellingen",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "440000",
+    "naam": "Leveranciers",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "451000",
+    "naam": "Te betalen btw-saldo",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "451100",
+    "naam": "Verschuldigde btw",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "451200",
+    "naam": "Verschuldigde btw op inkomende creditnota’s",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "488000",
+    "naam": "Terug te betalen verpakking",
+    "apko": "P",
+    "slot": 0
+   },
+   {
+    "rekening": "550000",
+    "naam": "Bankrekening",
+    "apko": "A",
+    "slot": 44997
+   },
+   {
+    "rekening": "570000",
+    "naam": "Kas",
+    "apko": "A",
+    "slot": 545
+   },
+   {
+    "rekening": "580000",
+    "naam": "Interne overboekingen",
+    "apko": "A",
+    "slot": 0
+   },
+   {
+    "rekening": "600000",
+    "naam": "Aankopen grondstoffen",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "604000",
+    "naam": "Aankopen handelsgoederen",
+    "apko": "K",
+    "slot": 60400
+   },
+   {
+    "rekening": "604010",
+    "naam": "Retours op aankopen (-)",
+    "apko": "K",
+    "slot": -8100
+   },
+   {
+    "rekening": "604020",
+    "naam": "Handelskorting op aankopen (-)",
+    "apko": "K",
+    "slot": -3400
+   },
+   {
+    "rekening": "604030",
+    "naam": "Aankoopkosten",
+    "apko": "K",
+    "slot": 600
+   },
+   {
+    "rekening": "609400",
+    "naam": "Voorraadwijzigingen handelsgoederen",
+    "apko": "K",
+    "slot": -1930
+   },
+   {
+    "rekening": "611000",
+    "naam": "Huur en huurlasten",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "611800",
+    "naam": "Onderhoud en herstellingen rollend materieel",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "612000",
+    "naam": "Kantoorbenodigdheden en drukwerk",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "612700",
+    "naam": "Verbruik elektriciteit",
+    "apko": "K",
+    "slot": 1300
+   },
+   {
+    "rekening": "613200",
+    "naam": "Erelonen boekhouders",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "616200",
+    "naam": "Telefoon, gsm",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "616300",
+    "naam": "Internetkosten",
+    "apko": "K",
+    "slot": 300
+   },
+   {
+    "rekening": "616520",
+    "naam": "Publiciteitskosten",
+    "apko": "K",
+    "slot": 0
+   },
+   {
+    "rekening": "630200",
+    "naam": "Afschrijvingen op materiële vaste activa",
+    "apko": "K",
+    "slot": 400
+   },
+   {
+    "rekening": "630300",
+    "naam": "Afschrijvingen op meubilair en rollend materieel",
+    "apko": "K",
+    "slot": 6700
+   },
+   {
+    "rekening": "650000",
+    "naam": "Rente, commissies en kosten verbonden aan schulden",
+    "apko": "K",
+    "slot": 855
+   },
+   {
+    "rekening": "657000",
+    "naam": "Betalingskortingen aan klanten",
+    "apko": "K",
+    "slot": 100
+   },
+   {
+    "rekening": "693000",
+    "naam": "Over te dragen winst",
+    "apko": "K",
+    "slot": 18875
+   },
+   {
+    "rekening": "700000",
+    "naam": "Verkopen en dienstprestaties",
+    "apko": "O",
+    "slot": -3200
+   },
+   {
+    "rekening": "704000",
+    "naam": "Verkopen handelsgoederen",
+    "apko": "O",
+    "slot": -83500
+   },
+   {
+    "rekening": "704010",
+    "naam": "Retours op verkopen (-)",
+    "apko": "O",
+    "slot": 9000
+   },
+   {
+    "rekening": "704020",
+    "naam": "Handelskorting op verkopen (-)",
+    "apko": "O",
+    "slot": 2720
+   },
+   {
+    "rekening": "746000",
+    "naam": "Doorgerekende kosten",
+    "apko": "O",
+    "slot": -720
+   },
+   {
+    "rekening": "757000",
+    "naam": "Betalingskortingen van leveranciers",
+    "apko": "O",
+    "slot": -400
+   },
+   {
+    "rekening": "793000",
+    "naam": "Over te dragen verlies",
+    "apko": "O",
+    "slot": 0
+   }
+  ],
+  "voorraad": [
+   {
+    "artikel": "STAD",
+    "oms": "Stadsfiets City, 7 versnellingen",
+    "begin": 8,
+    "aankopen": 59,
+    "retoursAankoop": 14,
+    "verkopen": 55,
+    "retoursVerkoop": 13,
+    "dagontvangsten": 4,
+    "inventaris": 7,
+    "prijs": 400,
+    "waarde": 2800
+   },
+   {
+    "artikel": "EBIKE",
+    "oms": "E-bike Comfort, 500 Wh",
+    "begin": 4,
+    "aankopen": 10,
+    "retoursAankoop": 0,
+    "verkopen": 11,
+    "retoursVerkoop": 0,
+    "dagontvangsten": 1,
+    "inventaris": 2,
+    "prijs": 1400,
+    "waarde": 2800
+   },
+   {
+    "artikel": "BAK",
+    "oms": "Bakfiets Cargo, 2 wielen",
+    "begin": 1,
+    "aankopen": 9,
+    "retoursAankoop": 1,
+    "verkopen": 6,
+    "retoursVerkoop": 0,
+    "dagontvangsten": 0,
+    "inventaris": 3,
+    "prijs": 1800,
+    "waarde": 5400
+   },
+   {
+    "artikel": "KIND",
+    "oms": "Kinderfiets 20 inch",
+    "begin": 2,
+    "aankopen": 22,
+    "retoursAankoop": 4,
+    "verkopen": 16,
+    "retoursVerkoop": 4,
+    "dagontvangsten": 0,
+    "inventaris": 8,
+    "prijs": 150,
+    "waarde": 1200
+   },
+   {
+    "artikel": "HELM",
+    "oms": "Fietshelm Urban",
+    "begin": 0,
+    "aankopen": 80,
+    "retoursAankoop": 0,
+    "verkopen": 56,
+    "retoursVerkoop": 4,
+    "dagontvangsten": 18,
+    "inventaris": 10,
+    "prijs": 30,
+    "waarde": 300
+   },
+   {
+    "artikel": "SLOT",
+    "oms": "Plooislot",
+    "begin": 10,
+    "aankopen": 20,
+    "retoursAankoop": 0,
+    "verkopen": 0,
+    "retoursVerkoop": 0,
+    "dagontvangsten": 4,
+    "inventaris": 26,
+    "prijs": 20,
+    "waarde": 520
+   },
+   {
+    "artikel": "BAND",
+    "oms": "Buitenband 28 inch",
+    "begin": 28,
+    "aankopen": 10,
+    "retoursAankoop": 0,
+    "verkopen": 0,
+    "retoursVerkoop": 0,
+    "dagontvangsten": 12,
+    "inventaris": 26,
+    "prijs": 15,
+    "waarde": 390
+   },
+   {
+    "artikel": "KET",
+    "oms": "Fietsketting 8 speed",
+    "begin": 5,
+    "aankopen": 10,
+    "retoursAankoop": 0,
+    "verkopen": 0,
+    "retoursVerkoop": 0,
+    "dagontvangsten": 6,
+    "inventaris": 9,
+    "prijs": 10,
+    "waarde": 90
+   },
+   {
+    "artikel": "LAMP",
+    "oms": "Verlichtingsset LED",
+    "begin": 6,
+    "aankopen": 10,
+    "retoursAankoop": 4,
+    "verkopen": 0,
+    "retoursVerkoop": 0,
+    "dagontvangsten": 6,
+    "inventaris": 6,
+    "prijs": 25,
+    "waarde": 150
+   }
+  ]
+ }
+}

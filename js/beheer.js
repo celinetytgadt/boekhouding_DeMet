@@ -74,8 +74,11 @@
      veel dan een link die stilletjes verdwijnt.
      ====================================================================== */
   function taakCategorieen() {
-    var lijst = (typeof CATEGORIE_VOLGORDE !== "undefined" ? CATEGORIE_VOLGORDE : []).slice();
-    lijst.push(SAMEN);
+    // Het oefendossier zet "Noor · " voor zijn categorieën: in de Sheet
+    // staan de taken van beide dossiers onder elkaar.
+    var voor = (api() && api().categoriePrefix) || "";
+    var lijst = (typeof CATEGORIE_VOLGORDE !== "undefined" ? CATEGORIE_VOLGORDE : []).map(function (c) { return voor + c; });
+    lijst.push(voor + SAMEN);
     model.taken.forEach(function (t) {
       if (lijst.indexOf(t.categorie) === -1) lijst.push(t.categorie);
     });

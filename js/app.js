@@ -108,8 +108,17 @@
      1. State: aanmaken, laden, bewaren
      ======================================================================== */
 
-  var LAATSTE_LEERLING_KEY = "boekhoudapp_laatste_leerling";
-  var PREFIX_KEY = "boekhoudapp_vestiging";
+  /* Alle apps op celinetytgadt.github.io delen hetzelfde geheugen in de
+     browser (localStorage). Daarom begint elke sleutel met het voorvoegsel
+     van het dossier (DOSSIER.opslag in js/dossier.js of js/noor/dossier.js):
+     anders leest het oefendossier het werk en de feedback van MetWear, of
+     van de app van het 4e jaar. MetWear houdt "boekhoudapp", zodat het werk
+     dat al in de browsers staat gewoon blijft. */
+  var DOSSIER_INFO = (typeof DOSSIER !== "undefined" && DOSSIER) ? DOSSIER : {};
+  var APP_SLEUTEL = DOSSIER_INFO.opslag || "boekhoudapp";
+  var DOC_MAP = DOSSIER_INFO.documenten || "documenten/";
+  var LAATSTE_LEERLING_KEY = APP_SLEUTEL + "_laatste_leerling";
+  var PREFIX_KEY = APP_SLEUTEL + "_vestiging";
 
   /* De code van de vestiging (LEU, SKW, TW) hoort mee in de bewaarsleutel:
      twee scholen kunnen een gelijknamige leerling hebben, en op een gedeelde
@@ -120,7 +129,7 @@
   try { opslagPrefix = localStorage.getItem(PREFIX_KEY) || ""; } catch (e) { opslagPrefix = ""; }
 
   function storageKeyVoor(student) {
-    return "boekhoudapp_data_" + (opslagPrefix ? opslagPrefix + "_" : "") + slug(student);
+    return APP_SLEUTEL + "_data_" + (opslagPrefix ? opslagPrefix + "_" : "") + slug(student);
   }
 
   function maakLegeRij() {
@@ -516,7 +525,7 @@
   window.handleDocFout = function (img) {
     if (img.dataset.stap === "0") {
       img.dataset.stap = "1";
-      img.src = "documenten/" + img.dataset.doc + ".jpg";
+      img.src = DOC_MAP + img.dataset.doc + ".jpg";
     } else {
       img.style.display = "none";
       var missing = document.getElementById(img.dataset.missingId);
@@ -563,13 +572,13 @@
     var missingId = "missing-" + slug(doc) + "-" + docImgTeller;
     var klasse = klein ? "document-klein" : "document-afbeelding";
     return (
-      '<img class="' + klasse + '" src="documenten/' + escapeAttr(doc) + '.png" ' +
+      '<img class="' + klasse + '" src="' + escapeAttr(DOC_MAP + doc) + '.png" ' +
       'data-doc="' + escapeAttr(doc) + '" data-stap="0" data-missing-id="' + missingId + '" ' +
       'onerror="handleDocFout(this)" onclick="vergrootDoc(this)" ' +
       'title="Klik om het document schermvullend te openen" ' +
       'alt="Verantwoordingsstuk ' + escapeAttr(doc) + '">' +
       '<div class="document-ontbreekt" id="' + missingId + '" style="display:none">' +
-      "Document niet gevonden: documenten/" + escapeAttr(doc) + ".png (of .jpg)</div>"
+      "Document niet gevonden: " + escapeAttr(DOC_MAP + doc) + ".png (of .jpg)</div>"
     );
   }
 
@@ -891,9 +900,25 @@
      beheertabblad), dan wint die. Anders de standaardtekst hieronder. */
   function renderStart() {
     var html = htmlBannerNaamOntbreekt();
-    html += '<h1 class="pagina-titel">Boekhoudapp Kern 8</h1>';
+    html += '<h1 class="pagina-titel">' + escapeAttr(DOSSIER_INFO.titel || "Boekhoudapp Kern 8") + "</h1>";
+    // Het dossier stelt zich eerst voor (enkel het oefendossier heeft zo'n
+    // tekst); daaronder de gewone uitleg over de app.
+    if (DOSSIER_INFO.welkomst) html += '<div class="paneel">' + DOSSIER_INFO.welkomst + "</div>";
+    html += htmlDossierKnop();
     html += '<div class="paneel">' + welkomstHtml() + "</div>";
     return html;
+  }
+
+  /* Een duidelijke knop naar het andere dossier, bovenaan de startpagina.
+     Het linkje in de titelbalk is klein en verdwijnt op een smal scherm. */
+  function htmlDossierKnop() {
+    var ander = DOSSIER_INFO.ander;
+    if (!ander || !ander.url) return "";
+    return '<div class="paneel dossier-keuze">' +
+      "<p>Je werkt nu in <strong>" + escapeAttr(DOSSIER_INFO.titel || "dit dossier") + "</strong>. " +
+      "Je werk in het andere dossier blijft gewoon bewaard.</p>" +
+      '<a class="btn-primair dossier-knop" href="' + escapeAttr(ander.url) + '">Naar ' + escapeAttr(ander.naam) + " →</a>" +
+      "</div>";
   }
 
   function welkomstHtml() {
@@ -2743,7 +2768,27 @@
      12. Opstarten
      ======================================================================== */
 
+  /* De naam van het dossier bovenaan, met een link naar het andere dossier.
+     Beide dossiers delen de aanmelding: wie wisselt, hoeft zich niet
+     opnieuw aan te melden. */
+  function toonDossier() {
+    var naamEl = document.getElementById("app-naam");
+    if (!naamEl) return;
+    if (DOSSIER_INFO.kort) naamEl.textContent = DOSSIER_INFO.kort;
+    if (DOSSIER_INFO.titel) document.title = DOSSIER_INFO.titel + " — De MET";
+    var ander = DOSSIER_INFO.ander;
+    if (!ander || !ander.url || document.getElementById("dossier-wissel")) return;
+    var a = document.createElement("a");
+    a.id = "dossier-wissel";
+    a.className = "dossier-wissel";
+    a.href = ander.url;
+    a.textContent = "→ " + ander.naam;
+    a.title = "Naar het andere dossier. Je werk in dit dossier blijft gewoon staan.";
+    naamEl.parentNode.appendChild(a);
+  }
+
   function init() {
+    toonDossier();
     var laatsteNaam = null;
     try { laatsteNaam = localStorage.getItem(LAATSTE_LEERLING_KEY); } catch (e) {}
     if (laatsteNaam) {

@@ -25,9 +25,8 @@ function kopieerApp(doel, bestanden) {
   ["index.html", "css/style.css", "apps-script/Code.gs"].forEach((b) => {
     fs.copyFileSync(path.join(BRON, b), path.join(doel, b));
   });
-  fs.readdirSync(path.join(BRON, "js")).forEach((b) => {
-    fs.copyFileSync(path.join(BRON, "js", b), path.join(doel, "js", b));
-  });
+  fs.cpSync(path.join(BRON, "js"), path.join(doel, "js"), { recursive: true });
+  fs.copyFileSync(path.join(BRON, "noor.html"), path.join(doel, "noor.html"));
   Object.keys(bestanden).forEach((b) => fs.writeFileSync(path.join(doel, b), bestanden[b]));
 }
 
@@ -235,9 +234,9 @@ function server(url, opts) {
 // De scripts worden zelf ingeladen (en niet door jsdom), zodat de pagina op
 // een https-adres draait. Enkel dan geeft jsdom een werkende localStorage —
 // en net die willen we testen.
-async function start(map) {
+async function start(map, pagina, vooraf) {
   map = map || APP;
-  const html = fs.readFileSync(path.join(map, "index.html"), "utf8");
+  const html = fs.readFileSync(path.join(map, pagina || "index.html"), "utf8");
   const bronnen = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
   const dom = new JSDOM(html.replace(/<script src="[^"]+"><\/script>/g, ""), {
     runScripts: "dangerously",
@@ -246,6 +245,8 @@ async function start(map) {
   });
   dom.window.fetch = server;
   dom.window.navigator.sendBeacon = () => true;
+  // Wat er al in de browser stond (bv. de aanmelding en het werk van MetWear).
+  Object.keys(vooraf || {}).forEach((k) => dom.window.localStorage.setItem(k, vooraf[k]));
 
   // Als <script>-element invoegen en niet met eval: enkel zo komen de
   // const-declaraties (MAR_INDELING, OPDRACHTEN, KLASLIJST …) echt in de
@@ -833,6 +834,113 @@ function vinkIn(venster, naam) {
     dom2.window.document.getElementById("leerling-naam-input").hidden === false);
   check("indienknop verborgen zonder koppeling",
     dom2.window.document.getElementById("btn-indienen").hidden === true);
+
+  console.log("\n19. Het oefendossier Fietsatelier Noor (noor.html)");
+  const NOOR = require(path.join(BRON, "hulpmiddelen/noor/case-j3.json"));
+  const metwearWerk = JSON.stringify({ student: "Lotte V.", boekingen: { AK01: { geboekt: true, rows: [] } } });
+  const vooraf = {
+    boekhoudapp_aanmelding: JSON.stringify({ vestiging: "LEU", naam: "Lotte V.", code: codeLotte }),
+    boekhoudapp_vestiging: "leu",
+    boekhoudapp_laatste_leerling: "Lotte V.",
+    "boekhoudapp_data_leu_lotte-v": metwearWerk,
+    boekhoudapp_feedback_LEU_lottev: JSON.stringify({ AK01: [{ beoordeling: "In orde", feedback: "metwear" }] }),
+  };
+  const metwearVoor = (gedeeld.bestanden.find((b) => b.naam === "werk_LEU_lottev.json") || {}).inhoud;
+
+  // Eerst met een script dat het dossier nog niet kent: dan mag er niets
+  // naar de server gaan, anders belandt Noor in het werkbestand van MetWear.
+  omgeving.DOSSIERS = [];
+  const domOud = await start(APP, "noor.html", vooraf);
+  await new Promise((r) => setTimeout(r, 120));
+  const wo = domOud.window;
+  const opdrN = wo.eval("OPDRACHTEN.map(function (o) { return o.ref; })");
+  check("oefendossier laadt zijn eigen opdrachten", opdrN.length === 56 && opdrN[0] === "BB" && opdrN.indexOf("LOON06") !== -1, opdrN.length);
+  check("gedeelde aanmelding: Lotte is meteen aangemeld", wo.APP.getState().student === "Lotte V.", wo.APP.getState().student);
+  check("het werk van MetWear staat er niet in", !wo.APP.getState().boekingen.AK01, Object.keys(wo.APP.getState().boekingen));
+  check("oud script: melding dat het oefendossier nog niet ingesteld is",
+    /nog niet ingesteld/.test(wo.document.getElementById("koppeling-status").textContent),
+    wo.document.getElementById("koppeling-status").textContent);
+  wo.APP.getState().boekingen.AK01 = { geboekt: true, rows: [{ bedrag: "1", rekening: "604000", dc: "D" }] };
+  wo.APP.saveState();
+  wo.document.getElementById("btn-indienen").click();
+  await new Promise((r) => setTimeout(r, 80));
+  check("oud script: indienen geweigerd met uitleg",
+    /nog niet ingesteld/.test((wo.document.querySelector(".koppeling-overlay") || {}).textContent || ""));
+  check("oud script: geen werkbestand voor Noor, MetWear onaangeroerd",
+    !gedeeld.bestanden.some((b) => /^werk_NOOR_/.test(b.naam)) &&
+      (gedeeld.bestanden.find((b) => b.naam === "werk_LEU_lottev.json") || {}).inhoud === metwearVoor);
+  omgeving.DOSSIERS = ["NOOR"];
+
+  // Nu met het bijgewerkte script.
+  const domN = await start(APP, "noor.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  const wn = domN.window;
+  check("de vestiging staat onder het eigen voorvoegsel", wn.localStorage.getItem("kern8noor_vestiging") === "leu",
+    Object.keys(wn.localStorage));
+  check("de feedback van MetWear staat er niet", wn.feedbackVoor("AK01").length === 0, wn.feedbackVoor("AK01"));
+  check("bovenaan een link naar MetWear", (wn.document.getElementById("dossier-wissel") || {}).getAttribute &&
+    wn.document.getElementById("dossier-wissel").getAttribute("href") === "index.html");
+
+  // AK01 volgens de sleutel, AK02 met een fout.
+  const rijenVolgens = (ref, fout) => {
+    const s = {};
+    NOOR.journaal.filter((j) => j.ref === ref).forEach((j) => { s[j.rekening] = (s[j.rekening] || 0) + j.debet - j.credit; });
+    return Object.keys(s).map((nr, i) => ({ bedrag: String(Math.abs(s[nr]) + (fout && i === 0 ? 1 : 0)).replace(".", ","),
+      rekening: nr, dc: s[nr] > 0 ? "D" : "C", relatie: /^4[04]0000$/.test(nr) ? "Velomax bv" : "", redenering: "", apko: "", stijgtDaalt: "" }));
+  };
+  const stN = wn.APP.getState();
+  stN.boekingen.AK01 = { geboekt: true, rows: rijenVolgens("AK01") };
+  stN.boekingen.AK02 = { geboekt: true, rows: rijenVolgens("AK02", true) };
+  wn.APP.saveState();
+  check("eigen opslag: kern8noor_data_… en kern8noor_laatste_leerling",
+    !!wn.localStorage.getItem("kern8noor_data_leu_lotte-v") && wn.localStorage.getItem("kern8noor_laatste_leerling") === "Lotte V." &&
+      wn.localStorage.getItem("boekhoudapp_data_leu_lotte-v") === metwearWerk,
+    Object.keys(wn.localStorage));
+  // De opdrachtpagina toont het document uit documenten/noor/.
+  wn.location.hash = "";
+  check("de documenten komen uit documenten/noor/", wn.eval("typeof DOSSIER") === "object" && wn.eval("DOSSIER.documenten") === "documenten/noor/");
+  wn.document.getElementById("btn-indienen").click();
+  await new Promise((r) => setTimeout(r, 60));
+  const vn = wn.document.querySelector(".koppeling-overlay");
+  const catsN = [...vn.querySelectorAll("[data-cat]")].map((v) => v.dataset.cat);
+  check("indienvenster toont de lessen", catsN.includes("Aankopen 1 · kortingen") && catsN.includes("Lonen 2 · RSZ, voorheffing en personeelskosten"), catsN);
+  const voorN = inz.getLastRow();
+  vinkIn(vn, "Aankopen 1 · kortingen");
+  vn.querySelector("#btn-indienen-bevestig").click();
+  await new Promise((r) => setTimeout(r, 40));
+  vn.querySelector('[data-role="bevestig-ja"]').click();
+  await new Promise((r) => setTimeout(r, 160));
+  const noorRijen = inz.rijen.slice(voorN);
+  check("zes rijen voor les 'Aankopen 1'", noorRijen.length === 6, noorRijen.length);
+  check("refs met NOOR- ervoor", noorRijen.every((r) => /^NOOR-AK0[1-6]$/.test(r[3])), noorRijen.map((r) => r[3]));
+  check("categorie met Noor · ervoor", noorRijen.every((r) => r[2] === "Noor · Aankopen 1 · kortingen"), noorRijen.map((r) => r[2]));
+  const rijN = (ref) => noorRijen.find((r) => r[3] === ref);
+  check("ingebouwde sleutel: AK01 automatisch In orde", rijN("NOOR-AK01")[6] === "In orde", rijN("NOOR-AK01").slice(6, 12));
+  check("ingebouwde sleutel: AK02 met fout wordt Te remediëren", rijN("NOOR-AK02")[6] === "Te remediëren", rijN("NOOR-AK02")[11]);
+  check("niet begonnen blijft zonder beoordeling", rijN("NOOR-AK03")[6] === "", rijN("NOOR-AK03"));
+  check("werkbestand werk_NOOR_LEU_lottev.json", gedeeld.bestanden.some((b) => b.naam === "werk_NOOR_LEU_lottev.json"),
+    gedeeld.bestanden.map((b) => b.naam));
+  check("het werkbestand van MetWear is niet overschreven",
+    (gedeeld.bestanden.find((b) => b.naam === "werk_LEU_lottev.json") || {}).inhoud === metwearVoor);
+  check("taken van Noor in het tabblad Taken",
+    sheets.Taken.rijen.some((r) => r[0] === "Noor · Lonen 1 · loonstaten"), sheets.Taken.rijen.map((r) => r[0]));
+
+  // Feedback vrijgeven en terug ophalen: enkel in het juiste dossier.
+  inz.rijen.forEach((r, i) => { if (r[3] === "NOOR-AK01") { inz.zet(i + 1, 8, "noor-feedback"); inz.zet(i + 1, 9, true); } });
+  wn.document.getElementById("btn-feedback").click();
+  await new Promise((r) => setTimeout(r, 120));
+  check("Noor ziet zijn feedback bij AK01", wn.feedbackVoor("AK01").some((f) => f.feedback === "noor-feedback"), wn.feedbackVoor("AK01"));
+  const domM = await start(APP, "index.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("MetWear krijgt de feedback van Noor niet", !domM.window.feedbackVoor("AK01").some((f) => f.feedback === "noor-feedback"),
+    domM.window.feedbackVoor("AK01"));
+  check("MetWear houdt zijn eigen opslag", domM.window.localStorage.getItem("boekhoudapp_laatste_leerling") === "Lotte V.");
+
+  // Werk terugzetten voor het oefendossier.
+  antwoordPrompt = "NOOR Lotte V.";
+  laatsteAlert = "";
+  omgeving.zetVersieTerug();
+  check("werk terugzetten met NOOR ervoor zoekt het oefendossier", !/Onbekend|Geen bewaarde versies gevonden voor NOOR/.test(laatsteAlert), laatsteAlert.slice(0, 160));
 
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);

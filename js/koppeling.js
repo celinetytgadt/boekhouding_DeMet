@@ -41,8 +41,27 @@
   // De gekozen vestiging (een object uit de lijst hierboven).
   var vestiging = vestigingen.length === 1 ? vestigingen[0] : null;
 
+  /* Het dossier van deze pagina (js/dossier.js of js/noor/dossier.js).
+     De aanmelding (school, naam, code) delen de dossiers: dezelfde Sheet,
+     dezelfde klaslijst, en zo hoeft niemand zich bij het wisselen opnieuw
+     aan te melden. De feedback heeft het eigen voorvoegsel van het dossier,
+     net als het werk in app.js. */
+  var DOS = (typeof DOSSIER !== "undefined" && DOSSIER) ? DOSSIER : {};
+  var DOSSIER_CODE = DOS.code || "";
+  // Wat er in de Sheet voor de ref en de categorie komt: NOOR-AK01 en
+  // "Noor · Aankopen 1 · kortingen". MetWear heeft geen voorvoegsel.
+  var REF_PREFIX = DOSSIER_CODE ? DOSSIER_CODE + "-" : "";
+  var CAT_PREFIX = DOSSIER_CODE ? (DOS.categoriePrefix || DOSSIER_CODE + " · ") : "";
   var AANMELD_KEY = "boekhoudapp_aanmelding";
-  var FEEDBACK_KEY_PREFIX = "boekhoudapp_feedback_";
+  var FEEDBACK_KEY_PREFIX = (DOS.opslag || "boekhoudapp") + "_feedback_";
+
+  /* Kent het script van deze vestiging dit dossier? Een script van vóór de
+     dossiers zou het werk van Noor in het werkbestand van MetWear schrijven.
+     Zolang dat niet zeker is, gaat er van een dossier met een code niets naar
+     de server: het werk blijft dan enkel in de browser. MetWear (zonder code)
+     werkt altijd zoals vroeger.
+       null   nog niet gevraagd   true  ja   false  nee, script te oud */
+  var dossierOk = DOSSIER_CODE ? null : true;
 
   // Wat de vakexpert als "in orde" aanduidt, gaat op slot: het wordt niet
   // meer meegestuurd bij een volgende inzending. Deze tekst moet exact
@@ -242,6 +261,7 @@
     data.sleutel = sleutelwoord();
     data.naam = aanmelding ? aanmelding.naam : "";
     data.code = aanmelding ? aanmelding.code : "";
+    if (DOSSIER_CODE) data.dossier = DOSSIER_CODE;
     return data;
   }
 
@@ -284,6 +304,7 @@
           // Elke vestiging heeft haar eigen Sheet, en dus haar eigen
           // klaslijst, teksten en taken.
           instellingen = {}; taken = {}; klasServer = null;
+          if (DOSSIER_CODE) dossierOk = null;
           window.INSTELLINGEN = instellingen;
           vulNamen();
           haalInstellingen();
@@ -365,6 +386,25 @@
     laadFeedbackUitBrowser();
     APP.renderAlles();
 
+    zekerVanDossier(function (ok) {
+      if (!ok) { status(TEKST_SCRIPT_TE_OUD, "fout"); return; }
+      haalWerkVanServer();
+      if (cfg.feedbackBijOpstart) haalFeedback(true);
+    });
+  }
+
+  var TEKST_SCRIPT_TE_OUD = "Het oefendossier is nog niet ingesteld voor jouw school: je werk wordt enkel in deze " +
+    "browser bewaard en je kan nog niet indienen. Verwittig je vakexpert (Code.gs bijwerken).";
+
+  /* Roept daarna(true) op als er voor dit dossier met de server gepraat mag
+     worden. Voor MetWear meteen; voor een ander dossier pas als het script
+     van de vestiging laten weten heeft dat het het dossier kent. */
+  function zekerVanDossier(daarna) {
+    if (dossierOk !== null) { daarna(dossierOk); return; }
+    haalInstellingen(function () { daarna(dossierOk === true); });
+  }
+
+  function haalWerkVanServer() {
     haal(metAanmelding({ actie: "werk" }))
       .then(function (r) {
         if (!r || !r.ok) { status(foutTekst(r), "fout"); return; }
@@ -392,8 +432,6 @@
         console.error(err);
         startAutoBewaren();
       });
-
-    if (cfg.feedbackBijOpstart) haalFeedback(true);
   }
 
   function neemOver(r) {
@@ -421,7 +459,7 @@
   }
 
   function bewaarNaarServer(altijd) {
-    if (!actief() || !aanmelding) return Promise.resolve(false);
+    if (!actief() || !aanmelding || dossierOk !== true) return Promise.resolve(false);
     if (!altijd && !teBewaren) return Promise.resolve(false);
     if (bezigMetBewaren) return Promise.resolve(false);
 
@@ -449,7 +487,7 @@
   // Bij het sluiten van het tabblad is er geen tijd meer voor een gewoon
   // verzoek. sendBeacon vertrekt ook als de pagina al aan het afsluiten is.
   function bewaarViaBeacon() {
-    if (!actief() || !aanmelding || !teBewaren) return;
+    if (!actief() || !aanmelding || !teBewaren || dossierOk !== true) return;
     try {
       var pakket = JSON.stringify(metAanmelding({ actie: "bewaren", state: APP.getState() }));
       var blob = new Blob([pakket], { type: "text/plain;charset=utf-8" });
@@ -483,6 +521,7 @@
         // Intussen een andere school gekozen? Dan is dit antwoord verouderd.
         if (!vestiging || vestiging.code !== voorVestiging) return;
         if (!r || !r.ok) { if (daarna) daarna(); return; }
+        if (DOSSIER_CODE) dossierOk = Array.isArray(r.dossiers) && r.dossiers.indexOf(DOSSIER_CODE) !== -1;
         zetInstellingen(voorVestiging, r.instellingen, r.taken, r.klas);
         if (daarna) daarna();
       })
@@ -550,12 +589,17 @@
      toont de app de herinnering zonder knop: liever geen knop dan een knop
      die op een foutmelding uitkomt. */
   function taakLink(categorie) {
-    var ruw = taken[categorie];
+    // In de Sheet staan de taken van beide dossiers; die van het oefendossier
+    // beginnen met "Noor · ". Enkel de eigen rijen tellen.
+    var ruw = taken[CAT_PREFIX + categorie];
     if (!ruw) {
       var sleutels = Object.keys(taken);
       for (var i = 0; i < sleutels.length; i++) {
-        var delen = sleutels[i].split("&").map(function (d) { return d.trim().toLowerCase(); });
-        if (delen.indexOf(String(categorie).toLowerCase()) !== -1) { ruw = taken[sleutels[i]]; break; }
+        var sleutel = sleutels[i];
+        var vanAnderDossier = CAT_PREFIX ? sleutel.indexOf(CAT_PREFIX) !== 0 : /^\S+ · /.test(sleutel);
+        if (vanAnderDossier) continue;
+        var delen = sleutel.slice(CAT_PREFIX.length).split("&").map(function (d) { return d.trim().toLowerCase(); });
+        if (delen.indexOf(String(categorie).toLowerCase()) !== -1) { ruw = taken[sleutel]; break; }
       }
     }
     ruw = String(ruw || "").trim();
@@ -664,6 +708,13 @@
     }
     if (!aanmelding) {
       toonMelding("Indienen", "Meld je eerst bovenaan aan met je naam en je code.");
+      return;
+    }
+    if (dossierOk !== true) {
+      zekerVanDossier(function (ok) {
+        if (ok) openIndienVenster();
+        else toonMelding("Indienen", esc(TEKST_SCRIPT_TE_OUD));
+      });
       return;
     }
 
@@ -800,6 +851,13 @@
     }
 
     zetModalInhoud(venster, htmlBezig("Even geduld, je werk wordt verzonden…"));
+
+    // In de Sheet staan beide dossiers door elkaar: de ref en de categorie
+    // krijgen er het dossier vóór (NOOR-AK01). MetWear blijft zoals het was.
+    items.forEach(function (it) {
+      it.ref = REF_PREFIX + it.ref;
+      it.categorie = CAT_PREFIX + it.categorie;
+    });
 
     stuur(metAanmelding({ actie: "indienen", items: items }))
       .then(function (r) {
@@ -995,6 +1053,13 @@
       if (!stil) toonMelding("Feedback ophalen", "Meld je eerst bovenaan aan met je naam en je code.");
       return;
     }
+    if (dossierOk !== true) {
+      zekerVanDossier(function (ok) {
+        if (ok) haalFeedback(stil);
+        else if (!stil) toonMelding("Feedback ophalen", esc(TEKST_SCRIPT_TE_OUD));
+      });
+      return;
+    }
 
     var venster = null;
     if (!stil) {
@@ -1013,8 +1078,10 @@
         var vorigAantal = tel(feedback);
         var nieuw = {};
         (r.feedback || []).forEach(function (f) {
-          if (!nieuw[f.ref]) nieuw[f.ref] = [];
-          nieuw[f.ref].push(f);   // de server stuurt ze al nieuwste eerst
+          var ref = refVanDitDossier(f.ref);
+          if (ref === null) return;
+          if (!nieuw[ref]) nieuw[ref] = [];
+          nieuw[ref].push(f);   // de server stuurt ze al nieuwste eerst
         });
         feedback = nieuw;
         schrijf(feedbackKey(), JSON.stringify(feedback));
@@ -1041,6 +1108,16 @@
         if (venster) zetModalInhoud(venster.el, htmlMelding("fout", "Niet gelukt",
           esc(foutUitleg(err)) + " Je feedback kon niet opgehaald worden — probeer het straks opnieuw."));
       });
+  }
+
+  /* De Sheet geeft de feedback van alle dossiers. Hoort de ref bij dit
+     dossier, dan komt ze terug zonder voorvoegsel (NOOR-AK01 → AK01);
+     anders null. MetWear-refs hebben geen voorvoegsel: een ref als NOOR-AK01
+     hoort dus nooit bij MetWear. */
+  function refVanDitDossier(ref) {
+    ref = String(ref || "");
+    if (REF_PREFIX) return ref.indexOf(REF_PREFIX) === 0 ? ref.slice(REF_PREFIX.length) : null;
+    return /^[A-Z][A-Z0-9]*-/.test(ref) ? null : ref;
   }
 
   // Hoeveel feedbackronden er in totaal zijn (niet: hoeveel verrichtingen).
@@ -1141,6 +1218,7 @@
     stuur: function (data) { return stuur(data); },
     sleutel: sleutelwoord,
     foutUitleg: foutUitleg,
+    categoriePrefix: CAT_PREFIX,
     // Het beheertabblad heeft net bewaard en kreeg alles terug: de app
     // meteen bijwerken, zonder er nóg een verzoek voor te doen.
     neemBeheerOver: function (r) {

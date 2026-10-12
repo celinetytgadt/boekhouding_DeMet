@@ -273,6 +273,15 @@ const MAR = [
   "rubriek_oms": "Meubilair & rollend materieel"
  },
 {
+  "nr": 300000,
+  "naam": "Voorraad grondstoffen",
+  "apko": "A",
+  "klasse": "3",
+  "klasse_oms": "Voorraden",
+  "rubriek": "30",
+  "rubriek_oms": "Voorraden"
+ },
+ {
   "nr": 340000,
   "naam": "Voorraad handelsgoederen",
   "apko": "A",
@@ -518,7 +527,7 @@ const MAR = [
 {
   "nr": 490000,
   "naam": "Over te dragen kosten",
-  "apko": "P",
+  "apko": "A",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
   "rubriek": "49",
@@ -527,7 +536,7 @@ const MAR = [
  {
   "nr": 491000,
   "naam": "Verkregen opbrengsten",
-  "apko": "P",
+  "apko": "A",
   "klasse": "4",
   "klasse_oms": "Vorderingen en schulden op ten hoogste 1 jaar",
   "rubriek": "49",
@@ -577,6 +586,15 @@ const MAR = [
   "klasse_oms": "Liquide middelen",
   "rubriek": "58",
   "rubriek_oms": "Interne overboekingen"
+ },
+ {
+  "nr": 600000,
+  "naam": "Aankopen grondstoffen",
+  "apko": "K",
+  "klasse": "6",
+  "klasse_oms": "Kosten",
+  "rubriek": "60",
+  "rubriek_oms": "Handelsgoederen, grond- en hulpstoffen"
  },
  {
   "nr": 604000,
@@ -1117,6 +1135,15 @@ const MAR = [
   "klasse_oms": "Kosten",
   "rubriek": "69",
   "rubriek_oms": "Resultaatverwerking"
+ },
+ {
+  "nr": 700000,
+  "naam": "Verkopen en dienstprestaties",
+  "apko": "O",
+  "klasse": "7",
+  "klasse_oms": "Opbrengsten",
+  "rubriek": "70",
+  "rubriek_oms": "Omzet"
  },
  {
   "nr": 704000,
