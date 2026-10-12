@@ -23,7 +23,7 @@ python3 hulpmiddelen/noor/maak-excel.py "case fietsatelier noor.xlsx" "uit.xlsx"
 | `maak-data.js` | `js/noor/data-opdrachten.js`, `js/noor/data-relaties.js` en het blok `SLEUTEL_NOOR` onderaan `apps-script/Code.gs` |
 | `maak-documenten.js` | `documenten/noor/*.png` — 56 stukken. Zelfde huisstijl per bedrijf als in BKH4. Met `AK01 BANK03` enkel die. Chrome niet gevonden? Zet het pad in `CHROME_PAD`. |
 | `maak-excel.py` | de Excel van de case met de tabbladen J3 erbij |
-| `maak-pdf.py` | `cursus/Oefendossier_Noor_documenten.pdf`: alle documenten om te printen, per les, één per pagina, met een voorblad |
+| `maak-pdf.py` | `cursus/Oefendossier_Noor_documenten.pdf`: alle documenten om te printen, per les, één per pagina, met een voorblad; en `…_2_per_pagina.pdf` met twee documenten per pagina (elke les op een nieuwe pagina) |
 
 `basis-j1j2.json` komt uit de Excel (bedrijven, artikelen, proefbalans en
 voorraad van jaar 2): daaruit volgt de beginbalans van 2028.
