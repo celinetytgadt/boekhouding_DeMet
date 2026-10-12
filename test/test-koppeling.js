@@ -942,6 +942,30 @@ function vinkIn(venster, naam) {
   omgeving.zetVersieTerug();
   check("werk terugzetten met NOOR ervoor zoekt het oefendossier", !/Onbekend|Geen bewaarde versies gevonden voor NOOR/.test(laatsteAlert), laatsteAlert.slice(0, 160));
 
+  console.log("\n20. Oefendossier tonen of niet (instelling in Beheer)");
+  const zetOefen = (w) => {
+    const b = sheets.Instellingen;
+    let rij = b.rijen.findIndex((r) => r[0] === "oefendossier");
+    if (rij === -1) { b.rijen.push(["oefendossier", "", ""]); rij = b.rijen.length - 1; }
+    b.zet(rij + 1, 2, w);
+    omgeving.vergeetInstellingen_();
+  };
+  check("de instelling oefendossier staat in het tabblad Instellingen (standaard ja)",
+    sheets.Instellingen.rijen.some((r) => r[0] === "oefendossier" && r[1] === "ja"), sheets.Instellingen.rijen.map((r) => r[0] + "=" + r[1]));
+  const knopNaarNoor = (w) => [...w.document.querySelectorAll(".dossier-knop")].some((a) => /noor\.html/.test(a.getAttribute("href")));
+  const linkNaarNoor = (w) => { const a = w.document.getElementById("dossier-wissel"); return !!a && !a.hidden; };
+  const domJa = await start(APP, "index.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("ja: knop en link naar Noor in MetWear", knopNaarNoor(domJa.window) && linkNaarNoor(domJa.window));
+  zetOefen("nee");
+  const domNee = await start(APP, "index.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("nee: geen knop en geen link naar Noor in MetWear", !knopNaarNoor(domNee.window) && !linkNaarNoor(domNee.window));
+  const domNeeN = await start(APP, "noor.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("nee: noor.html zegt dat het niet openstaat", /niet open/.test(domNeeN.window.document.getElementById("pagina-inhoud").textContent));
+  zetOefen("ja");
+
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

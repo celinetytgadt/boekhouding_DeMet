@@ -70,6 +70,7 @@ expertcode) of rechtstreeks in de Sheet:
 | een mededeling bovenaan elke pagina | rij `mededeling` |
 | de link naar de cursus (knop bovenaan) | rij `cursusUrl` |
 | de link naar de handleiding (knop bovenaan) | rij `handleidingUrl` |
+| oefendossier Noor tonen of niet (`ja`/`nee`) | rij `oefendossier` |
 | de expertcode | rij `expertcode` — enkel in de Sheet te wijzigen |
 
 Elke vestiging heeft haar eigen Sheet en dus haar eigen instellingen. Is de

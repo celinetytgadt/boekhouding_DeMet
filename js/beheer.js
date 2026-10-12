@@ -222,6 +222,22 @@
       veld("handleidingUrl", "Link naar de handleiding",
         "Komt als knop <em>Handleiding</em> bovenaan te staan. Leeg = geen knop.",
         "https://…") +
+      "</div>" + htmlOefendossier();
+  }
+
+  /* Het oefendossier Fietsatelier Noor (noor.html) aan of uit voor deze
+     school. Leeg in de Sheet telt als ja. */
+  function htmlOefendossier() {
+    var nu = String(model.instellingen.oefendossier || "").trim().toLowerCase() === "nee" ? "nee" : "ja";
+    return '<div class="paneel">' +
+      "<h2>Oefendossier Fietsatelier Noor</h2>" +
+      '<label class="beheer-veld"><span class="beheer-label">Oefendossier tonen</span>' +
+      '<select data-role="inst" data-sleutel="oefendossier">' +
+      '<option value="ja"' + (nu === "ja" ? " selected" : "") + ">ja, de leerlingen zien het oefendossier</option>" +
+      '<option value="nee"' + (nu === "nee" ? " selected" : "") + ">nee, verbergen</option>" +
+      "</select>" +
+      '<span class="beheer-uitleg">Bij <em>ja</em> staat in MetWear een knop naar het oefendossier. Bij <em>nee</em> is die knop weg, ' +
+      "en wie het oefendossier toch opent, leest dat het voor deze school niet openstaat. Het werk van de leerlingen blijft altijd bewaard.</span></label>" +
       "</div>";
   }
 
@@ -425,6 +441,13 @@
         if (rol === "taak") { taakVoor(t.dataset.cat).link = t.value; return; }
         if (rol === "klas-naam") { model.klas[+t.dataset.i].naam = t.value; return; }
         if (rol === "klas-opm") { model.klas[+t.dataset.i].opmerking = t.value; return; }
+      });
+
+      // Een keuzelijst meldt zich met "change" (niet overal met "input").
+      el.addEventListener("change", function (e) {
+        if (!opBeheerpagina()) return;
+        var t = e.target;
+        if (t.tagName === "SELECT" && t.dataset && t.dataset.role === "inst") model.instellingen[t.dataset.sleutel] = t.value;
       });
 
       el.addEventListener("keydown", function (e) {

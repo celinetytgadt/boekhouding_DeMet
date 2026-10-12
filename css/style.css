@@ -77,6 +77,7 @@ button {
   text-decoration: underline;
 }
 #topbar-title .dossier-wissel:hover { opacity: 1; }
+#topbar-title .dossier-wissel[hidden] { display: none; }
 
 #topbar-leerling {
   display: flex;
@@ -1886,7 +1887,7 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 
 .beheer-veld { display: block; margin-bottom: 16px; }
 .beheer-label { display: block; font-weight: 600; margin-bottom: 4px; }
-.beheer-veld input[type="text"], .beheer-veld textarea, .beheer-slot textarea,
+.beheer-veld input[type="text"], .beheer-veld select, .beheer-veld textarea, .beheer-slot textarea,
 .paneel textarea[data-role="klas-plak"] {
   width: 100%;
   padding: 7px 9px;
