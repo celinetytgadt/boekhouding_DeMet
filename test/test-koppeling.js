@@ -211,8 +211,11 @@ vm.runInContext(fs.readFileSync(path.join(APP, "apps-script/Code.gs"), "utf8"), 
 
 /* ===================== nagemaakte server ===================== */
 
+let serverHangt = false;   // nagebootst: Google laat de web-app wachten
+
 function server(url, opts) {
   const u = new URL(url);
+  if (serverHangt && u.searchParams.get("actie") === "instellingen") return new Promise(() => {});
   if (u.hostname === "faketw") {
     // De tweede vestiging: een eigen Sheet, nog helemaal leeg. Haar app valt
     // dus terug op js/data-klas.js.
@@ -971,6 +974,18 @@ function vinkIn(venster, naam) {
   await new Promise((r) => setTimeout(r, 150));
   check("nee: noor.html zegt dat het niet openstaat", /niet open/.test(domNeeN.window.document.getElementById("pagina-inhoud").textContent));
   zetOefen("ja");
+
+  console.log("\n21. Namenlijst meteen zichtbaar, ook als Google traag is");
+  const kopie = domJa.window.localStorage.getItem("boekhoudapp_instellingen_LEU");
+  check("de klaslijst staat na het ophalen in de browser", !!kopie && JSON.parse(kopie).klas.length > 0, kopie);
+  check("zonder codes van de leerlingen", !!kopie && !/"code"/.test(kopie), kopie);
+  serverHangt = true;
+  for (const pagina of ["index.html", "noor.html"]) {
+    const domTraag = await start(APP, pagina, Object.assign({}, vooraf, { boekhoudapp_instellingen_LEU: kopie }));
+    const opties = [...domTraag.window.document.getElementById("leerling-select").options].map((o) => o.value).filter(Boolean);
+    check(pagina + ": namen staan er al vóór de server antwoordt", opties.length === JSON.parse(kopie).klas.length, opties);
+  }
+  serverHangt = false;
 
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);

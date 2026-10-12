@@ -53,6 +53,9 @@
   var REF_PREFIX = DOSSIER_CODE ? DOSSIER_CODE + "-" : "";
   var CAT_PREFIX = DOSSIER_CODE ? (DOS.categoriePrefix || DOSSIER_CODE + " · ") : "";
   var AANMELD_KEY = "boekhoudapp_aanmelding";
+  // De laatst opgehaalde klaslijst, teksten en taken per vestiging, gedeeld
+  // door beide dossiers (zelfde Sheet). Zie haalInstellingen().
+  var INSTELLINGEN_KEY_PREFIX = "boekhoudapp_instellingen_";
   var FEEDBACK_KEY_PREFIX = (DOS.opslag || "boekhoudapp") + "_feedback_";
 
   /* Kent het script van deze vestiging dit dossier? Een script van vóór de
@@ -515,6 +518,17 @@
     if (instellingenBezig) { if (daarna) daarna(); return; }
     instellingenBezig = true;
     var voorVestiging = vestiging.code;
+    /* Google laat een web-app soms seconden wachten voor ze antwoordt. De
+       versie van de vorige keer staat al in de browser: die verschijnt
+       meteen, zodat de leerling haar naam al kan kiezen. Het verse antwoord
+       vervangt ze zodra het binnen is. Enkel na het leegmaken van de cache
+       (of de allereerste keer) is er dus nog te wachten. */
+    if (!klasServer || klasServer.code !== voorVestiging) {
+      try {
+        var bewaard = JSON.parse(lees(INSTELLINGEN_KEY_PREFIX + voorVestiging) || "null");
+        if (bewaard) zetInstellingen(voorVestiging, bewaard.instellingen, bewaard.taken, bewaard.klas);
+      } catch (e) { /* kapotte kopie: gewoon wachten op de server */ }
+    }
     haal({ actie: "instellingen", sleutel: sleutelwoord() })
       .then(function (r) {
         instellingenBezig = false;
@@ -552,6 +566,10 @@
       return typeof l === "string" ? l : String((l && l.naam) || "");
     }).filter(Boolean) };
     window.INSTELLINGEN = instellingen;
+    // Enkel de namen, nooit de codes (het beheerantwoord heeft die erbij).
+    schrijf(INSTELLINGEN_KEY_PREFIX + code, JSON.stringify({
+      instellingen: instellingen, taken: taken, klas: klasServer.namen,
+    }));
     zetTopbarLinks();
     if (vulNamenFn) vulNamenFn();
     APP.renderAlles();

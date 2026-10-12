@@ -6,7 +6,9 @@
 # afbeeldingen uit documenten/noor/, en schrijft
 # cursus/Oefendossier_Noor_documenten.pdf: een voorblad met de stukken per
 # les, daarna één document per A4-pagina, met bovenaan de les en de
-# referentie (zoals in de app). Een document dat bij meer opdrachten hoort
+# referentie (zoals in de app). Daarnaast
+# cursus/Oefendossier_Noor_documenten_2_per_pagina.pdf: hetzelfde met twee
+# documenten onder elkaar per pagina (een les begint op een nieuwe pagina). Een document dat bij meer opdrachten hoort
 # (bv. de aflossingstabel), staat er één keer in.
 #
 # Nodig: Python 3 met Pillow (pip install pillow), en Node.js.
@@ -20,6 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 DOCS = os.path.join(ROOT, "documenten", "noor")
 UIT = os.path.join(ROOT, "cursus", "Oefendossier_Noor_documenten.pdf")
+UIT_2 = os.path.join(ROOT, "cursus", "Oefendossier_Noor_documenten_2_per_pagina.pdf")
 
 js = """
 const fs = require('fs');
@@ -68,48 +71,79 @@ for o in data["OPDRACHTEN"]:
         gezien.add(bestand)
         stukken.append({"bestand": bestand, "ref": ref, "titel": titel, "les": o["categorie"]})
 
-paginas = []
 
-# ---- voorblad met de inhoud per les
-voor = Image.new("RGB", (B, H), "white")
-d = ImageDraw.Draw(voor)
-d.rectangle([0, 0, B, 26], fill=GROEN)
-d.text((MARGE, 90), "Oefendossier Fietsatelier Noor", font=F_TITEL, fill=DONKER)
-d.text((MARGE, 155), "Verantwoordingsstukken 1e kwartaal 2028 · per les, in de volgorde van de app", font=F_TEKST, fill=GRIJS)
-y = 240
-per_les = {}
-for s in stukken:
-    per_les.setdefault(s["les"], []).append(s["ref"])
-nr = 2   # pagina 1 is dit voorblad
-for les in data["CATEGORIE_VOLGORDE"] + ["Resultaatverwerking"]:
-    refs = per_les.get(les)
-    if not refs:
-        continue
-    d.text((MARGE, y), les, font=F_KOP, fill=DONKER)
-    tekst = ", ".join(refs) + "   (p. %d%s)" % (nr, "" if len(refs) == 1 else "–%d" % (nr + len(refs) - 1))
-    d.text((MARGE + 30, y + 40), tekst, font=F_TEKST, fill=(40, 40, 40))
-    nr += len(refs)
-    y += 100
-d.text((MARGE, H - 90), "Dit zijn fictieve documenten, gemaakt voor de lessen boekhouden.", font=F_KLEIN, fill=GRIJS)
-paginas.append(voor)
 
-# ---- één document per pagina
-for i, s in enumerate(stukken, start=2):
-    p = Image.new("RGB", (B, H), "white")
-    d = ImageDraw.Draw(p)
-    d.text((MARGE, 50), s["les"], font=F_TEKST, fill=GRIJS)
-    breedte_ref = d.textlength(s["ref"], font=F_KOP)
-    d.text((B - MARGE - breedte_ref, 44), s["ref"], font=F_KOP, fill=DONKER)
-    d.line([MARGE, 95, B - MARGE, 95], fill=(200, 200, 200), width=2)
-    beeld = Image.open(os.path.join(DOCS, s["bestand"] + ".png")).convert("RGB")
-    max_b, max_h = B - 2 * MARGE, H - 95 - 30 - 90
+def geschaald(bestand, max_b, max_h):
+    beeld = Image.open(os.path.join(DOCS, bestand + ".png")).convert("RGB")
     schaal = min(max_b / beeld.width, max_h / beeld.height)
-    beeld = beeld.resize((int(beeld.width * schaal), int(beeld.height * schaal)), Image.LANCZOS)
-    p.paste(beeld, ((B - beeld.width) // 2, 125))
-    voet = "Oefendossier Fietsatelier Noor · pagina %d van %d" % (i, len(stukken) + 1)
-    d.text(((B - d.textlength(voet, font=F_KLEIN)) / 2, H - 60), voet, font=F_KLEIN, fill=GRIJS)
-    paginas.append(p)
+    return beeld.resize((int(beeld.width * schaal), int(beeld.height * schaal)), Image.LANCZOS)
 
-os.makedirs(os.path.dirname(UIT), exist_ok=True)
-paginas[0].save(UIT, save_all=True, append_images=paginas[1:], resolution=150, quality=85)
-print("Geschreven:", UIT, "·", len(paginas), "pagina's")
+
+def maak(per_pagina, uit):
+    """per_pagina 1: één document per pagina, met bovenaan les en ref.
+    per_pagina 2: twee onder elkaar, elk met les en ref erboven. Een les
+    begint altijd op een nieuwe pagina, zodat je per les kunt uitdelen."""
+    # De stukken per les, in de volgorde van de app, verdeeld over pagina's.
+    lessen = []
+    for s in stukken:
+        if not lessen or lessen[-1][0] != s["les"]:
+            lessen.append((s["les"], []))
+        lessen[-1][1].append(s)
+    bladen = []   # (les, [stukken op die pagina])
+    for les, lijst in lessen:
+        for i in range(0, len(lijst), per_pagina):
+            bladen.append((les, lijst[i:i + per_pagina]))
+    totaal = len(bladen) + 1
+
+    # ---- voorblad met de inhoud per les
+    voor = Image.new("RGB", (B, H), "white")
+    d = ImageDraw.Draw(voor)
+    d.rectangle([0, 0, B, 26], fill=GROEN)
+    d.text((MARGE, 90), "Oefendossier Fietsatelier Noor", font=F_TITEL, fill=DONKER)
+    ondertitel = "Verantwoordingsstukken 1e kwartaal 2028 · per les, in de volgorde van de app"
+    if per_pagina == 2:
+        ondertitel += " · 2 per pagina"
+    d.text((MARGE, 155), ondertitel, font=F_TEKST, fill=GRIJS)
+    y, nr = 240, 2
+    for les, lijst in lessen:
+        n = (len(lijst) + per_pagina - 1) // per_pagina
+        d.text((MARGE, y), les, font=F_KOP, fill=DONKER)
+        tekst = ", ".join(s["ref"] for s in lijst) + "   (p. %d%s)" % (nr, "" if n == 1 else "–%d" % (nr + n - 1))
+        d.text((MARGE + 30, y + 40), tekst, font=F_TEKST, fill=(40, 40, 40))
+        nr += n
+        y += 100
+    d.text((MARGE, H - 90), "Dit zijn fictieve documenten, gemaakt voor de lessen boekhouden.", font=F_KLEIN, fill=GRIJS)
+    paginas = [voor]
+
+    for nr, (les, op_blad) in enumerate(bladen, start=2):
+        p = Image.new("RGB", (B, H), "white")
+        d = ImageDraw.Draw(p)
+        if per_pagina == 1:
+            d.text((MARGE, 50), les, font=F_TEKST, fill=GRIJS)
+            ref = op_blad[0]["ref"]
+            d.text((B - MARGE - d.textlength(ref, font=F_KOP), 44), ref, font=F_KOP, fill=DONKER)
+            d.line([MARGE, 95, B - MARGE, 95], fill=(200, 200, 200), width=2)
+            beeld = geschaald(op_blad[0]["bestand"], B - 2 * MARGE, H - 95 - 30 - 90)
+            p.paste(beeld, ((B - beeld.width) // 2, 125))
+        else:
+            boven, onder = 40, 80
+            vak = (H - boven - onder) // 2
+            for k, s in enumerate(op_blad):
+                y0 = boven + k * vak
+                if k:
+                    d.line([MARGE, y0 - 6, B - MARGE, y0 - 6], fill=(200, 200, 200), width=2)
+                d.text((MARGE, y0 + 8), les, font=F_KLEIN, fill=GRIJS)
+                d.text((B - MARGE - d.textlength(s["ref"], font=F_KOP), y0 + 2), s["ref"], font=F_KOP, fill=DONKER)
+                beeld = geschaald(s["bestand"], B - 2 * MARGE, vak - 50 - 14)
+                p.paste(beeld, ((B - beeld.width) // 2, y0 + 50))
+        voet = "Oefendossier Fietsatelier Noor · pagina %d van %d" % (nr, totaal)
+        d.text(((B - d.textlength(voet, font=F_KLEIN)) / 2, H - 60), voet, font=F_KLEIN, fill=GRIJS)
+        paginas.append(p)
+
+    os.makedirs(os.path.dirname(uit), exist_ok=True)
+    paginas[0].save(uit, save_all=True, append_images=paginas[1:], resolution=150, quality=85)
+    print("Geschreven:", uit, "·", len(paginas), "pagina's")
+
+
+maak(1, UIT)
+maak(2, UIT_2)
