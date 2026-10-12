@@ -318,41 +318,40 @@ const AK01 = factuur({ id: "J3A01", ref: "AK01", categorie: C_AK1, soort: "AK", 
 const AK02 = factuur({ id: "J3A02", ref: "AK02", categorie: C_AK1, soort: "AK", datum: "2028-01-09", nr: "HH-28-002", van: HELM,
   hk: 0.10, lijnen: [{ art: "HELM", n: 30 }, { art: "SLOT", n: 5 }] });
 const AK03 = factuur({ id: "J3A03", ref: "AK03", categorie: C_AK1, soort: "AK", datum: "2028-01-12", nr: "SW-2028-014", van: SPAAK,
-  hk: 0.10, lijnen: [{ art: "BAND", n: 20 }, { art: "KET", n: 10 }, { art: "LAMP", n: 24 }] });
+  hk: 0.20, hkReden: "opruiming oude collectie", lijnen: [{ art: "LAMP", n: 15 }] });
 const AK04 = factuur({ id: "J3A04", ref: "AK04", categorie: C_AK1, soort: "AK", datum: "2028-01-18", nr: "2028-021", van: VELO,
   hk: 0.20, hkReden: "voorjaarsactie", fk: 0.05, fkBetaald: false,
   lijnen: [{ art: "STAD", n: 10 }, { art: "EBIKE", n: 3 }, { art: "BAK", n: 1 }] });
 const AK05 = factuur({ id: "J3A05", ref: "AK05", categorie: C_AK1, soort: "AK", datum: "2028-02-01", nr: "2028-047", van: VELO,
   fk: 0.05, fkBetaald: true, lijnen: [{ art: "EBIKE", n: 10 }] });
 const AK06 = factuur({ id: "J3A06", ref: "AK06", categorie: C_AK1, soort: "AK", datum: "2028-02-15", nr: "2028-066", van: VELO,
-  fk: 0.02, fkBetaald: true, lijnen: [{ art: "STAD", n: 2 }, { art: "EBIKE", n: 3 }] });
+  fk: 0.05, fkBetaald: true, lijnen: [{ art: "STAD", n: 5 }] });
 
 // ---- Les 3 · Kosten, verpakking, diensten en diverse goederen, investeringen ----
 const AK07 = factuur({ id: "J3A07", ref: "AK07", categorie: C_AK2, soort: "AK", datum: "2028-02-08", nr: "2028-058", van: VELO,
-  lijnen: [{ art: "STAD", n: 6 }, { art: "BAK", n: 1 }, { kosten: "Transportkosten", bedrag: 200 }, { verpakking: REK, n: 4, prijs: 50 }] });
+  lijnen: [{ art: "BAK", n: 2 }, { kosten: "Transportkosten", bedrag: 200 }, { verpakking: REK, n: 4, prijs: 50 }] });
 const AK08 = factuur({ id: "J3A08", ref: "AK08", categorie: C_AK2, soort: "AK", datum: "2028-02-22", nr: "SW-2028-077", van: SPAAK,
-  lijnen: [{ art: "KET", n: 20 }, { art: "LAMP", n: 8 }, { kosten: "Leveringskosten", bedrag: 100 }, { verpakking: KRAT, n: 4, prijs: 25 }] });
+  lijnen: [{ art: "KET", n: 20 }, { kosten: "Leveringskosten", bedrag: 100 }, { verpakking: KRAT, n: 4, prijs: 25 }] });
 const AK09 = factuur({ id: "J3A09", ref: "AK09", categorie: C_AK2, soort: "AK", datum: "2028-01-10", nr: "SK-28-0412", van: STROOM,
   termijn: 15, lijnen: [{ oms: "Elektriciteit winkel en werkplaats, december 2027 - februari 2028", bedrag: 800, rek: "612700" }] });
 const AK10 = factuur({ id: "J3A10", ref: "AK10", categorie: C_AK2, soort: "AK", datum: "2028-01-24", nr: "DP-2028-031", van: PEET,
   lijnen: [{ oms: "Folders voorjaarsactie (1.000 stuks)", bedrag: 400, rek: "616520" },
     { oms: "Briefpapier en kasticketrollen", bedrag: 200, rek: "612000" }] });
 const AK11 = factuur({ id: "J3A11", ref: "AK11", categorie: C_AK2, soort: "AK", datum: "2028-01-15", nr: "DW-28-0006", van: DEPREZ,
-  lijnen: [{ oms: "Wielrichtbank met centreerbank", bedrag: 1200, rek: "232000" },
-    { oms: "Tweede montagestandaard, dubbele klem", bedrag: 800, rek: "232000" },
+  lijnen: [{ oms: "Wielrichtbank met centreerbank en tweede montagestandaard", bedrag: 2000, rek: "232000" },
     { oms: "Levering en montage in de werkplaats", bedrag: 200, rek: "232000" }] });
 const AK12 = factuur({ id: "J3A12", ref: "AK12", categorie: C_AK2, soort: "AK", datum: "2028-02-29", nr: "KT-2028-118", van: KASSA,
   lijnen: [{ oms: "Tablet met werkbonsoftware voor de werkplaats", bedrag: 1200, rek: "240200" }] });
 
 // ---- Les 4 · Creditnota's en over te dragen kosten ----
 const AK13 = factuur({ id: "J3CA1", ref: "AK13", categorie: C_AK3, soort: "CN-AK", datum: "2028-01-10", nr: "CN-2028-001", van: VELO,
-  verwijst: AK01.nr, reden: "3 stadsfietsen en 1 bakfiets met transportschade, teruggestuurd",
-  hk: 0.10, lijnen: [{ art: "STAD", n: 3 }, { art: "BAK", n: 1 }] });
+  verwijst: AK01.nr, reden: "5 stadsfietsen met transportschade, teruggestuurd",
+  hk: 0.10, lijnen: [{ art: "STAD", n: 5 }] });
 const AK14 = factuur({ id: "J3CA2", ref: "AK14", categorie: C_AK3, soort: "CN-AK", datum: "2028-03-01", nr: "SW-CN-2028-004", van: SPAAK,
   verwijst: AK08.nr, reden: "4 transportkratten teruggestuurd", lijnen: [{ verpakking: KRAT, n: 4, prijs: 25 }] });
 const AK15 = factuur({ id: "J3CA3", ref: "AK15", categorie: C_AK3, soort: "CN-AK", datum: "2028-02-20", nr: "CN-2028-006", van: VELO,
-  verwijst: AK07.nr, reden: "2 stadsfietsen in de verkeerde maat en 2 fietsrekken teruggestuurd",
-  lijnen: [{ art: "STAD", n: 2 }, { verpakking: REK, n: 2, prijs: 50 }] });
+  verwijst: AK07.nr, reden: "1 bakfiets met een beschadigd frame en 2 fietsrekken teruggestuurd",
+  lijnen: [{ art: "BAK", n: 1 }, { verpakking: REK, n: 2, prijs: 50 }] });
 const AK16 = factuur({ id: "J3A16", ref: "AK16", categorie: C_AK3, soort: "AK", datum: "2028-01-02", nr: "GZ-28-00871", van: GERZO,
   termijn: 15, periode: "1 januari 2028 tot en met 31 december 2028",
   lijnen: [{ oms: "Jaarpremie verzekering bestelwagen (BA en omnium), periode 01/01/2028 - 31/12/2028", bedrag: 1200, btw: 0,
@@ -364,17 +363,17 @@ const AK17 = factuur({ id: "J3A17", ref: "AK17", categorie: C_AK3, soort: "AK", 
 
 // ---- Les 5 · Verkopen: basis, handelskorting, doorgerekende kosten ----
 const VK01 = factuur({ id: "J3V01", ref: "VK01", categorie: C_VK1, soort: "VK", datum: "2028-01-08", nr: "2028-001", aan: "Snelpost bv",
-  lijnen: [{ art: "BAK", n: 3 }, { art: "HELM", n: 6 }, { dienst: "ONDH", n: 25, oms: "Onderhoudsbeurt koeriersfietsen (arbeid)" }] });
+  lijnen: [{ art: "BAK", n: 3 }, { dienst: "ONDH", n: 25, oms: "Onderhoudsbeurt koeriersfietsen (arbeid)" }] });
 const VK02 = factuur({ id: "J3V02", ref: "VK02", categorie: C_VK1, soort: "VK", datum: "2028-01-11", nr: "2028-002", aan: "Hotel De Linde bv",
-  lijnen: [{ dienst: "ONDH", n: 30, oms: "Onderhoudsbeurt huurfietsen (arbeid)" }, { art: "BAND", n: 16 }, { art: "KET", n: 10 }, { art: "LAMP", n: 10 }] });
+  lijnen: [{ dienst: "ONDH", n: 30, oms: "Onderhoudsbeurt huurfietsen (arbeid)" }, { art: "LAMP", n: 10 }] });
 const VK03 = factuur({ id: "J3V03", ref: "VK03", categorie: C_VK1, soort: "VK", datum: "2028-01-17", nr: "2028-003", aan: "Velocity Deelfietsen bv",
   hk: 0.05, lijnen: [{ art: "STAD", n: 12 }, { art: "HELM", n: 16 }] });
 const VK04 = factuur({ id: "J3V04", ref: "VK04", categorie: C_VK1, soort: "VK", datum: "2028-01-25", nr: "2028-004", aan: "Bouwbedrijf Janssens & Zonen bv",
-  hk: 0.10, lijnen: [{ art: "EBIKE", n: 4 }, { art: "HELM", n: 4 }, { kosten: "Transportkosten", bedrag: 120 }] });
+  hk: 0.10, lijnen: [{ art: "EBIKE", n: 3 }, { kosten: "Transportkosten", bedrag: 100 }] });
 const VK05 = factuur({ id: "J3V05", ref: "VK05", categorie: C_VK1, soort: "VK", datum: "2028-02-07", nr: "2028-006", aan: "Brouwerij Van Acker bv",
   lijnen: [{ art: "BAK", n: 3 }, { kosten: "Leveringskosten", bedrag: 200 }] });
 const VK06 = factuur({ id: "J3V06", ref: "VK06", categorie: C_VK1, soort: "VK", datum: "2028-02-21", nr: "2028-009", aan: "Bytewise bv",
-  hk: 0.05, lijnen: [{ art: "EBIKE", n: 7 }, { kosten: "Transportkosten", bedrag: 100 }] });
+  hk: 0.05, lijnen: [{ art: "EBIKE", n: 5 }, { kosten: "Transportkosten", bedrag: 100 }] });
 
 // ---- Les 6 · Verkopen: verpakking, creditnota's, financiële korting, dagontvangsten ----
 const VK07 = factuur({ id: "J3V07", ref: "VK07", categorie: C_VK2, soort: "VK", datum: "2028-02-03", nr: "2028-005", aan: "Camping De Vlinder bv",
@@ -386,7 +385,7 @@ const VK09 = factuur({ id: "J3CV2", ref: "VK09", categorie: C_VK2, soort: "CN-VK
 const VK10 = factuur({ id: "J3V10", ref: "VK10", categorie: C_VK2, soort: "VK", datum: "2028-03-01", nr: "2028-011", aan: "Woonzorgcentrum Zonnehof vzw",
   fk: 0.02, fkBetaald: true, lijnen: [{ art: "EBIKE", n: 5 }] });
 const VK11 = factuur({ id: "J3V11", ref: "VK11", categorie: C_VK2, soort: "VK", datum: "2028-03-09", nr: "2028-013", aan: "Studio Kowalski bv",
-  fk: 0.04, fkBetaald: false, lijnen: [{ art: "STAD", n: 4 }, { art: "HELM", n: 2 }] });
+  fk: 0.05, fkBetaald: false, lijnen: [{ art: "EBIKE", n: 1 }] });
 const ONTV01 = dagontvangst({ id: "J3D1", ref: "ONTV01", categorie: C_VK2, soort: "DO", datum: "2028-03-18", nr: "DO-2028-11", periode: "week 11 (13 tot en met 18 maart 2028)",
   bancontact: 3000, lijnen: [{ art: "STAD", n: 2 }, { art: "EBIKE", n: 1 }, { art: "KIND", n: 2 }, { art: "HELM", n: 8 },
     { art: "SLOT", n: 6 }, { art: "BAND", n: 6 }, { art: "KET", n: 9 }, { art: "LAMP", n: 4 }, { dienst: "HERST", n: 50 }] });
@@ -414,15 +413,13 @@ const AK18 = rszFactuur({ id: "J3S1", ref: "AK18", categorie: C_L2, datum: "2028
 const AK19 = rszFactuur({ id: "J3S2", ref: "AK19", categorie: C_L2, datum: "2028-02-29", nr: "LW-2028-0229", periode: "februari 2028" }, [L3, L4]);
 const AK20 = rszFactuur({ id: "J3S3", ref: "AK20", categorie: C_L2, datum: "2028-03-31", nr: "LW-2028-0331", periode: "maart 2028" }, [L5, L6]);
 const AK21 = factuur({ id: "J3A21", ref: "AK21", categorie: C_L2, soort: "AK", datum: "2028-03-31", nr: "LW-2028-0332", van: LOONW,
-  lijnen: [{ oms: "Beheerskosten loonadministratie 1e kwartaal 2028 (2 werknemers x 3 maanden)", n: 6, prijs: 25, bedrag: 150, rek: "613300" },
-    { oms: "Opstartdossier nieuwe werkgever (eenmalig)", bedrag: 50, rek: "613300" }] });
+  lijnen: [{ oms: "Beheerskosten loonadministratie 1e kwartaal 2028, opstartdossier inbegrepen", bedrag: 200, rek: "613300" }] });
 const AK22 = factuur({ id: "J3A22", ref: "AK22", categorie: C_L2, soort: "AK", datum: "2028-01-02", nr: "GZ-28-00872", van: GERZO,
   termijn: 15, periode: "1 januari 2028 tot en met 31 december 2028",
   lijnen: [{ oms: "Jaarpremie verzekering arbeidsongevallen, periode 01/01/2028 - 31/12/2028", bedrag: 600, btw: 0,
     rek: "623000" }], otk: { rek: "623000", maanden: 9, van: 12 } });
 const AK23 = factuur({ id: "J3A23", ref: "AK23", categorie: C_L2, soort: "AK", datum: "2028-01-10", nr: "PV-28-1022", van: PREV,
-  lijnen: [{ oms: "Aansluiting externe preventiedienst 2028 (2 werknemers)", bedrag: 100, btw: 0, rek: "623000" },
-    { oms: "Medisch onderzoek bij indiensttreding (2 werknemers)", n: 2, prijs: 20, bedrag: 40, btw: 0, rek: "623000" }] });
+  lijnen: [{ oms: "Aansluiting 2028 en medisch onderzoek bij indiensttreding (per werknemer)", n: 2, prijs: 70, bedrag: 140, btw: 0, rek: "623000" }] });
 
 /* ======================================================================
    Betalingen: rekeninguittreksels en kas
@@ -441,7 +438,7 @@ function betaling(docs, opts) {
   const relatie = (fac[0] || cns[0]).relatie;
   const nrs = fac.map((x) => "factuur " + x.nr).concat(cns.map((x) => "creditnota " + x.nr)).join(" - ");
   const oms = (aankoop ? "Overschrijving naar " : "Overschrijving van ") + relatie + ", " + nrs +
-    (korting ? " (min " + korting + " financiële korting)" : "");
+    "";   // de korting staat er bewust niet bij: de leerling ziet ze zelf aan het bedrag
   const regels = aankoop
     ? [{ rek: "440000", dc: "D", bedrag: bruto }, { rek: "757000", dc: "C", bedrag: korting }, { rek: "550000", dc: "C", bedrag: netto }]
     : [{ rek: "550000", dc: "D", bedrag: netto }, { rek: "657000", dc: "D", bedrag: korting }, { rek: "400000", dc: "C", bedrag: bruto }];
@@ -480,57 +477,40 @@ const KAS02 = kasDoc({ id: "J3K2", ref: "KAS02", categorie: C_FIN, datum: "2028-
 boek(KAS01, [{ rek: "570000", dc: "D", bedrag: KAS01.contant }, { rek: "400000", dc: "C", bedrag: KAS01.contant }]);
 boek(KAS02, [{ rek: "580000", dc: "D", bedrag: 3500 }, { rek: "570000", dc: "C", bedrag: 3500 }]);
 
+// Niet elke factuur wordt in dit kwartaal betaald. Wel altijd: de facturen
+// met financiële korting (binnen of buiten de termijn), de lonen en Loonwijs.
+// Verder hoogstens 6 betalingen van klanten en 6 aan leveranciers.
+const AFLOSSING = { oms: "Aflossing lening nr. " + LENING.nr + ": kapitaal " + afl.kapitaal.toLocaleString("nl-BE") + " + intrest " + afl.intrest,
+  bedrag: -afl.totaal, docs: [], regels: [{ rek: "173000", dc: "D", bedrag: afl.kapitaal }, { rek: "650000", dc: "D", bedrag: afl.intrest }, { rek: "550000", dc: "C", bedrag: afl.totaal }] };
 const U = [
-  { nr: 1, datum: "2028-01-15", lijnen: [
-    ["2028-01-10", betaling([AK16])],
-    ["2028-01-15", betaling([AK22])],
-  ] },
-  { nr: 2, datum: "2028-01-25", lijnen: [
+  { nr: 1, datum: "2028-01-31", lijnen: [
     ["2028-01-20", betaling([VK01])],
-    ["2028-01-20", betaling([AK03])],
     ["2028-01-25", betaling([AK01, AK13])],
-    ["2028-01-25", betaling([AK09])],
-  ] },
-  { nr: 3, datum: "2028-02-01", lijnen: [
     ["2028-01-31", lonen([L1, L2], "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)")],
-    ["2028-01-31", betaling([AK23])],
-    ["2028-02-01", { oms: "Aflossing lening nr. " + LENING.nr + ": kapitaal " + afl.kapitaal.toLocaleString("nl-BE") + " + intrest " + afl.intrest,
-      bedrag: -afl.totaal, docs: [], regels: [{ rek: "173000", dc: "D", bedrag: afl.kapitaal }, { rek: "650000", dc: "D", bedrag: afl.intrest }, { rek: "550000", dc: "C", bedrag: afl.totaal }] }],
+  ] },
+  { nr: 2, datum: "2028-02-10", lijnen: [
+    ["2028-02-01", AFLOSSING],
     ["2028-02-01", betaling([AK17], { oms: "Domiciliëring Immo Vaartkom bv, huur februari-april 2028, factuur " + AK17.nr })],
-  ] },
-  { nr: 4, datum: "2028-02-10", lijnen: [
-    ["2028-02-05", betaling([VK02])],
-    ["2028-02-05", betaling([AK02])],
-    ["2028-02-10", betaling([AK11])],
-    ["2028-02-10", betaling([AK18])],
     ["2028-02-10", betaling([AK05])],
+    ["2028-02-10", betaling([AK18])],
   ] },
-  { nr: 5, datum: "2028-02-22", lijnen: [
-    ["2028-02-15", betaling([VK03])],
+  { nr: 3, datum: "2028-02-22", lijnen: [
     ["2028-02-15", betaling([AK04])],
     ["2028-02-20", betaling([VK04, VK08])],
-    ["2028-02-20", betaling([AK10])],
     ["2028-02-22", betaling([AK06])],
   ] },
-  { nr: 6, datum: "2028-03-01", lijnen: [
+  { nr: 4, datum: "2028-03-10", lijnen: [
     ["2028-02-29", lonen([L3, L4], "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)")],
     ["2028-03-01", betaling([VK07, VK09])],
-  ] },
-  { nr: 7, datum: "2028-03-10", lijnen: [
-    ["2028-03-05", betaling([VK05])],
     ["2028-03-05", betaling([AK07, AK15])],
     ["2028-03-09", betaling([VK10])],
     ["2028-03-10", betaling([AK19])],
   ] },
-  { nr: 8, datum: "2028-03-22", lijnen: [
-    ["2028-03-15", betaling([AK08, AK14])],
+  { nr: 5, datum: "2028-03-31", lijnen: [
     ["2028-03-20", { oms: "Bancontact-ontvangsten 18/03/2028", bedrag: ONTV01.bancontact, docs: [ONTV01.id],
       regels: [{ rek: "550000", dc: "D", bedrag: ONTV01.bancontact }, { rek: "400000", dc: "C", bedrag: ONTV01.bancontact }] }],
-    ["2028-03-20", betaling([AK12])],
     ["2028-03-22", { oms: "Storting contanten", bedrag: 3500, docs: [KAS02.id],
       regels: [{ rek: "550000", dc: "D", bedrag: 3500 }, { rek: "580000", dc: "C", bedrag: 3500 }] }],
-  ] },
-  { nr: 9, datum: "2028-03-31", lijnen: [
     ["2028-03-25", betaling([VK11])],
     ["2028-03-31", lonen([L5, L6], "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)")],
   ] },

@@ -42,7 +42,7 @@ Met de hand gemaakt en niet door een script overschreven:
 | Verkopen 2 · verpakking, creditnota's, financiële korting | VK07–VK11, ONTV01 |
 | Lonen 1 · loonstaten | LOON01–LOON06 (januari–maart, arbeiders en bedienden apart) |
 | Lonen 2 · RSZ, voorheffing en personeelskosten | AK18–AK23 |
-| Financiële verrichtingen | BANK01–BANK09, KAS01–KAS02 |
+| Financiële verrichtingen | BANK01–BANK05, KAS01–KAS02 (niet alles wordt betaald: 6 klanten, 6 leveranciers, alle facturen met financiële korting, lonen en Loonwijs) |
 | BTW-verwerking, eindejaar, resultaat | BTW, AFSCHR, OTK, LENING, VR, BELASTING, RESULTAAT |
 
 ## Afspraken in de sleutel

@@ -17,9 +17,9 @@ const OPDRACHTEN = [
   {"ref": "AK01", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK01", "doc": "AK01"},
   {"ref": "AK02", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK02", "doc": "AK02"},
   {"ref": "AK03", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK03", "doc": "AK03"},
-  {"ref": "AK04", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK04", "doc": "AK04", "tip": "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling."},
-  {"ref": "AK05", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK05", "doc": "AK05", "tip": "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling."},
-  {"ref": "AK06", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK06", "doc": "AK06", "tip": "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling."},
+  {"ref": "AK04", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK04", "doc": "AK04"},
+  {"ref": "AK05", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK05", "doc": "AK05"},
+  {"ref": "AK06", "categorie": "Aankopen 1 · kortingen", "titel": "Aankoop AK06", "doc": "AK06"},
 
   // Aankopen 2 · kosten, verpakking en investeringen
   {"ref": "AK07", "categorie": "Aankopen 2 · kosten, verpakking en investeringen", "titel": "Aankoop AK07", "doc": "AK07"},
@@ -48,8 +48,8 @@ const OPDRACHTEN = [
   {"ref": "VK07", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK07", "doc": "VK07"},
   {"ref": "VK08", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK08", "doc": "VK08"},
   {"ref": "VK09", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK09", "doc": "VK09"},
-  {"ref": "VK10", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK10", "doc": "VK10", "tip": "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling."},
-  {"ref": "VK11", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK11", "doc": "VK11", "tip": "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling."},
+  {"ref": "VK10", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK10", "doc": "VK10"},
+  {"ref": "VK11", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Verkoop VK11", "doc": "VK11"},
   {"ref": "ONTV01", "categorie": "Verkopen 2 · verpakking, creditnota's, financiële korting", "titel": "Dagontvangsten ONTV01", "doc": "ONTV01"},
 
   // Lonen 1 · loonstaten
@@ -73,13 +73,9 @@ const OPDRACHTEN = [
   {"ref": "BANK02", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK02", "doc": "BANK02"},
   {"ref": "BANK03", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK03", "doc": "BANK03", "hulpdoc": "LENING", "hulpdocTitel": "Aflossingstabel lening 2027-0042"},
   {"ref": "BANK04", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK04", "doc": "BANK04"},
-  {"ref": "BANK05", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK05", "doc": "BANK05"},
-  {"ref": "BANK06", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK06", "doc": "BANK06"},
-  {"ref": "BANK07", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK07", "doc": "BANK07"},
   {"ref": "KAS01", "categorie": "Financiële verrichtingen", "titel": "Kasstuk KAS01", "doc": "KAS01"},
   {"ref": "KAS02", "categorie": "Financiële verrichtingen", "titel": "Kasstuk KAS02", "doc": "KAS02"},
-  {"ref": "BANK08", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK08", "doc": "BANK08"},
-  {"ref": "BANK09", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK09", "doc": "BANK09"},
+  {"ref": "BANK05", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK05", "doc": "BANK05"},
 
   // BTW-verwerking
   {"ref": "BTW", "categorie": "BTW-verwerking", "titel": "Btw-verwerking 1e kwartaal 2028", "geenDocument": true, "instructie": "Kijk in de T-rekeningen rechts naar het saldo van de tussentijdse btw-rekeningen (de 411- en 451-rekeningen die niet op 000 eindigen). Na de btw-aangifte van het 1e kwartaal wordt die btw gecentraliseerd op 411000 Terug te vorderen btw-saldo of 451000 Te betalen btw-saldo. Let op: op de beginbalans staat nog een btw-tegoed van het 4e kwartaal 2027 op 411000. Dat tegoed verreken je mee."},

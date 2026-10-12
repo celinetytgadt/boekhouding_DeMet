@@ -560,63 +560,42 @@
    "datum": "2028-01-12",
    "nr": "SW-2028-014",
    "van": "Spaakwerk bv",
-   "hk": 0.1,
+   "hk": 0.2,
+   "hkReden": "opruiming oude collectie",
    "lijnen": [
-    {
-     "soort": "artikel",
-     "artikel": "BAND",
-     "oms": "Buitenband 28 inch",
-     "aantal": 20,
-     "prijs": 15,
-     "bedrag": 300,
-     "btwPct": 0.21,
-     "lijn": 1,
-     "btw": 63
-    },
-    {
-     "soort": "artikel",
-     "artikel": "KET",
-     "oms": "Fietsketting 8 speed",
-     "aantal": 10,
-     "prijs": 10,
-     "bedrag": 100,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 21
-    },
     {
      "soort": "artikel",
      "artikel": "LAMP",
      "oms": "Verlichtingsset LED",
-     "aantal": 24,
+     "aantal": 15,
      "prijs": 25,
-     "bedrag": 600,
+     "bedrag": 375,
      "btwPct": 0.21,
-     "lijn": 3,
-     "btw": 126
+     "lijn": 1,
+     "btw": 78.75
     },
     {
      "soort": "handelskorting",
-     "oms": "Handelskorting 10% op de goederen",
-     "aantal": 0.1,
-     "prijs": -1000,
-     "bedrag": -100,
+     "oms": "Handelskorting 20% op de goederen (opruiming oude collectie)",
+     "aantal": 0.2,
+     "prijs": -375,
+     "bedrag": -75,
      "btwPct": 0.21,
-     "lijn": 4,
-     "btw": -21
+     "lijn": 2,
+     "btw": -15.75
     }
    ],
    "aan": "Fietsatelier Noor bv",
    "relatie": "Spaakwerk bv",
    "vervaldag": "2028-02-11",
-   "mvh21": 900,
+   "mvh21": 300,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 189,
+   "btw21": 63,
    "btw6": 0,
    "waarborg": 0,
    "fk": 0,
-   "totaal": 1089,
+   "totaal": 363,
    "binnenTermijn": null,
    "boekOms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv"
   },
@@ -764,46 +743,35 @@
      "soort": "artikel",
      "artikel": "STAD",
      "oms": "Stadsfiets City, 7 versnellingen",
-     "aantal": 2,
+     "aantal": 5,
      "prijs": 400,
-     "bedrag": 800,
+     "bedrag": 2000,
      "btwPct": 0.21,
      "lijn": 1,
-     "btw": 168
-    },
-    {
-     "soort": "artikel",
-     "artikel": "EBIKE",
-     "oms": "E-bike Comfort, 500 Wh",
-     "aantal": 3,
-     "prijs": 1400,
-     "bedrag": 4200,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 882
+     "btw": 420
     },
     {
      "soort": "financiële korting",
-     "oms": "Financiële korting 2% bij betaling binnen 10 dagen (btw berekend na korting)",
-     "aantal": 0.02,
-     "prijs": -5000,
+     "oms": "Financiële korting 5% bij betaling binnen 10 dagen (btw berekend na korting)",
+     "aantal": 0.05,
+     "prijs": -2000,
      "bedrag": -100,
      "btwPct": 0.21,
-     "lijn": 3,
+     "lijn": 2,
      "btw": -21
     }
    ],
    "aan": "Fietsatelier Noor bv",
    "relatie": "Velomax bv",
    "vervaldag": "2028-03-16",
-   "mvh21": 4900,
+   "mvh21": 1900,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 1029,
+   "btw21": 399,
    "btw6": 0,
    "waarborg": 0,
-   "totaal": 6029,
-   "binnenTermijn": 5929,
+   "totaal": 2399,
+   "binnenTermijn": 2299,
    "boekOms": "Aankoopfactuur 2028-066 - Velomax bv"
   },
   {
@@ -818,25 +786,14 @@
    "lijnen": [
     {
      "soort": "artikel",
-     "artikel": "STAD",
-     "oms": "Stadsfiets City, 7 versnellingen",
-     "aantal": 6,
-     "prijs": 400,
-     "bedrag": 2400,
-     "btwPct": 0.21,
-     "lijn": 1,
-     "btw": 504
-    },
-    {
-     "soort": "artikel",
      "artikel": "BAK",
      "oms": "Bakfiets Cargo, 2 wielen",
-     "aantal": 1,
+     "aantal": 2,
      "prijs": 1800,
-     "bedrag": 1800,
+     "bedrag": 3600,
      "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 378
+     "lijn": 1,
+     "btw": 756
     },
     {
      "soort": "kosten",
@@ -845,7 +802,7 @@
      "prijs": 200,
      "bedrag": 200,
      "btwPct": 0.21,
-     "lijn": 3,
+     "lijn": 2,
      "btw": 42
     },
     {
@@ -855,21 +812,21 @@
      "prijs": 50,
      "bedrag": 200,
      "btwPct": 0,
-     "lijn": 4,
+     "lijn": 3,
      "btw": 0
     }
    ],
    "aan": "Fietsatelier Noor bv",
    "relatie": "Velomax bv",
    "vervaldag": "2028-03-09",
-   "mvh21": 4400,
+   "mvh21": 3800,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 924,
+   "btw21": 798,
    "btw6": 0,
    "waarborg": 200,
    "fk": 0,
-   "totaal": 5524,
+   "totaal": 4798,
    "binnenTermijn": null,
    "boekOms": "Aankoopfactuur 2028-058 - Velomax bv"
   },
@@ -895,24 +852,13 @@
      "btw": 42
     },
     {
-     "soort": "artikel",
-     "artikel": "LAMP",
-     "oms": "Verlichtingsset LED",
-     "aantal": 8,
-     "prijs": 25,
-     "bedrag": 200,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 42
-    },
-    {
      "soort": "kosten",
      "oms": "Leveringskosten",
      "aantal": 1,
      "prijs": 100,
      "bedrag": 100,
      "btwPct": 0.21,
-     "lijn": 3,
+     "lijn": 2,
      "btw": 21
     },
     {
@@ -922,21 +868,21 @@
      "prijs": 25,
      "bedrag": 100,
      "btwPct": 0,
-     "lijn": 4,
+     "lijn": 3,
      "btw": 0
     }
    ],
    "aan": "Fietsatelier Noor bv",
    "relatie": "Spaakwerk bv",
    "vervaldag": "2028-03-23",
-   "mvh21": 500,
+   "mvh21": 300,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 105,
+   "btw21": 63,
    "btw6": 0,
    "waarborg": 100,
    "fk": 0,
-   "totaal": 705,
+   "totaal": 463,
    "binnenTermijn": null,
    "boekOms": "Aankoopfactuur SW-2028-077 - Spaakwerk bv"
   },
@@ -1035,25 +981,14 @@
    "lijnen": [
     {
      "soort": "vrij",
-     "oms": "Wielrichtbank met centreerbank",
+     "oms": "Wielrichtbank met centreerbank en tweede montagestandaard",
      "aantal": 1,
-     "prijs": 1200,
-     "bedrag": 1200,
+     "prijs": 2000,
+     "bedrag": 2000,
      "btwPct": 0.21,
      "rek": "232000",
      "lijn": 1,
-     "btw": 252
-    },
-    {
-     "soort": "vrij",
-     "oms": "Tweede montagestandaard, dubbele klem",
-     "aantal": 1,
-     "prijs": 800,
-     "bedrag": 800,
-     "btwPct": 0.21,
-     "rek": "232000",
-     "lijn": 2,
-     "btw": 168
+     "btw": 420
     },
     {
      "soort": "vrij",
@@ -1063,7 +998,7 @@
      "bedrag": 200,
      "btwPct": 0.21,
      "rek": "232000",
-     "lijn": 3,
+     "lijn": 2,
      "btw": 42
     }
    ],
@@ -1127,52 +1062,41 @@
    "nr": "CN-2028-001",
    "van": "Velomax bv",
    "verwijst": "2028-003",
-   "reden": "3 stadsfietsen en 1 bakfiets met transportschade, teruggestuurd",
+   "reden": "5 stadsfietsen met transportschade, teruggestuurd",
    "hk": 0.1,
    "lijnen": [
     {
      "soort": "artikel",
      "artikel": "STAD",
      "oms": "Stadsfiets City, 7 versnellingen",
-     "aantal": 3,
+     "aantal": 5,
      "prijs": 400,
-     "bedrag": 1200,
+     "bedrag": 2000,
      "btwPct": 0.21,
      "lijn": 1,
-     "btw": 252
-    },
-    {
-     "soort": "artikel",
-     "artikel": "BAK",
-     "oms": "Bakfiets Cargo, 2 wielen",
-     "aantal": 1,
-     "prijs": 1800,
-     "bedrag": 1800,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 378
+     "btw": 420
     },
     {
      "soort": "handelskorting",
      "oms": "Handelskorting 10% op de goederen",
      "aantal": 0.1,
-     "prijs": -3000,
-     "bedrag": -300,
+     "prijs": -2000,
+     "bedrag": -200,
      "btwPct": 0.21,
-     "lijn": 3,
-     "btw": -63
+     "lijn": 2,
+     "btw": -42
     }
    ],
    "aan": "Fietsatelier Noor bv",
    "relatie": "Velomax bv",
-   "mvh21": 2700,
+   "mvh21": 1800,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 567,
+   "btw21": 378,
    "btw6": 0,
    "waarborg": 0,
    "fk": 0,
-   "totaal": 3267,
+   "totaal": 2178,
    "binnenTermijn": null,
    "boekOms": "Creditnota CN-2028-001 - Velomax bv"
   },
@@ -1222,18 +1146,18 @@
    "nr": "CN-2028-006",
    "van": "Velomax bv",
    "verwijst": "2028-058",
-   "reden": "2 stadsfietsen in de verkeerde maat en 2 fietsrekken teruggestuurd",
+   "reden": "1 bakfiets met een beschadigd frame en 2 fietsrekken teruggestuurd",
    "lijnen": [
     {
      "soort": "artikel",
-     "artikel": "STAD",
-     "oms": "Stadsfiets City, 7 versnellingen",
-     "aantal": 2,
-     "prijs": 400,
-     "bedrag": 800,
+     "artikel": "BAK",
+     "oms": "Bakfiets Cargo, 2 wielen",
+     "aantal": 1,
+     "prijs": 1800,
+     "bedrag": 1800,
      "btwPct": 0.21,
      "lijn": 1,
-     "btw": 168
+     "btw": 378
     },
     {
      "soort": "verpakking",
@@ -1248,14 +1172,14 @@
    ],
    "aan": "Fietsatelier Noor bv",
    "relatie": "Velomax bv",
-   "mvh21": 800,
+   "mvh21": 1800,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 168,
+   "btw21": 378,
    "btw6": 0,
    "waarborg": 100,
    "fk": 0,
-   "totaal": 1068,
+   "totaal": 2278,
    "binnenTermijn": null,
    "boekOms": "Creditnota CN-2028-006 - Velomax bv"
   },
@@ -1365,17 +1289,6 @@
      "btw": 1638
     },
     {
-     "soort": "artikel",
-     "artikel": "HELM",
-     "oms": "Fietshelm Urban",
-     "aantal": 6,
-     "prijs": 50,
-     "bedrag": 300,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 63
-    },
-    {
      "soort": "dienst",
      "artikel": "ONDH",
      "oms": "Onderhoudsbeurt koeriersfietsen (arbeid)",
@@ -1383,21 +1296,21 @@
      "prijs": 60,
      "bedrag": 1500,
      "btwPct": 0.06,
-     "lijn": 3,
+     "lijn": 2,
      "btw": 90
     }
    ],
    "van": "Fietsatelier Noor bv",
    "relatie": "Snelpost bv",
    "vervaldag": "2028-02-07",
-   "mvh21": 8100,
+   "mvh21": 7800,
    "mvh6": 1500,
    "vrij": 0,
-   "btw21": 1701,
+   "btw21": 1638,
    "btw6": 90,
    "waarborg": 0,
    "fk": 0,
-   "totaal": 11391,
+   "totaal": 11028,
    "binnenTermijn": null,
    "boekOms": "Verkoopfactuur 2028-001 - Snelpost bv"
   },
@@ -1424,49 +1337,27 @@
     },
     {
      "soort": "artikel",
-     "artikel": "BAND",
-     "oms": "Buitenband 28 inch",
-     "aantal": 16,
-     "prijs": 25,
-     "bedrag": 400,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 84
-    },
-    {
-     "soort": "artikel",
-     "artikel": "KET",
-     "oms": "Fietsketting 8 speed",
-     "aantal": 10,
-     "prijs": 20,
-     "bedrag": 200,
-     "btwPct": 0.21,
-     "lijn": 3,
-     "btw": 42
-    },
-    {
-     "soort": "artikel",
      "artikel": "LAMP",
      "oms": "Verlichtingsset LED",
      "aantal": 10,
      "prijs": 40,
      "bedrag": 400,
      "btwPct": 0.21,
-     "lijn": 4,
+     "lijn": 2,
      "btw": 84
     }
    ],
    "van": "Fietsatelier Noor bv",
    "relatie": "Hotel De Linde bv",
    "vervaldag": "2028-02-10",
-   "mvh21": 1000,
+   "mvh21": 400,
    "mvh6": 1800,
    "vrij": 0,
-   "btw21": 210,
+   "btw21": 84,
    "btw6": 108,
    "waarborg": 0,
    "fk": 0,
-   "totaal": 3118,
+   "totaal": 2392,
    "binnenTermijn": null,
    "boekOms": "Verkoopfactuur 2028-002 - Hotel De Linde bv"
   },
@@ -1543,56 +1434,45 @@
      "soort": "artikel",
      "artikel": "EBIKE",
      "oms": "E-bike Comfort, 500 Wh",
-     "aantal": 4,
+     "aantal": 3,
      "prijs": 2000,
-     "bedrag": 8000,
+     "bedrag": 6000,
      "btwPct": 0.21,
      "lijn": 1,
-     "btw": 1680
-    },
-    {
-     "soort": "artikel",
-     "artikel": "HELM",
-     "oms": "Fietshelm Urban",
-     "aantal": 4,
-     "prijs": 50,
-     "bedrag": 200,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 42
+     "btw": 1260
     },
     {
      "soort": "kosten",
      "oms": "Transportkosten",
      "aantal": 1,
-     "prijs": 120,
-     "bedrag": 120,
+     "prijs": 100,
+     "bedrag": 100,
      "btwPct": 0.21,
-     "lijn": 3,
-     "btw": 25.2
+     "lijn": 2,
+     "btw": 21
     },
     {
      "soort": "handelskorting",
      "oms": "Handelskorting 10% op de goederen",
      "aantal": 0.1,
-     "prijs": -8200,
-     "bedrag": -820,
+     "prijs": -6000,
+     "bedrag": -600,
      "btwPct": 0.21,
-     "lijn": 4,
-     "btw": -172.2
+     "lijn": 3,
+     "btw": -126
     }
    ],
    "van": "Fietsatelier Noor bv",
    "relatie": "Bouwbedrijf Janssens & Zonen bv",
    "vervaldag": "2028-02-24",
-   "mvh21": 7500,
+   "mvh21": 5500,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 1575,
+   "btw21": 1155,
    "btw6": 0,
    "waarborg": 0,
    "fk": 0,
-   "totaal": 9075,
+   "totaal": 6655,
    "binnenTermijn": null,
    "boekOms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv"
   },
@@ -1657,12 +1537,12 @@
      "soort": "artikel",
      "artikel": "EBIKE",
      "oms": "E-bike Comfort, 500 Wh",
-     "aantal": 7,
+     "aantal": 5,
      "prijs": 2000,
-     "bedrag": 14000,
+     "bedrag": 10000,
      "btwPct": 0.21,
      "lijn": 1,
-     "btw": 2940
+     "btw": 2100
     },
     {
      "soort": "kosten",
@@ -1678,24 +1558,24 @@
      "soort": "handelskorting",
      "oms": "Handelskorting 5% op de goederen",
      "aantal": 0.05,
-     "prijs": -14000,
-     "bedrag": -700,
+     "prijs": -10000,
+     "bedrag": -500,
      "btwPct": 0.21,
      "lijn": 3,
-     "btw": -147
+     "btw": -105
     }
    ],
    "van": "Fietsatelier Noor bv",
    "relatie": "Bytewise bv",
    "vervaldag": "2028-03-22",
-   "mvh21": 13400,
+   "mvh21": 9600,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 2814,
+   "btw21": 2016,
    "btw6": 0,
    "waarborg": 0,
    "fk": 0,
-   "totaal": 16214,
+   "totaal": 11616,
    "binnenTermijn": null,
    "boekOms": "Verkoopfactuur 2028-009 - Bytewise bv"
   },
@@ -1901,48 +1781,37 @@
    "lijnen": [
     {
      "soort": "artikel",
-     "artikel": "STAD",
-     "oms": "Stadsfiets City, 7 versnellingen",
-     "aantal": 4,
-     "prijs": 600,
-     "bedrag": 2400,
+     "artikel": "EBIKE",
+     "oms": "E-bike Comfort, 500 Wh",
+     "aantal": 1,
+     "prijs": 2000,
+     "bedrag": 2000,
      "btwPct": 0.21,
      "lijn": 1,
-     "btw": 504
-    },
-    {
-     "soort": "artikel",
-     "artikel": "HELM",
-     "oms": "Fietshelm Urban",
-     "aantal": 2,
-     "prijs": 50,
-     "bedrag": 100,
-     "btwPct": 0.21,
-     "lijn": 2,
-     "btw": 21
+     "btw": 420
     },
     {
      "soort": "financiële korting",
-     "oms": "Financiële korting 4% bij betaling binnen 10 dagen (btw berekend na korting)",
-     "aantal": 0.04,
-     "prijs": -2500,
+     "oms": "Financiële korting 5% bij betaling binnen 10 dagen (btw berekend na korting)",
+     "aantal": 0.05,
+     "prijs": -2000,
      "bedrag": -100,
      "btwPct": 0.21,
-     "lijn": 3,
+     "lijn": 2,
      "btw": -21
     }
    ],
    "van": "Fietsatelier Noor bv",
    "relatie": "Studio Kowalski bv",
    "vervaldag": "2028-04-08",
-   "mvh21": 2400,
+   "mvh21": 1900,
    "mvh6": 0,
    "vrij": 0,
-   "btw21": 504,
+   "btw21": 399,
    "btw6": 0,
    "waarborg": 0,
-   "totaal": 3004,
-   "binnenTermijn": 2904,
+   "totaal": 2399,
+   "binnenTermijn": 2299,
    "boekOms": "Verkoopfactuur 2028-013 - Studio Kowalski bv"
   },
   {
@@ -2348,25 +2217,14 @@
    "lijnen": [
     {
      "soort": "vrij",
-     "oms": "Beheerskosten loonadministratie 1e kwartaal 2028 (2 werknemers x 3 maanden)",
-     "aantal": 6,
-     "prijs": 25,
-     "bedrag": 150,
+     "oms": "Beheerskosten loonadministratie 1e kwartaal 2028, opstartdossier inbegrepen",
+     "aantal": 1,
+     "prijs": 200,
+     "bedrag": 200,
      "btwPct": 0.21,
      "rek": "613300",
      "lijn": 1,
-     "btw": 31.5
-    },
-    {
-     "soort": "vrij",
-     "oms": "Opstartdossier nieuwe werkgever (eenmalig)",
-     "aantal": 1,
-     "prijs": 50,
-     "bedrag": 50,
-     "btwPct": 0.21,
-     "rek": "613300",
-     "lijn": 2,
-     "btw": 10.5
+     "btw": 42
     }
    ],
    "aan": "Fietsatelier Noor bv",
@@ -2437,24 +2295,13 @@
    "lijnen": [
     {
      "soort": "vrij",
-     "oms": "Aansluiting externe preventiedienst 2028 (2 werknemers)",
-     "aantal": 1,
-     "prijs": 100,
-     "bedrag": 100,
+     "oms": "Aansluiting 2028 en medisch onderzoek bij indiensttreding (per werknemer)",
+     "aantal": 2,
+     "prijs": 70,
+     "bedrag": 140,
      "btwPct": 0,
      "rek": "623000",
      "lijn": 1,
-     "btw": 0
-    },
-    {
-     "soort": "vrij",
-     "oms": "Medisch onderzoek bij indiensttreding (2 werknemers)",
-     "aantal": 2,
-     "prijs": 20,
-     "bedrag": 40,
-     "btwPct": 0,
-     "rek": "623000",
-     "lijn": 2,
      "btw": 0
     }
    ],
@@ -2504,7 +2351,7 @@
    "ref": "BANK01",
    "categorie": "Financiële verrichtingen",
    "soort": "BANK",
-   "datum": "2028-01-15",
+   "datum": "2028-01-31",
    "nr": 1,
    "vorig": 44997,
    "boekOms": "Rekeninguittreksel 1",
@@ -2512,429 +2359,247 @@
     {
      "uittreksel": 1,
      "lijn": 1,
-     "datum": "2028-01-10",
-     "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00871",
-     "bedrag": -1200,
-     "saldo": 43797,
-     "verwijst": "J3A16",
-     "relatie": "Gerzo Verzekeringen nv"
+     "datum": "2028-01-20",
+     "oms": "Overschrijving van Snelpost bv, factuur 2028-001",
+     "bedrag": 11028,
+     "saldo": 56025,
+     "verwijst": "J3V01",
+     "relatie": "Snelpost bv"
     },
     {
      "uittreksel": 1,
      "lijn": 2,
-     "datum": "2028-01-15",
-     "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00872",
-     "bedrag": -600,
-     "saldo": 43197,
-     "verwijst": "J3A22",
-     "relatie": "Gerzo Verzekeringen nv"
+     "datum": "2028-01-25",
+     "oms": "Overschrijving naar Velomax bv, factuur 2028-003 - creditnota CN-2028-001",
+     "bedrag": -8712,
+     "saldo": 47313,
+     "verwijst": "J3A01, J3CA1",
+     "relatie": "Velomax bv"
+    },
+    {
+     "uittreksel": 1,
+     "lijn": 3,
+     "datum": "2028-01-31",
+     "oms": "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)",
+     "bedrag": -3150,
+     "saldo": 44163,
+     "verwijst": "J3L1, J3L2",
+     "relatie": ""
     }
    ],
-   "nieuw": 43197
+   "nieuw": 44163
   },
   {
    "id": "J3U2",
    "ref": "BANK02",
    "categorie": "Financiële verrichtingen",
    "soort": "BANK",
-   "datum": "2028-01-25",
+   "datum": "2028-02-10",
    "nr": 2,
-   "vorig": 43197,
+   "vorig": 44163,
    "boekOms": "Rekeninguittreksel 2",
    "lijnen": [
     {
      "uittreksel": 2,
      "lijn": 1,
-     "datum": "2028-01-20",
-     "oms": "Overschrijving van Snelpost bv, factuur 2028-001",
-     "bedrag": 11391,
-     "saldo": 54588,
-     "verwijst": "J3V01",
-     "relatie": "Snelpost bv"
+     "datum": "2028-02-01",
+     "oms": "Aflossing lening nr. 2027-0042: kapitaal 1.500 + intrest 255",
+     "bedrag": -1755,
+     "saldo": 42408,
+     "verwijst": "",
+     "relatie": ""
     },
     {
      "uittreksel": 2,
      "lijn": 2,
-     "datum": "2028-01-20",
-     "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-014",
-     "bedrag": -1089,
-     "saldo": 53499,
-     "verwijst": "J3A03",
-     "relatie": "Spaakwerk bv"
+     "datum": "2028-02-01",
+     "oms": "Domiciliëring Immo Vaartkom bv, huur februari-april 2028, factuur IV-2028-02",
+     "bedrag": -1500,
+     "saldo": 40908,
+     "verwijst": "J3A17",
+     "relatie": "Immo Vaartkom bv"
     },
     {
      "uittreksel": 2,
      "lijn": 3,
-     "datum": "2028-01-25",
-     "oms": "Overschrijving naar Velomax bv, factuur 2028-003 - creditnota CN-2028-001",
-     "bedrag": -7623,
-     "saldo": 45876,
-     "verwijst": "J3A01, J3CA1",
+     "datum": "2028-02-10",
+     "oms": "Overschrijving naar Velomax bv, factuur 2028-047",
+     "bedrag": -16093,
+     "saldo": 24815,
+     "verwijst": "J3A05",
      "relatie": "Velomax bv"
     },
     {
      "uittreksel": 2,
      "lijn": 4,
-     "datum": "2028-01-25",
-     "oms": "Overschrijving naar Stroomkracht nv, factuur SK-28-0412",
-     "bedrag": -968,
-     "saldo": 44908,
-     "verwijst": "J3A09",
-     "relatie": "Stroomkracht nv"
+     "datum": "2028-02-10",
+     "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0131",
+     "bedrag": -2100,
+     "saldo": 22715,
+     "verwijst": "J3S1",
+     "relatie": "Loonwijs vzw"
     }
    ],
-   "nieuw": 44908
+   "nieuw": 22715
   },
   {
    "id": "J3U3",
    "ref": "BANK03",
    "categorie": "Financiële verrichtingen",
    "soort": "BANK",
-   "datum": "2028-02-01",
+   "datum": "2028-02-22",
    "nr": 3,
-   "vorig": 44908,
+   "vorig": 22715,
    "boekOms": "Rekeninguittreksel 3",
    "lijnen": [
     {
      "uittreksel": 3,
      "lijn": 1,
-     "datum": "2028-01-31",
-     "oms": "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)",
-     "bedrag": -3150,
-     "saldo": 41758,
-     "verwijst": "J3L1, J3L2",
-     "relatie": ""
+     "datum": "2028-02-15",
+     "oms": "Overschrijving naar Velomax bv, factuur 2028-021",
+     "bedrag": -9596,
+     "saldo": 13119,
+     "verwijst": "J3A04",
+     "relatie": "Velomax bv"
     },
     {
      "uittreksel": 3,
      "lijn": 2,
-     "datum": "2028-01-31",
-     "oms": "Overschrijving naar Preventa vzw, factuur PV-28-1022",
-     "bedrag": -140,
-     "saldo": 41618,
-     "verwijst": "J3A23",
-     "relatie": "Preventa vzw"
+     "datum": "2028-02-20",
+     "oms": "Overschrijving van Bouwbedrijf Janssens & Zonen bv, factuur 2028-004 - creditnota CN-2028-001",
+     "bedrag": 4477,
+     "saldo": 17596,
+     "verwijst": "J3V04, J3CV1",
+     "relatie": "Bouwbedrijf Janssens & Zonen bv"
     },
     {
      "uittreksel": 3,
      "lijn": 3,
-     "datum": "2028-02-01",
-     "oms": "Aflossing lening nr. 2027-0042: kapitaal 1.500 + intrest 255",
-     "bedrag": -1755,
-     "saldo": 39863,
-     "verwijst": "",
-     "relatie": ""
-    },
-    {
-     "uittreksel": 3,
-     "lijn": 4,
-     "datum": "2028-02-01",
-     "oms": "Domiciliëring Immo Vaartkom bv, huur februari-april 2028, factuur IV-2028-02",
-     "bedrag": -1500,
-     "saldo": 38363,
-     "verwijst": "J3A17",
-     "relatie": "Immo Vaartkom bv"
+     "datum": "2028-02-22",
+     "oms": "Overschrijving naar Velomax bv, factuur 2028-066",
+     "bedrag": -2299,
+     "saldo": 15297,
+     "verwijst": "J3A06",
+     "relatie": "Velomax bv"
     }
    ],
-   "nieuw": 38363
+   "nieuw": 15297
   },
   {
    "id": "J3U4",
    "ref": "BANK04",
    "categorie": "Financiële verrichtingen",
    "soort": "BANK",
-   "datum": "2028-02-10",
+   "datum": "2028-03-10",
    "nr": 4,
-   "vorig": 38363,
+   "vorig": 15297,
    "boekOms": "Rekeninguittreksel 4",
    "lijnen": [
     {
      "uittreksel": 4,
      "lijn": 1,
-     "datum": "2028-02-05",
-     "oms": "Overschrijving van Hotel De Linde bv, factuur 2028-002",
-     "bedrag": 3118,
-     "saldo": 41481,
-     "verwijst": "J3V02",
-     "relatie": "Hotel De Linde bv"
+     "datum": "2028-02-29",
+     "oms": "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)",
+     "bedrag": -3390,
+     "saldo": 11907,
+     "verwijst": "J3L3, J3L4",
+     "relatie": ""
     },
     {
      "uittreksel": 4,
      "lijn": 2,
-     "datum": "2028-02-05",
-     "oms": "Overschrijving naar HelmHuis bv, factuur HH-28-002",
-     "bedrag": -1089,
-     "saldo": 40392,
-     "verwijst": "J3A02",
-     "relatie": "HelmHuis bv"
+     "datum": "2028-03-01",
+     "oms": "Overschrijving van Camping De Vlinder bv, factuur 2028-005 - creditnota CN-2028-002",
+     "bedrag": 5566,
+     "saldo": 17473,
+     "verwijst": "J3V07, J3CV2",
+     "relatie": "Camping De Vlinder bv"
     },
     {
      "uittreksel": 4,
      "lijn": 3,
-     "datum": "2028-02-10",
-     "oms": "Overschrijving naar Deprez Werkplaatsinrichting bv, factuur DW-28-0006",
-     "bedrag": -2662,
-     "saldo": 37730,
-     "verwijst": "J3A11",
-     "relatie": "Deprez Werkplaatsinrichting bv"
+     "datum": "2028-03-05",
+     "oms": "Overschrijving naar Velomax bv, factuur 2028-058 - creditnota CN-2028-006",
+     "bedrag": -2520,
+     "saldo": 14953,
+     "verwijst": "J3A07, J3CA3",
+     "relatie": "Velomax bv"
     },
     {
      "uittreksel": 4,
      "lijn": 4,
-     "datum": "2028-02-10",
-     "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0131",
-     "bedrag": -2100,
-     "saldo": 35630,
-     "verwijst": "J3S1",
-     "relatie": "Loonwijs vzw"
+     "datum": "2028-03-09",
+     "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011",
+     "bedrag": 11858,
+     "saldo": 26811,
+     "verwijst": "J3V10",
+     "relatie": "Woonzorgcentrum Zonnehof vzw"
     },
     {
      "uittreksel": 4,
      "lijn": 5,
-     "datum": "2028-02-10",
-     "oms": "Overschrijving naar Velomax bv, factuur 2028-047 (min 700 financiële korting)",
-     "bedrag": -16093,
-     "saldo": 19537,
-     "verwijst": "J3A05",
-     "relatie": "Velomax bv"
+     "datum": "2028-03-10",
+     "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0229",
+     "bedrag": -2360,
+     "saldo": 24451,
+     "verwijst": "J3S2",
+     "relatie": "Loonwijs vzw"
     }
    ],
-   "nieuw": 19537
+   "nieuw": 24451
   },
   {
    "id": "J3U5",
    "ref": "BANK05",
    "categorie": "Financiële verrichtingen",
    "soort": "BANK",
-   "datum": "2028-02-22",
+   "datum": "2028-03-31",
    "nr": 5,
-   "vorig": 19537,
+   "vorig": 24451,
    "boekOms": "Rekeninguittreksel 5",
    "lijnen": [
     {
      "uittreksel": 5,
      "lijn": 1,
-     "datum": "2028-02-15",
-     "oms": "Overschrijving van Velocity Deelfietsen bv, factuur 2028-003",
-     "bedrag": 9196,
-     "saldo": 28733,
-     "verwijst": "J3V03",
-     "relatie": "Velocity Deelfietsen bv"
-    },
-    {
-     "uittreksel": 5,
-     "lijn": 2,
-     "datum": "2028-02-15",
-     "oms": "Overschrijving naar Velomax bv, factuur 2028-021",
-     "bedrag": -9596,
-     "saldo": 19137,
-     "verwijst": "J3A04",
-     "relatie": "Velomax bv"
-    },
-    {
-     "uittreksel": 5,
-     "lijn": 3,
-     "datum": "2028-02-20",
-     "oms": "Overschrijving van Bouwbedrijf Janssens & Zonen bv, factuur 2028-004 - creditnota CN-2028-001",
-     "bedrag": 6897,
-     "saldo": 26034,
-     "verwijst": "J3V04, J3CV1",
-     "relatie": "Bouwbedrijf Janssens & Zonen bv"
-    },
-    {
-     "uittreksel": 5,
-     "lijn": 4,
-     "datum": "2028-02-20",
-     "oms": "Overschrijving naar Drukkerij Peeters bv, factuur DP-2028-031",
-     "bedrag": -726,
-     "saldo": 25308,
-     "verwijst": "J3A10",
-     "relatie": "Drukkerij Peeters bv"
-    },
-    {
-     "uittreksel": 5,
-     "lijn": 5,
-     "datum": "2028-02-22",
-     "oms": "Overschrijving naar Velomax bv, factuur 2028-066 (min 100 financiële korting)",
-     "bedrag": -5929,
-     "saldo": 19379,
-     "verwijst": "J3A06",
-     "relatie": "Velomax bv"
-    }
-   ],
-   "nieuw": 19379
-  },
-  {
-   "id": "J3U6",
-   "ref": "BANK06",
-   "categorie": "Financiële verrichtingen",
-   "soort": "BANK",
-   "datum": "2028-03-01",
-   "nr": 6,
-   "vorig": 19379,
-   "boekOms": "Rekeninguittreksel 6",
-   "lijnen": [
-    {
-     "uittreksel": 6,
-     "lijn": 1,
-     "datum": "2028-02-29",
-     "oms": "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)",
-     "bedrag": -3390,
-     "saldo": 15989,
-     "verwijst": "J3L3, J3L4",
-     "relatie": ""
-    },
-    {
-     "uittreksel": 6,
-     "lijn": 2,
-     "datum": "2028-03-01",
-     "oms": "Overschrijving van Camping De Vlinder bv, factuur 2028-005 - creditnota CN-2028-002",
-     "bedrag": 5566,
-     "saldo": 21555,
-     "verwijst": "J3V07, J3CV2",
-     "relatie": "Camping De Vlinder bv"
-    }
-   ],
-   "nieuw": 21555
-  },
-  {
-   "id": "J3U7",
-   "ref": "BANK07",
-   "categorie": "Financiële verrichtingen",
-   "soort": "BANK",
-   "datum": "2028-03-10",
-   "nr": 7,
-   "vorig": 21555,
-   "boekOms": "Rekeninguittreksel 7",
-   "lijnen": [
-    {
-     "uittreksel": 7,
-     "lijn": 1,
-     "datum": "2028-03-05",
-     "oms": "Overschrijving van Brouwerij Van Acker bv, factuur 2028-006",
-     "bedrag": 9680,
-     "saldo": 31235,
-     "verwijst": "J3V05",
-     "relatie": "Brouwerij Van Acker bv"
-    },
-    {
-     "uittreksel": 7,
-     "lijn": 2,
-     "datum": "2028-03-05",
-     "oms": "Overschrijving naar Velomax bv, factuur 2028-058 - creditnota CN-2028-006",
-     "bedrag": -4456,
-     "saldo": 26779,
-     "verwijst": "J3A07, J3CA3",
-     "relatie": "Velomax bv"
-    },
-    {
-     "uittreksel": 7,
-     "lijn": 3,
-     "datum": "2028-03-09",
-     "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011 (min 200 financiële korting)",
-     "bedrag": 11858,
-     "saldo": 38637,
-     "verwijst": "J3V10",
-     "relatie": "Woonzorgcentrum Zonnehof vzw"
-    },
-    {
-     "uittreksel": 7,
-     "lijn": 4,
-     "datum": "2028-03-10",
-     "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0229",
-     "bedrag": -2360,
-     "saldo": 36277,
-     "verwijst": "J3S2",
-     "relatie": "Loonwijs vzw"
-    }
-   ],
-   "nieuw": 36277
-  },
-  {
-   "id": "J3U8",
-   "ref": "BANK08",
-   "categorie": "Financiële verrichtingen",
-   "soort": "BANK",
-   "datum": "2028-03-22",
-   "nr": 8,
-   "vorig": 36277,
-   "boekOms": "Rekeninguittreksel 8",
-   "lijnen": [
-    {
-     "uittreksel": 8,
-     "lijn": 1,
-     "datum": "2028-03-15",
-     "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-077 - creditnota SW-CN-2028-004",
-     "bedrag": -605,
-     "saldo": 35672,
-     "verwijst": "J3A08, J3CA2",
-     "relatie": "Spaakwerk bv"
-    },
-    {
-     "uittreksel": 8,
-     "lijn": 2,
      "datum": "2028-03-20",
      "oms": "Bancontact-ontvangsten 18/03/2028",
      "bedrag": 3000,
-     "saldo": 38672,
+     "saldo": 27451,
      "verwijst": "J3D1",
      "relatie": ""
     },
     {
-     "uittreksel": 8,
-     "lijn": 3,
-     "datum": "2028-03-20",
-     "oms": "Overschrijving naar Kassatech bv, factuur KT-2028-118",
-     "bedrag": -1452,
-     "saldo": 37220,
-     "verwijst": "J3A12",
-     "relatie": "Kassatech bv"
-    },
-    {
-     "uittreksel": 8,
-     "lijn": 4,
+     "uittreksel": 5,
+     "lijn": 2,
      "datum": "2028-03-22",
      "oms": "Storting contanten",
      "bedrag": 3500,
-     "saldo": 40720,
+     "saldo": 30951,
      "verwijst": "J3K2",
      "relatie": ""
-    }
-   ],
-   "nieuw": 40720
-  },
-  {
-   "id": "J3U9",
-   "ref": "BANK09",
-   "categorie": "Financiële verrichtingen",
-   "soort": "BANK",
-   "datum": "2028-03-31",
-   "nr": 9,
-   "vorig": 40720,
-   "boekOms": "Rekeninguittreksel 9",
-   "lijnen": [
+    },
     {
-     "uittreksel": 9,
-     "lijn": 1,
+     "uittreksel": 5,
+     "lijn": 3,
      "datum": "2028-03-25",
      "oms": "Overschrijving van Studio Kowalski bv, factuur 2028-013",
-     "bedrag": 3004,
-     "saldo": 43724,
+     "bedrag": 2399,
+     "saldo": 33350,
      "verwijst": "J3V11",
      "relatie": "Studio Kowalski bv"
     },
     {
-     "uittreksel": 9,
-     "lijn": 2,
+     "uittreksel": 5,
+     "lijn": 4,
      "datum": "2028-03-31",
      "oms": "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)",
      "bedrag": -3280,
-     "saldo": 40444,
+     "saldo": 30070,
      "verwijst": "J3L5, J3L6",
      "relatie": ""
     }
    ],
-   "nieuw": 40444
+   "nieuw": 30070
   },
   {
    "id": "J3BTW",
@@ -2944,7 +2609,7 @@
    "datum": "2028-03-31",
    "geenDocument": true,
    "boekOms": "Btw-verwerking 1e kwartaal 2028",
-   "saldo": 3249
+   "saldo": 2682
   },
   {
    "id": "J3AFS",
@@ -3011,9 +2676,9 @@
    "categorie": "Eindejaarsverrichtingen",
    "soort": "VR",
    "datum": "2028-03-31",
-   "eind": 9680,
+   "eind": 10355,
    "begin": 13650,
-   "boekOms": "Voorraadwijziging handelsgoederen 1e kwartaal 2028 (9680 - 13650)"
+   "boekOms": "Voorraadwijziging handelsgoederen 1e kwartaal 2028 (10355 - 13650)"
   },
   {
    "id": "J3BEL",
@@ -3022,7 +2687,7 @@
    "soort": "MEMO",
    "datum": "2028-03-31",
    "geenDocument": true,
-   "boekOms": "Geraamde vennootschapsbelasting 1e kwartaal 2028 (20% van 7000)"
+   "boekOms": "Geraamde vennootschapsbelasting 1e kwartaal 2028 (20% van 4975)"
   },
   {
    "id": "J3RES",
@@ -3036,354 +2701,211 @@
  ],
  "uittreksels": [
   {
-   "datumUittreksel": "2028-01-15",
+   "datumUittreksel": "2028-01-31",
    "uittreksel": 1,
-   "lijn": 1,
-   "datum": "2028-01-10",
-   "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00871",
-   "bedrag": -1200,
-   "saldo": 43797,
-   "verwijst": "J3A16",
-   "relatie": "Gerzo Verzekeringen nv"
-  },
-  {
-   "datumUittreksel": "2028-01-15",
-   "uittreksel": 1,
-   "lijn": 2,
-   "datum": "2028-01-15",
-   "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00872",
-   "bedrag": -600,
-   "saldo": 43197,
-   "verwijst": "J3A22",
-   "relatie": "Gerzo Verzekeringen nv"
-  },
-  {
-   "datumUittreksel": "2028-01-25",
-   "uittreksel": 2,
    "lijn": 1,
    "datum": "2028-01-20",
    "oms": "Overschrijving van Snelpost bv, factuur 2028-001",
-   "bedrag": 11391,
-   "saldo": 54588,
+   "bedrag": 11028,
+   "saldo": 56025,
    "verwijst": "J3V01",
    "relatie": "Snelpost bv"
   },
   {
-   "datumUittreksel": "2028-01-25",
-   "uittreksel": 2,
+   "datumUittreksel": "2028-01-31",
+   "uittreksel": 1,
    "lijn": 2,
-   "datum": "2028-01-20",
-   "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-014",
-   "bedrag": -1089,
-   "saldo": 53499,
-   "verwijst": "J3A03",
-   "relatie": "Spaakwerk bv"
-  },
-  {
-   "datumUittreksel": "2028-01-25",
-   "uittreksel": 2,
-   "lijn": 3,
    "datum": "2028-01-25",
    "oms": "Overschrijving naar Velomax bv, factuur 2028-003 - creditnota CN-2028-001",
-   "bedrag": -7623,
-   "saldo": 45876,
+   "bedrag": -8712,
+   "saldo": 47313,
    "verwijst": "J3A01, J3CA1",
    "relatie": "Velomax bv"
   },
   {
-   "datumUittreksel": "2028-01-25",
-   "uittreksel": 2,
-   "lijn": 4,
-   "datum": "2028-01-25",
-   "oms": "Overschrijving naar Stroomkracht nv, factuur SK-28-0412",
-   "bedrag": -968,
-   "saldo": 44908,
-   "verwijst": "J3A09",
-   "relatie": "Stroomkracht nv"
-  },
-  {
-   "datumUittreksel": "2028-02-01",
-   "uittreksel": 3,
-   "lijn": 1,
+   "datumUittreksel": "2028-01-31",
+   "uittreksel": 1,
+   "lijn": 3,
    "datum": "2028-01-31",
    "oms": "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)",
    "bedrag": -3150,
-   "saldo": 41758,
+   "saldo": 44163,
    "verwijst": "J3L1, J3L2",
    "relatie": ""
   },
   {
-   "datumUittreksel": "2028-02-01",
-   "uittreksel": 3,
-   "lijn": 2,
-   "datum": "2028-01-31",
-   "oms": "Overschrijving naar Preventa vzw, factuur PV-28-1022",
-   "bedrag": -140,
-   "saldo": 41618,
-   "verwijst": "J3A23",
-   "relatie": "Preventa vzw"
-  },
-  {
-   "datumUittreksel": "2028-02-01",
-   "uittreksel": 3,
-   "lijn": 3,
+   "datumUittreksel": "2028-02-10",
+   "uittreksel": 2,
+   "lijn": 1,
    "datum": "2028-02-01",
    "oms": "Aflossing lening nr. 2027-0042: kapitaal 1.500 + intrest 255",
    "bedrag": -1755,
-   "saldo": 39863,
+   "saldo": 42408,
    "verwijst": "",
    "relatie": ""
   },
   {
-   "datumUittreksel": "2028-02-01",
-   "uittreksel": 3,
-   "lijn": 4,
+   "datumUittreksel": "2028-02-10",
+   "uittreksel": 2,
+   "lijn": 2,
    "datum": "2028-02-01",
    "oms": "Domiciliëring Immo Vaartkom bv, huur februari-april 2028, factuur IV-2028-02",
    "bedrag": -1500,
-   "saldo": 38363,
+   "saldo": 40908,
    "verwijst": "J3A17",
    "relatie": "Immo Vaartkom bv"
   },
   {
    "datumUittreksel": "2028-02-10",
-   "uittreksel": 4,
-   "lijn": 1,
-   "datum": "2028-02-05",
-   "oms": "Overschrijving van Hotel De Linde bv, factuur 2028-002",
-   "bedrag": 3118,
-   "saldo": 41481,
-   "verwijst": "J3V02",
-   "relatie": "Hotel De Linde bv"
-  },
-  {
-   "datumUittreksel": "2028-02-10",
-   "uittreksel": 4,
-   "lijn": 2,
-   "datum": "2028-02-05",
-   "oms": "Overschrijving naar HelmHuis bv, factuur HH-28-002",
-   "bedrag": -1089,
-   "saldo": 40392,
-   "verwijst": "J3A02",
-   "relatie": "HelmHuis bv"
-  },
-  {
-   "datumUittreksel": "2028-02-10",
-   "uittreksel": 4,
+   "uittreksel": 2,
    "lijn": 3,
    "datum": "2028-02-10",
-   "oms": "Overschrijving naar Deprez Werkplaatsinrichting bv, factuur DW-28-0006",
-   "bedrag": -2662,
-   "saldo": 37730,
-   "verwijst": "J3A11",
-   "relatie": "Deprez Werkplaatsinrichting bv"
-  },
-  {
-   "datumUittreksel": "2028-02-10",
-   "uittreksel": 4,
-   "lijn": 4,
-   "datum": "2028-02-10",
-   "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0131",
-   "bedrag": -2100,
-   "saldo": 35630,
-   "verwijst": "J3S1",
-   "relatie": "Loonwijs vzw"
-  },
-  {
-   "datumUittreksel": "2028-02-10",
-   "uittreksel": 4,
-   "lijn": 5,
-   "datum": "2028-02-10",
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-047 (min 700 financiële korting)",
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-047",
    "bedrag": -16093,
-   "saldo": 19537,
+   "saldo": 24815,
    "verwijst": "J3A05",
    "relatie": "Velomax bv"
   },
   {
-   "datumUittreksel": "2028-02-22",
-   "uittreksel": 5,
-   "lijn": 1,
-   "datum": "2028-02-15",
-   "oms": "Overschrijving van Velocity Deelfietsen bv, factuur 2028-003",
-   "bedrag": 9196,
-   "saldo": 28733,
-   "verwijst": "J3V03",
-   "relatie": "Velocity Deelfietsen bv"
+   "datumUittreksel": "2028-02-10",
+   "uittreksel": 2,
+   "lijn": 4,
+   "datum": "2028-02-10",
+   "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0131",
+   "bedrag": -2100,
+   "saldo": 22715,
+   "verwijst": "J3S1",
+   "relatie": "Loonwijs vzw"
   },
   {
    "datumUittreksel": "2028-02-22",
-   "uittreksel": 5,
-   "lijn": 2,
+   "uittreksel": 3,
+   "lijn": 1,
    "datum": "2028-02-15",
    "oms": "Overschrijving naar Velomax bv, factuur 2028-021",
    "bedrag": -9596,
-   "saldo": 19137,
+   "saldo": 13119,
    "verwijst": "J3A04",
    "relatie": "Velomax bv"
   },
   {
    "datumUittreksel": "2028-02-22",
-   "uittreksel": 5,
-   "lijn": 3,
+   "uittreksel": 3,
+   "lijn": 2,
    "datum": "2028-02-20",
    "oms": "Overschrijving van Bouwbedrijf Janssens & Zonen bv, factuur 2028-004 - creditnota CN-2028-001",
-   "bedrag": 6897,
-   "saldo": 26034,
+   "bedrag": 4477,
+   "saldo": 17596,
    "verwijst": "J3V04, J3CV1",
    "relatie": "Bouwbedrijf Janssens & Zonen bv"
   },
   {
    "datumUittreksel": "2028-02-22",
-   "uittreksel": 5,
-   "lijn": 4,
-   "datum": "2028-02-20",
-   "oms": "Overschrijving naar Drukkerij Peeters bv, factuur DP-2028-031",
-   "bedrag": -726,
-   "saldo": 25308,
-   "verwijst": "J3A10",
-   "relatie": "Drukkerij Peeters bv"
-  },
-  {
-   "datumUittreksel": "2028-02-22",
-   "uittreksel": 5,
-   "lijn": 5,
+   "uittreksel": 3,
+   "lijn": 3,
    "datum": "2028-02-22",
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-066 (min 100 financiële korting)",
-   "bedrag": -5929,
-   "saldo": 19379,
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-066",
+   "bedrag": -2299,
+   "saldo": 15297,
    "verwijst": "J3A06",
    "relatie": "Velomax bv"
   },
   {
-   "datumUittreksel": "2028-03-01",
-   "uittreksel": 6,
+   "datumUittreksel": "2028-03-10",
+   "uittreksel": 4,
    "lijn": 1,
    "datum": "2028-02-29",
    "oms": "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)",
    "bedrag": -3390,
-   "saldo": 15989,
+   "saldo": 11907,
    "verwijst": "J3L3, J3L4",
    "relatie": ""
   },
   {
-   "datumUittreksel": "2028-03-01",
-   "uittreksel": 6,
+   "datumUittreksel": "2028-03-10",
+   "uittreksel": 4,
    "lijn": 2,
    "datum": "2028-03-01",
    "oms": "Overschrijving van Camping De Vlinder bv, factuur 2028-005 - creditnota CN-2028-002",
    "bedrag": 5566,
-   "saldo": 21555,
+   "saldo": 17473,
    "verwijst": "J3V07, J3CV2",
    "relatie": "Camping De Vlinder bv"
   },
   {
    "datumUittreksel": "2028-03-10",
-   "uittreksel": 7,
-   "lijn": 1,
-   "datum": "2028-03-05",
-   "oms": "Overschrijving van Brouwerij Van Acker bv, factuur 2028-006",
-   "bedrag": 9680,
-   "saldo": 31235,
-   "verwijst": "J3V05",
-   "relatie": "Brouwerij Van Acker bv"
-  },
-  {
-   "datumUittreksel": "2028-03-10",
-   "uittreksel": 7,
-   "lijn": 2,
+   "uittreksel": 4,
+   "lijn": 3,
    "datum": "2028-03-05",
    "oms": "Overschrijving naar Velomax bv, factuur 2028-058 - creditnota CN-2028-006",
-   "bedrag": -4456,
-   "saldo": 26779,
+   "bedrag": -2520,
+   "saldo": 14953,
    "verwijst": "J3A07, J3CA3",
    "relatie": "Velomax bv"
   },
   {
    "datumUittreksel": "2028-03-10",
-   "uittreksel": 7,
-   "lijn": 3,
+   "uittreksel": 4,
+   "lijn": 4,
    "datum": "2028-03-09",
-   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011 (min 200 financiële korting)",
+   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011",
    "bedrag": 11858,
-   "saldo": 38637,
+   "saldo": 26811,
    "verwijst": "J3V10",
    "relatie": "Woonzorgcentrum Zonnehof vzw"
   },
   {
    "datumUittreksel": "2028-03-10",
-   "uittreksel": 7,
-   "lijn": 4,
+   "uittreksel": 4,
+   "lijn": 5,
    "datum": "2028-03-10",
    "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0229",
    "bedrag": -2360,
-   "saldo": 36277,
+   "saldo": 24451,
    "verwijst": "J3S2",
    "relatie": "Loonwijs vzw"
   },
   {
-   "datumUittreksel": "2028-03-22",
-   "uittreksel": 8,
+   "datumUittreksel": "2028-03-31",
+   "uittreksel": 5,
    "lijn": 1,
-   "datum": "2028-03-15",
-   "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-077 - creditnota SW-CN-2028-004",
-   "bedrag": -605,
-   "saldo": 35672,
-   "verwijst": "J3A08, J3CA2",
-   "relatie": "Spaakwerk bv"
-  },
-  {
-   "datumUittreksel": "2028-03-22",
-   "uittreksel": 8,
-   "lijn": 2,
    "datum": "2028-03-20",
    "oms": "Bancontact-ontvangsten 18/03/2028",
    "bedrag": 3000,
-   "saldo": 38672,
+   "saldo": 27451,
    "verwijst": "J3D1",
    "relatie": ""
   },
   {
-   "datumUittreksel": "2028-03-22",
-   "uittreksel": 8,
-   "lijn": 3,
-   "datum": "2028-03-20",
-   "oms": "Overschrijving naar Kassatech bv, factuur KT-2028-118",
-   "bedrag": -1452,
-   "saldo": 37220,
-   "verwijst": "J3A12",
-   "relatie": "Kassatech bv"
-  },
-  {
-   "datumUittreksel": "2028-03-22",
-   "uittreksel": 8,
-   "lijn": 4,
+   "datumUittreksel": "2028-03-31",
+   "uittreksel": 5,
+   "lijn": 2,
    "datum": "2028-03-22",
    "oms": "Storting contanten",
    "bedrag": 3500,
-   "saldo": 40720,
+   "saldo": 30951,
    "verwijst": "J3K2",
    "relatie": ""
   },
   {
    "datumUittreksel": "2028-03-31",
-   "uittreksel": 9,
-   "lijn": 1,
+   "uittreksel": 5,
+   "lijn": 3,
    "datum": "2028-03-25",
    "oms": "Overschrijving van Studio Kowalski bv, factuur 2028-013",
-   "bedrag": 3004,
-   "saldo": 43724,
+   "bedrag": 2399,
+   "saldo": 33350,
    "verwijst": "J3V11",
    "relatie": "Studio Kowalski bv"
   },
   {
    "datumUittreksel": "2028-03-31",
-   "uittreksel": 9,
-   "lijn": 2,
+   "uittreksel": 5,
+   "lijn": 4,
    "datum": "2028-03-31",
    "oms": "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)",
    "bedrag": -3280,
-   "saldo": 40444,
+   "saldo": 30070,
    "verwijst": "J3L5, J3L6",
    "relatie": ""
   }
@@ -3497,27 +3019,7 @@
    "datum": "2028-01-12",
    "rekening": "604000",
    "naam": "Aankopen handelsgoederen",
-   "debet": 300,
-   "credit": 0,
-   "oms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv"
-  },
-  {
-   "doc": "J3A03",
-   "ref": "AK03",
-   "datum": "2028-01-12",
-   "rekening": "604000",
-   "naam": "Aankopen handelsgoederen",
-   "debet": 100,
-   "credit": 0,
-   "oms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv"
-  },
-  {
-   "doc": "J3A03",
-   "ref": "AK03",
-   "datum": "2028-01-12",
-   "rekening": "604000",
-   "naam": "Aankopen handelsgoederen",
-   "debet": 600,
+   "debet": 375,
    "credit": 0,
    "oms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv"
   },
@@ -3528,7 +3030,7 @@
    "rekening": "604020",
    "naam": "Handelskorting op aankopen (-)",
    "debet": 0,
-   "credit": 100,
+   "credit": 75,
    "oms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv"
   },
   {
@@ -3537,7 +3039,7 @@
    "datum": "2028-01-12",
    "rekening": "411100",
    "naam": "Aftrekbare btw",
-   "debet": 189,
+   "debet": 63,
    "credit": 0,
    "oms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv"
   },
@@ -3548,7 +3050,7 @@
    "rekening": "440000",
    "naam": "Leveranciers",
    "debet": 0,
-   "credit": 1089,
+   "credit": 363,
    "oms": "Aankoopfactuur SW-2028-014 - Spaakwerk bv",
    "relatie": "Spaakwerk bv"
   },
@@ -3650,17 +3152,7 @@
    "datum": "2028-02-15",
    "rekening": "604000",
    "naam": "Aankopen handelsgoederen",
-   "debet": 800,
-   "credit": 0,
-   "oms": "Aankoopfactuur 2028-066 - Velomax bv"
-  },
-  {
-   "doc": "J3A06",
-   "ref": "AK06",
-   "datum": "2028-02-15",
-   "rekening": "604000",
-   "naam": "Aankopen handelsgoederen",
-   "debet": 4200,
+   "debet": 2000,
    "credit": 0,
    "oms": "Aankoopfactuur 2028-066 - Velomax bv"
   },
@@ -3670,7 +3162,7 @@
    "datum": "2028-02-15",
    "rekening": "411100",
    "naam": "Aftrekbare btw",
-   "debet": 1029,
+   "debet": 399,
    "credit": 0,
    "oms": "Aankoopfactuur 2028-066 - Velomax bv"
   },
@@ -3681,7 +3173,7 @@
    "rekening": "440000",
    "naam": "Leveranciers",
    "debet": 0,
-   "credit": 6029,
+   "credit": 2399,
    "oms": "Aankoopfactuur 2028-066 - Velomax bv",
    "relatie": "Velomax bv"
   },
@@ -3691,17 +3183,7 @@
    "datum": "2028-02-08",
    "rekening": "604000",
    "naam": "Aankopen handelsgoederen",
-   "debet": 2400,
-   "credit": 0,
-   "oms": "Aankoopfactuur 2028-058 - Velomax bv"
-  },
-  {
-   "doc": "J3A07",
-   "ref": "AK07",
-   "datum": "2028-02-08",
-   "rekening": "604000",
-   "naam": "Aankopen handelsgoederen",
-   "debet": 1800,
+   "debet": 3600,
    "credit": 0,
    "oms": "Aankoopfactuur 2028-058 - Velomax bv"
   },
@@ -3731,7 +3213,7 @@
    "datum": "2028-02-08",
    "rekening": "411100",
    "naam": "Aftrekbare btw",
-   "debet": 924,
+   "debet": 798,
    "credit": 0,
    "oms": "Aankoopfactuur 2028-058 - Velomax bv"
   },
@@ -3742,7 +3224,7 @@
    "rekening": "440000",
    "naam": "Leveranciers",
    "debet": 0,
-   "credit": 5524,
+   "credit": 4798,
    "oms": "Aankoopfactuur 2028-058 - Velomax bv",
    "relatie": "Velomax bv"
   },
@@ -3760,16 +3242,6 @@
    "doc": "J3A08",
    "ref": "AK08",
    "datum": "2028-02-22",
-   "rekening": "604000",
-   "naam": "Aankopen handelsgoederen",
-   "debet": 200,
-   "credit": 0,
-   "oms": "Aankoopfactuur SW-2028-077 - Spaakwerk bv"
-  },
-  {
-   "doc": "J3A08",
-   "ref": "AK08",
-   "datum": "2028-02-22",
    "rekening": "604030",
    "naam": "Aankoopkosten",
    "debet": 100,
@@ -3792,7 +3264,7 @@
    "datum": "2028-02-22",
    "rekening": "411100",
    "naam": "Aftrekbare btw",
-   "debet": 105,
+   "debet": 63,
    "credit": 0,
    "oms": "Aankoopfactuur SW-2028-077 - Spaakwerk bv"
   },
@@ -3803,7 +3275,7 @@
    "rekening": "440000",
    "naam": "Leveranciers",
    "debet": 0,
-   "credit": 705,
+   "credit": 463,
    "oms": "Aankoopfactuur SW-2028-077 - Spaakwerk bv",
    "relatie": "Spaakwerk bv"
   },
@@ -3885,17 +3357,7 @@
    "datum": "2028-01-15",
    "rekening": "232000",
    "naam": "Uitrusting",
-   "debet": 1200,
-   "credit": 0,
-   "oms": "Aankoopfactuur DW-28-0006 - Deprez Werkplaatsinrichting bv"
-  },
-  {
-   "doc": "J3A11",
-   "ref": "AK11",
-   "datum": "2028-01-15",
-   "rekening": "232000",
-   "naam": "Uitrusting",
-   "debet": 800,
+   "debet": 2000,
    "credit": 0,
    "oms": "Aankoopfactuur DW-28-0006 - Deprez Werkplaatsinrichting bv"
   },
@@ -3968,17 +3430,7 @@
    "rekening": "604010",
    "naam": "Retours op aankopen (-)",
    "debet": 0,
-   "credit": 1200,
-   "oms": "Creditnota CN-2028-001 - Velomax bv"
-  },
-  {
-   "doc": "J3CA1",
-   "ref": "AK13",
-   "datum": "2028-01-10",
-   "rekening": "604010",
-   "naam": "Retours op aankopen (-)",
-   "debet": 0,
-   "credit": 1800,
+   "credit": 2000,
    "oms": "Creditnota CN-2028-001 - Velomax bv"
   },
   {
@@ -3987,7 +3439,7 @@
    "datum": "2028-01-10",
    "rekening": "604020",
    "naam": "Handelskorting op aankopen (-)",
-   "debet": 300,
+   "debet": 200,
    "credit": 0,
    "oms": "Creditnota CN-2028-001 - Velomax bv"
   },
@@ -3998,7 +3450,7 @@
    "rekening": "451200",
    "naam": "Verschuldigde btw op inkomende creditnota’s",
    "debet": 0,
-   "credit": 567,
+   "credit": 378,
    "oms": "Creditnota CN-2028-001 - Velomax bv"
   },
   {
@@ -4007,7 +3459,7 @@
    "datum": "2028-01-10",
    "rekening": "440000",
    "naam": "Leveranciers",
-   "debet": 3267,
+   "debet": 2178,
    "credit": 0,
    "oms": "Creditnota CN-2028-001 - Velomax bv",
    "relatie": "Velomax bv"
@@ -4040,7 +3492,7 @@
    "rekening": "604010",
    "naam": "Retours op aankopen (-)",
    "debet": 0,
-   "credit": 800,
+   "credit": 1800,
    "oms": "Creditnota CN-2028-006 - Velomax bv"
   },
   {
@@ -4060,7 +3512,7 @@
    "rekening": "451200",
    "naam": "Verschuldigde btw op inkomende creditnota’s",
    "debet": 0,
-   "credit": 168,
+   "credit": 378,
    "oms": "Creditnota CN-2028-006 - Velomax bv"
   },
   {
@@ -4069,7 +3521,7 @@
    "datum": "2028-02-20",
    "rekening": "440000",
    "naam": "Leveranciers",
-   "debet": 1068,
+   "debet": 2278,
    "credit": 0,
    "oms": "Creditnota CN-2028-006 - Velomax bv",
    "relatie": "Velomax bv"
@@ -4130,16 +3582,6 @@
    "doc": "J3V01",
    "ref": "VK01",
    "datum": "2028-01-08",
-   "rekening": "704000",
-   "naam": "Verkopen handelsgoederen",
-   "debet": 0,
-   "credit": 300,
-   "oms": "Verkoopfactuur 2028-001 - Snelpost bv"
-  },
-  {
-   "doc": "J3V01",
-   "ref": "VK01",
-   "datum": "2028-01-08",
    "rekening": "700000",
    "naam": "Verkopen en dienstprestaties",
    "debet": 0,
@@ -4153,7 +3595,7 @@
    "rekening": "451100",
    "naam": "Verschuldigde btw",
    "debet": 0,
-   "credit": 1791,
+   "credit": 1728,
    "oms": "Verkoopfactuur 2028-001 - Snelpost bv"
   },
   {
@@ -4162,7 +3604,7 @@
    "datum": "2028-01-08",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
-   "debet": 11391,
+   "debet": 11028,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-001 - Snelpost bv",
    "relatie": "Snelpost bv"
@@ -4191,30 +3633,10 @@
    "doc": "J3V02",
    "ref": "VK02",
    "datum": "2028-01-11",
-   "rekening": "704000",
-   "naam": "Verkopen handelsgoederen",
-   "debet": 0,
-   "credit": 200,
-   "oms": "Verkoopfactuur 2028-002 - Hotel De Linde bv"
-  },
-  {
-   "doc": "J3V02",
-   "ref": "VK02",
-   "datum": "2028-01-11",
-   "rekening": "704000",
-   "naam": "Verkopen handelsgoederen",
-   "debet": 0,
-   "credit": 400,
-   "oms": "Verkoopfactuur 2028-002 - Hotel De Linde bv"
-  },
-  {
-   "doc": "J3V02",
-   "ref": "VK02",
-   "datum": "2028-01-11",
    "rekening": "451100",
    "naam": "Verschuldigde btw",
    "debet": 0,
-   "credit": 318,
+   "credit": 192,
    "oms": "Verkoopfactuur 2028-002 - Hotel De Linde bv"
   },
   {
@@ -4223,7 +3645,7 @@
    "datum": "2028-01-11",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
-   "debet": 3118,
+   "debet": 2392,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-002 - Hotel De Linde bv",
    "relatie": "Hotel De Linde bv"
@@ -4286,17 +3708,7 @@
    "rekening": "704000",
    "naam": "Verkopen handelsgoederen",
    "debet": 0,
-   "credit": 8000,
-   "oms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv"
-  },
-  {
-   "doc": "J3V04",
-   "ref": "VK04",
-   "datum": "2028-01-25",
-   "rekening": "704000",
-   "naam": "Verkopen handelsgoederen",
-   "debet": 0,
-   "credit": 200,
+   "credit": 6000,
    "oms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv"
   },
   {
@@ -4306,7 +3718,7 @@
    "rekening": "746000",
    "naam": "Doorgerekende kosten",
    "debet": 0,
-   "credit": 120,
+   "credit": 100,
    "oms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv"
   },
   {
@@ -4315,7 +3727,7 @@
    "datum": "2028-01-25",
    "rekening": "704020",
    "naam": "Handelskorting op verkopen (-)",
-   "debet": 820,
+   "debet": 600,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv"
   },
@@ -4326,7 +3738,7 @@
    "rekening": "451100",
    "naam": "Verschuldigde btw",
    "debet": 0,
-   "credit": 1575,
+   "credit": 1155,
    "oms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv"
   },
   {
@@ -4335,7 +3747,7 @@
    "datum": "2028-01-25",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
-   "debet": 9075,
+   "debet": 6655,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-004 - Bouwbedrijf Janssens & Zonen bv",
    "relatie": "Bouwbedrijf Janssens & Zonen bv"
@@ -4388,7 +3800,7 @@
    "rekening": "704000",
    "naam": "Verkopen handelsgoederen",
    "debet": 0,
-   "credit": 14000,
+   "credit": 10000,
    "oms": "Verkoopfactuur 2028-009 - Bytewise bv"
   },
   {
@@ -4407,7 +3819,7 @@
    "datum": "2028-02-21",
    "rekening": "704020",
    "naam": "Handelskorting op verkopen (-)",
-   "debet": 700,
+   "debet": 500,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-009 - Bytewise bv"
   },
@@ -4418,7 +3830,7 @@
    "rekening": "451100",
    "naam": "Verschuldigde btw",
    "debet": 0,
-   "credit": 2814,
+   "credit": 2016,
    "oms": "Verkoopfactuur 2028-009 - Bytewise bv"
   },
   {
@@ -4427,7 +3839,7 @@
    "datum": "2028-02-21",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
-   "debet": 16214,
+   "debet": 11616,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-009 - Bytewise bv",
    "relatie": "Bytewise bv"
@@ -4583,17 +3995,7 @@
    "rekening": "704000",
    "naam": "Verkopen handelsgoederen",
    "debet": 0,
-   "credit": 2400,
-   "oms": "Verkoopfactuur 2028-013 - Studio Kowalski bv"
-  },
-  {
-   "doc": "J3V11",
-   "ref": "VK11",
-   "datum": "2028-03-09",
-   "rekening": "704000",
-   "naam": "Verkopen handelsgoederen",
-   "debet": 0,
-   "credit": 100,
+   "credit": 2000,
    "oms": "Verkoopfactuur 2028-013 - Studio Kowalski bv"
   },
   {
@@ -4603,7 +4005,7 @@
    "rekening": "451100",
    "naam": "Verschuldigde btw",
    "debet": 0,
-   "credit": 504,
+   "credit": 399,
    "oms": "Verkoopfactuur 2028-013 - Studio Kowalski bv"
   },
   {
@@ -4612,7 +4014,7 @@
    "datum": "2028-03-09",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
-   "debet": 3004,
+   "debet": 2399,
    "credit": 0,
    "oms": "Verkoopfactuur 2028-013 - Studio Kowalski bv",
    "relatie": "Studio Kowalski bv"
@@ -5057,17 +4459,7 @@
    "datum": "2028-03-31",
    "rekening": "613300",
    "naam": "Sociaal secretariaat",
-   "debet": 150,
-   "credit": 0,
-   "oms": "Aankoopfactuur LW-2028-0332 - Loonwijs vzw"
-  },
-  {
-   "doc": "J3A21",
-   "ref": "AK21",
-   "datum": "2028-03-31",
-   "rekening": "613300",
-   "naam": "Sociaal secretariaat",
-   "debet": 50,
+   "debet": 200,
    "credit": 0,
    "oms": "Aankoopfactuur LW-2028-0332 - Loonwijs vzw"
   },
@@ -5119,17 +4511,7 @@
    "datum": "2028-01-10",
    "rekening": "623000",
    "naam": "Andere personeelskosten",
-   "debet": 100,
-   "credit": 0,
-   "oms": "Aankoopfactuur PV-28-1022 - Preventa vzw"
-  },
-  {
-   "doc": "J3A23",
-   "ref": "AK23",
-   "datum": "2028-01-10",
-   "rekening": "623000",
-   "naam": "Andere personeelskosten",
-   "debet": 40,
+   "debet": 140,
    "credit": 0,
    "oms": "Aankoopfactuur PV-28-1022 - Preventa vzw"
   },
@@ -5188,133 +4570,49 @@
   {
    "doc": "J3U1",
    "ref": "BANK01",
-   "datum": "2028-01-15",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 1200,
-   "credit": 0,
-   "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00871",
-   "relatie": "Gerzo Verzekeringen nv"
-  },
-  {
-   "doc": "J3U1",
-   "ref": "BANK01",
-   "datum": "2028-01-15",
+   "datum": "2028-01-31",
    "rekening": "550000",
    "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 1200,
-   "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00871"
-  },
-  {
-   "doc": "J3U1",
-   "ref": "BANK01",
-   "datum": "2028-01-15",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 600,
-   "credit": 0,
-   "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00872",
-   "relatie": "Gerzo Verzekeringen nv"
-  },
-  {
-   "doc": "J3U1",
-   "ref": "BANK01",
-   "datum": "2028-01-15",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 600,
-   "oms": "Overschrijving naar Gerzo Verzekeringen nv, factuur GZ-28-00872"
-  },
-  {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 11391,
+   "debet": 11028,
    "credit": 0,
    "oms": "Overschrijving van Snelpost bv, factuur 2028-001"
   },
   {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
+   "doc": "J3U1",
+   "ref": "BANK01",
+   "datum": "2028-01-31",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "debet": 0,
-   "credit": 11391,
+   "credit": 11028,
    "oms": "Overschrijving van Snelpost bv, factuur 2028-001",
    "relatie": "Snelpost bv"
   },
   {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
+   "doc": "J3U1",
+   "ref": "BANK01",
+   "datum": "2028-01-31",
    "rekening": "440000",
    "naam": "Leveranciers",
-   "debet": 1089,
-   "credit": 0,
-   "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-014",
-   "relatie": "Spaakwerk bv"
-  },
-  {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 1089,
-   "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-014"
-  },
-  {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 7623,
+   "debet": 8712,
    "credit": 0,
    "oms": "Overschrijving naar Velomax bv, factuur 2028-003 - creditnota CN-2028-001",
    "relatie": "Velomax bv"
   },
   {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
+   "doc": "J3U1",
+   "ref": "BANK01",
+   "datum": "2028-01-31",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
-   "credit": 7623,
+   "credit": 8712,
    "oms": "Overschrijving naar Velomax bv, factuur 2028-003 - creditnota CN-2028-001"
   },
   {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 968,
-   "credit": 0,
-   "oms": "Overschrijving naar Stroomkracht nv, factuur SK-28-0412",
-   "relatie": "Stroomkracht nv"
-  },
-  {
-   "doc": "J3U2",
-   "ref": "BANK02",
-   "datum": "2028-01-25",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 968,
-   "oms": "Overschrijving naar Stroomkracht nv, factuur SK-28-0412"
-  },
-  {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U1",
+   "ref": "BANK01",
+   "datum": "2028-01-31",
    "rekening": "455300",
    "naam": "Verschuldigde lonen arbeiders",
    "debet": 1900,
@@ -5322,9 +4620,9 @@
    "oms": "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U1",
+   "ref": "BANK01",
+   "datum": "2028-01-31",
    "rekening": "455200",
    "naam": "Verschuldigde lonen bedienden",
    "debet": 1250,
@@ -5332,9 +4630,9 @@
    "oms": "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U1",
+   "ref": "BANK01",
+   "datum": "2028-01-31",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
@@ -5342,30 +4640,9 @@
    "oms": "Nettolonen januari 2028 (loonstaten LW-LS-2028-0101 en -0102)"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 140,
-   "credit": 0,
-   "oms": "Overschrijving naar Preventa vzw, factuur PV-28-1022",
-   "relatie": "Preventa vzw"
-  },
-  {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 140,
-   "oms": "Overschrijving naar Preventa vzw, factuur PV-28-1022"
-  },
-  {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U2",
+   "ref": "BANK02",
+   "datum": "2028-02-10",
    "rekening": "173000",
    "naam": "Schulden aan kredietinstellingen",
    "debet": 1500,
@@ -5373,9 +4650,9 @@
    "oms": "Aflossing lening nr. 2027-0042: kapitaal 1.500 + intrest 255"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U2",
+   "ref": "BANK02",
+   "datum": "2028-02-10",
    "rekening": "650000",
    "naam": "Rente, commissies en kosten verbonden aan schulden",
    "debet": 255,
@@ -5383,9 +4660,9 @@
    "oms": "Aflossing lening nr. 2027-0042: kapitaal 1.500 + intrest 255"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U2",
+   "ref": "BANK02",
+   "datum": "2028-02-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
@@ -5393,9 +4670,9 @@
    "oms": "Aflossing lening nr. 2027-0042: kapitaal 1.500 + intrest 255"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U2",
+   "ref": "BANK02",
+   "datum": "2028-02-10",
    "rekening": "440000",
    "naam": "Leveranciers",
    "debet": 1500,
@@ -5404,9 +4681,9 @@
    "relatie": "Immo Vaartkom bv"
   },
   {
-   "doc": "J3U3",
-   "ref": "BANK03",
-   "datum": "2028-02-01",
+   "doc": "J3U2",
+   "ref": "BANK02",
+   "datum": "2028-02-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
@@ -5414,71 +4691,39 @@
    "oms": "Domiciliëring Immo Vaartkom bv, huur februari-april 2028, factuur IV-2028-02"
   },
   {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 3118,
-   "credit": 0,
-   "oms": "Overschrijving van Hotel De Linde bv, factuur 2028-002"
-  },
-  {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "400000",
-   "naam": "Handelsdebiteuren",
-   "debet": 0,
-   "credit": 3118,
-   "oms": "Overschrijving van Hotel De Linde bv, factuur 2028-002",
-   "relatie": "Hotel De Linde bv"
-  },
-  {
-   "doc": "J3U4",
-   "ref": "BANK04",
+   "doc": "J3U2",
+   "ref": "BANK02",
    "datum": "2028-02-10",
    "rekening": "440000",
    "naam": "Leveranciers",
-   "debet": 1089,
+   "debet": 16793,
    "credit": 0,
-   "oms": "Overschrijving naar HelmHuis bv, factuur HH-28-002",
-   "relatie": "HelmHuis bv"
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-047",
+   "relatie": "Velomax bv"
   },
   {
-   "doc": "J3U4",
-   "ref": "BANK04",
+   "doc": "J3U2",
+   "ref": "BANK02",
+   "datum": "2028-02-10",
+   "rekening": "757000",
+   "naam": "Betalingskortingen van leveranciers",
+   "debet": 0,
+   "credit": 700,
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-047"
+  },
+  {
+   "doc": "J3U2",
+   "ref": "BANK02",
    "datum": "2028-02-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
-   "credit": 1089,
-   "oms": "Overschrijving naar HelmHuis bv, factuur HH-28-002"
+   "credit": 16093,
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-047"
   },
   {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 2662,
-   "credit": 0,
-   "oms": "Overschrijving naar Deprez Werkplaatsinrichting bv, factuur DW-28-0006",
-   "relatie": "Deprez Werkplaatsinrichting bv"
-  },
-  {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 2662,
-   "oms": "Overschrijving naar Deprez Werkplaatsinrichting bv, factuur DW-28-0006"
-  },
-  {
-   "doc": "J3U4",
-   "ref": "BANK04",
+   "doc": "J3U2",
+   "ref": "BANK02",
    "datum": "2028-02-10",
    "rekening": "440000",
    "naam": "Leveranciers",
@@ -5488,8 +4733,8 @@
    "relatie": "Loonwijs vzw"
   },
   {
-   "doc": "J3U4",
-   "ref": "BANK04",
+   "doc": "J3U2",
+   "ref": "BANK02",
    "datum": "2028-02-10",
    "rekening": "550000",
    "naam": "Bankrekening",
@@ -5498,60 +4743,8 @@
    "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0131"
   },
   {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 16793,
-   "credit": 0,
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-047 (min 700 financiële korting)",
-   "relatie": "Velomax bv"
-  },
-  {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "757000",
-   "naam": "Betalingskortingen van leveranciers",
-   "debet": 0,
-   "credit": 700,
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-047 (min 700 financiële korting)"
-  },
-  {
-   "doc": "J3U4",
-   "ref": "BANK04",
-   "datum": "2028-02-10",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 16093,
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-047 (min 700 financiële korting)"
-  },
-  {
-   "doc": "J3U5",
-   "ref": "BANK05",
-   "datum": "2028-02-22",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 9196,
-   "credit": 0,
-   "oms": "Overschrijving van Velocity Deelfietsen bv, factuur 2028-003"
-  },
-  {
-   "doc": "J3U5",
-   "ref": "BANK05",
-   "datum": "2028-02-22",
-   "rekening": "400000",
-   "naam": "Handelsdebiteuren",
-   "debet": 0,
-   "credit": 9196,
-   "oms": "Overschrijving van Velocity Deelfietsen bv, factuur 2028-003",
-   "relatie": "Velocity Deelfietsen bv"
-  },
-  {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "440000",
    "naam": "Leveranciers",
@@ -5561,8 +4754,8 @@
    "relatie": "Velomax bv"
   },
   {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "550000",
    "naam": "Bankrekening",
@@ -5571,82 +4764,61 @@
    "oms": "Overschrijving naar Velomax bv, factuur 2028-021"
   },
   {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "550000",
    "naam": "Bankrekening",
-   "debet": 6897,
+   "debet": 4477,
    "credit": 0,
    "oms": "Overschrijving van Bouwbedrijf Janssens & Zonen bv, factuur 2028-004 - creditnota CN-2028-001"
   },
   {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "debet": 0,
-   "credit": 6897,
+   "credit": 4477,
    "oms": "Overschrijving van Bouwbedrijf Janssens & Zonen bv, factuur 2028-004 - creditnota CN-2028-001",
    "relatie": "Bouwbedrijf Janssens & Zonen bv"
   },
   {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "440000",
    "naam": "Leveranciers",
-   "debet": 726,
+   "debet": 2399,
    "credit": 0,
-   "oms": "Overschrijving naar Drukkerij Peeters bv, factuur DP-2028-031",
-   "relatie": "Drukkerij Peeters bv"
-  },
-  {
-   "doc": "J3U5",
-   "ref": "BANK05",
-   "datum": "2028-02-22",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 726,
-   "oms": "Overschrijving naar Drukkerij Peeters bv, factuur DP-2028-031"
-  },
-  {
-   "doc": "J3U5",
-   "ref": "BANK05",
-   "datum": "2028-02-22",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 6029,
-   "credit": 0,
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-066 (min 100 financiële korting)",
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-066",
    "relatie": "Velomax bv"
   },
   {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "757000",
    "naam": "Betalingskortingen van leveranciers",
    "debet": 0,
    "credit": 100,
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-066 (min 100 financiële korting)"
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-066"
   },
   {
-   "doc": "J3U5",
-   "ref": "BANK05",
+   "doc": "J3U3",
+   "ref": "BANK03",
    "datum": "2028-02-22",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
-   "credit": 5929,
-   "oms": "Overschrijving naar Velomax bv, factuur 2028-066 (min 100 financiële korting)"
+   "credit": 2299,
+   "oms": "Overschrijving naar Velomax bv, factuur 2028-066"
   },
   {
-   "doc": "J3U6",
-   "ref": "BANK06",
-   "datum": "2028-03-01",
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
    "rekening": "455300",
    "naam": "Verschuldigde lonen arbeiders",
    "debet": 2020,
@@ -5654,9 +4826,9 @@
    "oms": "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)"
   },
   {
-   "doc": "J3U6",
-   "ref": "BANK06",
-   "datum": "2028-03-01",
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
    "rekening": "455200",
    "naam": "Verschuldigde lonen bedienden",
    "debet": 1370,
@@ -5664,9 +4836,9 @@
    "oms": "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)"
   },
   {
-   "doc": "J3U6",
-   "ref": "BANK06",
-   "datum": "2028-03-01",
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
@@ -5674,9 +4846,9 @@
    "oms": "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)"
   },
   {
-   "doc": "J3U6",
-   "ref": "BANK06",
-   "datum": "2028-03-01",
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 5566,
@@ -5684,9 +4856,9 @@
    "oms": "Overschrijving van Camping De Vlinder bv, factuur 2028-005 - creditnota CN-2028-002"
   },
   {
-   "doc": "J3U6",
-   "ref": "BANK06",
-   "datum": "2028-03-01",
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "debet": 0,
@@ -5695,81 +4867,60 @@
    "relatie": "Camping De Vlinder bv"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
-   "datum": "2028-03-10",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 9680,
-   "credit": 0,
-   "oms": "Overschrijving van Brouwerij Van Acker bv, factuur 2028-006"
-  },
-  {
-   "doc": "J3U7",
-   "ref": "BANK07",
-   "datum": "2028-03-10",
-   "rekening": "400000",
-   "naam": "Handelsdebiteuren",
-   "debet": 0,
-   "credit": 9680,
-   "oms": "Overschrijving van Brouwerij Van Acker bv, factuur 2028-006",
-   "relatie": "Brouwerij Van Acker bv"
-  },
-  {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "440000",
    "naam": "Leveranciers",
-   "debet": 4456,
+   "debet": 2520,
    "credit": 0,
    "oms": "Overschrijving naar Velomax bv, factuur 2028-058 - creditnota CN-2028-006",
    "relatie": "Velomax bv"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 0,
-   "credit": 4456,
+   "credit": 2520,
    "oms": "Overschrijving naar Velomax bv, factuur 2028-058 - creditnota CN-2028-006"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 11858,
    "credit": 0,
-   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011 (min 200 financiële korting)"
+   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "657000",
    "naam": "Betalingskortingen aan klanten",
    "debet": 200,
    "credit": 0,
-   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011 (min 200 financiële korting)"
+   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "debet": 0,
    "credit": 12058,
-   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011 (min 200 financiële korting)",
+   "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011",
    "relatie": "Woonzorgcentrum Zonnehof vzw"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "440000",
    "naam": "Leveranciers",
@@ -5779,8 +4930,8 @@
    "relatie": "Loonwijs vzw"
   },
   {
-   "doc": "J3U7",
-   "ref": "BANK07",
+   "doc": "J3U4",
+   "ref": "BANK04",
    "datum": "2028-03-10",
    "rekening": "550000",
    "naam": "Bankrekening",
@@ -5789,30 +4940,9 @@
    "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0229"
   },
   {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 605,
-   "credit": 0,
-   "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-077 - creditnota SW-CN-2028-004",
-   "relatie": "Spaakwerk bv"
-  },
-  {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 605,
-   "oms": "Overschrijving naar Spaakwerk bv, factuur SW-2028-077 - creditnota SW-CN-2028-004"
-  },
-  {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
+   "doc": "J3U5",
+   "ref": "BANK05",
+   "datum": "2028-03-31",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 3000,
@@ -5820,9 +4950,9 @@
    "oms": "Bancontact-ontvangsten 18/03/2028"
   },
   {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
+   "doc": "J3U5",
+   "ref": "BANK05",
+   "datum": "2028-03-31",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "debet": 0,
@@ -5831,30 +4961,9 @@
    "relatie": "particulieren (kasticket)"
   },
   {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
-   "rekening": "440000",
-   "naam": "Leveranciers",
-   "debet": 1452,
-   "credit": 0,
-   "oms": "Overschrijving naar Kassatech bv, factuur KT-2028-118",
-   "relatie": "Kassatech bv"
-  },
-  {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
-   "rekening": "550000",
-   "naam": "Bankrekening",
-   "debet": 0,
-   "credit": 1452,
-   "oms": "Overschrijving naar Kassatech bv, factuur KT-2028-118"
-  },
-  {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
+   "doc": "J3U5",
+   "ref": "BANK05",
+   "datum": "2028-03-31",
    "rekening": "550000",
    "naam": "Bankrekening",
    "debet": 3500,
@@ -5862,9 +4971,9 @@
    "oms": "Storting contanten"
   },
   {
-   "doc": "J3U8",
-   "ref": "BANK08",
-   "datum": "2028-03-22",
+   "doc": "J3U5",
+   "ref": "BANK05",
+   "datum": "2028-03-31",
    "rekening": "580000",
    "naam": "Interne overboekingen",
    "debet": 0,
@@ -5872,29 +4981,29 @@
    "oms": "Storting contanten"
   },
   {
-   "doc": "J3U9",
-   "ref": "BANK09",
+   "doc": "J3U5",
+   "ref": "BANK05",
    "datum": "2028-03-31",
    "rekening": "550000",
    "naam": "Bankrekening",
-   "debet": 3004,
+   "debet": 2399,
    "credit": 0,
    "oms": "Overschrijving van Studio Kowalski bv, factuur 2028-013"
   },
   {
-   "doc": "J3U9",
-   "ref": "BANK09",
+   "doc": "J3U5",
+   "ref": "BANK05",
    "datum": "2028-03-31",
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "debet": 0,
-   "credit": 3004,
+   "credit": 2399,
    "oms": "Overschrijving van Studio Kowalski bv, factuur 2028-013",
    "relatie": "Studio Kowalski bv"
   },
   {
-   "doc": "J3U9",
-   "ref": "BANK09",
+   "doc": "J3U5",
+   "ref": "BANK05",
    "datum": "2028-03-31",
    "rekening": "455300",
    "naam": "Verschuldigde lonen arbeiders",
@@ -5903,8 +5012,8 @@
    "oms": "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)"
   },
   {
-   "doc": "J3U9",
-   "ref": "BANK09",
+   "doc": "J3U5",
+   "ref": "BANK05",
    "datum": "2028-03-31",
    "rekening": "455200",
    "naam": "Verschuldigde lonen bedienden",
@@ -5913,8 +5022,8 @@
    "oms": "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)"
   },
   {
-   "doc": "J3U9",
-   "ref": "BANK09",
+   "doc": "J3U5",
+   "ref": "BANK05",
    "datum": "2028-03-31",
    "rekening": "550000",
    "naam": "Bankrekening",
@@ -5928,7 +5037,7 @@
    "datum": "2028-03-31",
    "rekening": "451100",
    "naam": "Verschuldigde btw",
-   "debet": 14460,
+   "debet": 12948,
    "credit": 0,
    "oms": "Btw-verwerking 1e kwartaal 2028"
   },
@@ -5938,7 +5047,7 @@
    "datum": "2028-03-31",
    "rekening": "451200",
    "naam": "Verschuldigde btw op inkomende creditnota’s",
-   "debet": 735,
+   "debet": 756,
    "credit": 0,
    "oms": "Btw-verwerking 1e kwartaal 2028"
   },
@@ -5949,7 +5058,7 @@
    "rekening": "411100",
    "naam": "Aftrekbare btw",
    "debet": 0,
-   "credit": 9765,
+   "credit": 8841,
    "oms": "Btw-verwerking 1e kwartaal 2028"
   },
   {
@@ -5979,7 +5088,7 @@
    "rekening": "451000",
    "naam": "Te betalen btw-saldo",
    "debet": 0,
-   "credit": 3249,
+   "credit": 2682,
    "oms": "Btw-verwerking 1e kwartaal 2028"
   },
   {
@@ -6108,9 +5217,9 @@
    "datum": "2028-03-31",
    "rekening": "609400",
    "naam": "Voorraadwijzigingen handelsgoederen",
-   "debet": 3970,
+   "debet": 3295,
    "credit": 0,
-   "oms": "Voorraadwijziging handelsgoederen 1e kwartaal 2028 (9680 - 13650)"
+   "oms": "Voorraadwijziging handelsgoederen 1e kwartaal 2028 (10355 - 13650)"
   },
   {
    "doc": "J3VR",
@@ -6119,8 +5228,8 @@
    "rekening": "340000",
    "naam": "Voorraad handelsgoederen",
    "debet": 0,
-   "credit": 3970,
-   "oms": "Voorraadwijziging handelsgoederen 1e kwartaal 2028 (9680 - 13650)"
+   "credit": 3295,
+   "oms": "Voorraadwijziging handelsgoederen 1e kwartaal 2028 (10355 - 13650)"
   },
   {
    "doc": "J3BEL",
@@ -6128,9 +5237,9 @@
    "datum": "2028-03-31",
    "rekening": "670200",
    "naam": "Geraamde belastingen",
-   "debet": 1400,
+   "debet": 995,
    "credit": 0,
-   "oms": "Geraamde vennootschapsbelasting 1e kwartaal 2028 (20% van 7000)"
+   "oms": "Geraamde vennootschapsbelasting 1e kwartaal 2028 (20% van 4975)"
   },
   {
    "doc": "J3BEL",
@@ -6139,8 +5248,8 @@
    "rekening": "450000",
    "naam": "Geraamd bedrag der Belgische winstbelastingen",
    "debet": 0,
-   "credit": 1400,
-   "oms": "Geraamde vennootschapsbelasting 1e kwartaal 2028 (20% van 7000)"
+   "credit": 995,
+   "oms": "Geraamde vennootschapsbelasting 1e kwartaal 2028 (20% van 4975)"
   },
   {
    "doc": "J3RES",
@@ -6148,7 +5257,7 @@
    "datum": "2028-03-31",
    "rekening": "692000",
    "naam": "Toevoeging aan de wettelijke reserves",
-   "debet": 280,
+   "debet": 199,
    "credit": 0,
    "oms": "Toewijzing van het resultaat: 5% wettelijke reserve, de rest overgedragen"
   },
@@ -6158,7 +5267,7 @@
    "datum": "2028-03-31",
    "rekening": "693000",
    "naam": "Over te dragen winst",
-   "debet": 5320,
+   "debet": 3781,
    "credit": 0,
    "oms": "Toewijzing van het resultaat: 5% wettelijke reserve, de rest overgedragen"
   },
@@ -6169,7 +5278,7 @@
    "rekening": "130000",
    "naam": "Wettelijke reserve",
    "debet": 0,
-   "credit": 280,
+   "credit": 199,
    "oms": "Toewijzing van het resultaat: 5% wettelijke reserve, de rest overgedragen"
   },
   {
@@ -6179,7 +5288,7 @@
    "rekening": "140000",
    "naam": "Overgedragen winst",
    "debet": 0,
-   "credit": 5320,
+   "credit": 3781,
    "oms": "Toewijzing van het resultaat: 5% wettelijke reserve, de rest overgedragen"
   }
  ],
@@ -6196,14 +5305,14 @@
    "naam": "Wettelijke reserve",
    "apko": "P",
    "opening": 0,
-   "slot": -280
+   "slot": -199
   },
   {
    "rekening": "140000",
    "naam": "Overgedragen winst",
    "apko": "P",
    "opening": -40445,
-   "slot": -45765
+   "slot": -44226
   },
   {
    "rekening": "173000",
@@ -6273,14 +5382,14 @@
    "naam": "Voorraad handelsgoederen",
    "apko": "A",
    "opening": 13650,
-   "slot": 9680
+   "slot": 10355
   },
   {
    "rekening": "400000",
    "naam": "Handelsdebiteuren",
    "apko": "A",
    "opening": 0,
-   "slot": 16214
+   "slot": 32884
   },
   {
    "rekening": "411000",
@@ -6322,21 +5431,21 @@
    "naam": "Leveranciers",
    "apko": "P",
    "opening": 0,
-   "slot": -2462
+   "slot": -12025
   },
   {
    "rekening": "450000",
    "naam": "Geraamd bedrag der Belgische winstbelastingen",
    "apko": "P",
    "opening": 0,
-   "slot": -1400
+   "slot": -995
   },
   {
    "rekening": "451000",
    "naam": "Te betalen btw-saldo",
    "apko": "P",
    "opening": 0,
-   "slot": -3249
+   "slot": -2682
   },
   {
    "rekening": "451100",
@@ -6399,7 +5508,7 @@
    "naam": "Bankrekening",
    "apko": "A",
    "opening": 44997,
-   "slot": 40444
+   "slot": 30070
   },
   {
    "rekening": "570000",
@@ -6420,7 +5529,7 @@
    "naam": "Aankopen handelsgoederen",
    "apko": "K",
    "opening": 0,
-   "slot": 45600
+   "slot": 41175
   },
   {
    "rekening": "604010",
@@ -6434,7 +5543,7 @@
    "naam": "Handelskorting op aankopen (-)",
    "apko": "K",
    "opening": 0,
-   "slot": -2900
+   "slot": -2975
   },
   {
    "rekening": "604030",
@@ -6448,7 +5557,7 @@
    "naam": "Voorraadwijzigingen handelsgoederen",
    "apko": "K",
    "opening": 0,
-   "slot": 3970
+   "slot": 3295
   },
   {
    "rekening": "611000",
@@ -6553,21 +5662,21 @@
    "naam": "Geraamde belastingen",
    "apko": "K",
    "opening": 0,
-   "slot": 1400
+   "slot": 995
   },
   {
    "rekening": "692000",
    "naam": "Toevoeging aan de wettelijke reserves",
    "apko": "K",
    "opening": 0,
-   "slot": 280
+   "slot": 199
   },
   {
    "rekening": "693000",
    "naam": "Over te dragen winst",
    "apko": "K",
    "opening": 0,
-   "slot": 5320
+   "slot": 3781
   },
   {
    "rekening": "700000",
@@ -6581,7 +5690,7 @@
    "naam": "Verkopen handelsgoederen",
    "apko": "O",
    "opening": 0,
-   "slot": -69000
+   "slot": -61400
   },
   {
    "rekening": "704010",
@@ -6595,14 +5704,14 @@
    "naam": "Handelskorting op verkopen (-)",
    "apko": "O",
    "opening": 0,
-   "slot": 1720
+   "slot": 1300
   },
   {
    "rekening": "746000",
    "naam": "Doorgerekende kosten",
    "apko": "O",
    "opening": 0,
-   "slot": -420
+   "slot": -400
   },
   {
    "rekening": "757000",
@@ -6617,40 +5726,40 @@
    "artikel": "STAD",
    "oms": "Stadsfiets City, 7 versnellingen",
    "begin": 7,
-   "aankopen": 25,
+   "aankopen": 22,
    "retoursAankoop": 5,
-   "verkopen": 22,
+   "verkopen": 18,
    "retoursVerkoop": 0,
    "dagontvangsten": 2,
    "prijs": 400,
-   "inventaris": 3,
-   "waarde": 1200
+   "inventaris": 4,
+   "waarde": 1600
   },
   {
    "artikel": "EBIKE",
    "oms": "E-bike Comfort, 500 Wh",
    "begin": 2,
-   "aankopen": 16,
+   "aankopen": 13,
    "retoursAankoop": 0,
-   "verkopen": 16,
+   "verkopen": 14,
    "retoursVerkoop": 1,
    "dagontvangsten": 1,
    "prijs": 1400,
-   "inventaris": 2,
-   "waarde": 2800
+   "inventaris": 1,
+   "waarde": 1400
   },
   {
    "artikel": "BAK",
    "oms": "Bakfiets Cargo, 2 wielen",
    "begin": 3,
-   "aankopen": 6,
+   "aankopen": 7,
    "retoursAankoop": 1,
    "verkopen": 6,
    "retoursVerkoop": 0,
    "dagontvangsten": 0,
    "prijs": 1800,
-   "inventaris": 2,
-   "waarde": 3600
+   "inventaris": 3,
+   "waarde": 5400
   },
   {
    "artikel": "KIND",
@@ -6671,12 +5780,12 @@
    "begin": 10,
    "aankopen": 30,
    "retoursAankoop": 0,
-   "verkopen": 28,
+   "verkopen": 16,
    "retoursVerkoop": 0,
    "dagontvangsten": 8,
    "prijs": 30,
-   "inventaris": 4,
-   "waarde": 120
+   "inventaris": 16,
+   "waarde": 480
   },
   {
    "artikel": "SLOT",
@@ -6695,22 +5804,22 @@
    "artikel": "BAND",
    "oms": "Buitenband 28 inch",
    "begin": 26,
-   "aankopen": 20,
+   "aankopen": 0,
    "retoursAankoop": 0,
-   "verkopen": 16,
+   "verkopen": 0,
    "retoursVerkoop": 0,
    "dagontvangsten": 6,
    "prijs": 15,
-   "inventaris": 24,
-   "waarde": 360
+   "inventaris": 20,
+   "waarde": 300
   },
   {
    "artikel": "KET",
    "oms": "Fietsketting 8 speed",
    "begin": 9,
-   "aankopen": 30,
+   "aankopen": 20,
    "retoursAankoop": 0,
-   "verkopen": 10,
+   "verkopen": 0,
    "retoursVerkoop": 0,
    "dagontvangsten": 9,
    "prijs": 10,
@@ -6721,14 +5830,14 @@
    "artikel": "LAMP",
    "oms": "Verlichtingsset LED",
    "begin": 6,
-   "aankopen": 32,
+   "aankopen": 15,
    "retoursAankoop": 0,
    "verkopen": 10,
    "retoursVerkoop": 0,
    "dagontvangsten": 4,
    "prijs": 25,
-   "inventaris": 24,
-   "waarde": 600
+   "inventaris": 7,
+   "waarde": 175
   }
  ],
  "activa": [
@@ -7003,26 +6112,81 @@
   ]
  },
  "resultaat": {
-  "opbrengsten": 72300,
-  "kosten": 65300,
-  "winst": 7000,
-  "belasting": 1400,
-  "restwinst": 5600,
-  "reserve": 280,
-  "overdragen": 5320,
+  "opbrengsten": 65100,
+  "kosten": 60125,
+  "winst": 4975,
+  "belasting": 995,
+  "restwinst": 3980,
+  "reserve": 199,
+  "overdragen": 3781,
   "kapitaal": 20000,
   "reserveNu": 0
  },
  "openstaand": [
   {
+   "rekening": "440000",
+   "relatie": "HelmHuis bv",
+   "saldo": -1089
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Spaakwerk bv",
+   "saldo": -726
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Stroomkracht nv",
+   "saldo": -968
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Drukkerij Peeters bv",
+   "saldo": -726
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Deprez Werkplaatsinrichting bv",
+   "saldo": -2662
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Kassatech bv",
+   "saldo": -1452
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Gerzo Verzekeringen nv",
+   "saldo": -1800
+  },
+  {
+   "rekening": "400000",
+   "relatie": "Hotel De Linde bv",
+   "saldo": 2392
+  },
+  {
+   "rekening": "400000",
+   "relatie": "Velocity Deelfietsen bv",
+   "saldo": 9196
+  },
+  {
+   "rekening": "400000",
+   "relatie": "Brouwerij Van Acker bv",
+   "saldo": 9680
+  },
+  {
    "rekening": "400000",
    "relatie": "Bytewise bv",
-   "saldo": 16214
+   "saldo": 11616
   },
   {
    "rekening": "440000",
    "relatie": "Loonwijs vzw",
    "saldo": -2462
+  },
+  {
+   "rekening": "440000",
+   "relatie": "Preventa vzw",
+   "saldo": -140
   }
  ]
 }

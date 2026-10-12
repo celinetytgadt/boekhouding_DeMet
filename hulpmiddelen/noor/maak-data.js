@@ -72,7 +72,6 @@ const EXTRA = {
   },
 };
 const TIP_OTK = "Deze factuur loopt verder dan 31 maart 2028. Boek ze nu volledig als kost: het deel dat bij later hoort, regel je pas bij de afsluiting (over te dragen kosten).";
-const TIP_FK = "Op deze factuur staat een financiële korting. Of Noor ze krijgt, weet je pas bij de betaling.";
 const TIPS = { AK16: TIP_OTK, AK17: TIP_OTK, AK22: TIP_OTK };
 
 const docRef = {};
@@ -95,7 +94,6 @@ function opdrachten() {
       else o.doc = e.doc || d.ref;
       ["hulpdoc", "hulpdocTitel", "hulpdocs", "instructie"].forEach((k) => { if (e[k]) o[k] = e[k]; });
       if (TIPS[d.ref]) o.tip = TIPS[d.ref];
-      else if (d.fk && /AK|VK/.test(d.soort)) o.tip = TIP_FK;
       lijst.push(o);
     });
   });
