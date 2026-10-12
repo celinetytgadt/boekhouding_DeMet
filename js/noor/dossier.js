@@ -22,10 +22,6 @@ const DOSSIER = {
   titel: "Oefendossier Fietsatelier Noor",
   ander: { naam: "Eindopdracht MetWear", url: "index.html" },
   welkomst:
-    "<p><strong>Fietsatelier Noor bv</strong> ken je nog uit het 3e en 4e jaar: de fietsenwinkel en -herstelling " +
-    "van Noor Benali in de Fietsstraat in Leuven. Intussen zijn we in 2028. Noor heeft personeel in dienst genomen, " +
-    "een werkplaats ingericht en huurt een opslagruimte. Jij doet de boekhouding van het <strong>1e kwartaal 2028</strong>, " +
-    "met een afsluiting op 31 maart.</p>" +
     "<p>Dit is het <strong>oefendossier</strong>: na elke les maak je de stukken van die les. Het menu links volgt de lessen. " +
     "Je werk hier staat helemaal los van de eindopdracht MetWear (link bovenaan).</p>",
 };

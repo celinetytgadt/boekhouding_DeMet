@@ -173,6 +173,7 @@ const omgeving = {
   SpreadsheetApp: {
     getActiveSpreadsheet: () => ss,
     getActiveSheet: () => sheets.Inzendingen,
+    flush: () => {},
     getUi: () => ({
       // Eén argument = gewone melding; drie = een ja/nee-venster.
       alert: (t, b, c) => { laatsteAlert = c === undefined ? t : t + "\n" + b; return antwoordKnop; },
@@ -298,9 +299,14 @@ function vinkIn(venster, naam) {
   omgeving.installeer();
   check("tweede installatie loopt door ondanks een bestaande filter",
     /Klaar\./.test(laatsteAlert) && !/Niet alles lukte/.test(laatsteAlert), laatsteAlert.slice(0, 120));
-  check("sleutelwoord staat in de melding", /CELINET|TEST/.test(laatsteAlert));
-  check("de melding noemt de map waarin geschreven wordt",
-    /Werkbestanden komen in: Boekhoudapp werkbestanden \(gedeelde map\)/.test(laatsteAlert),
+  // De melding na de installatie is bewust kort (collega's lezen ze); de map
+  // en het sleutelwoord staan in de handleiding en in het menu
+  // "Waar staan de werkbestanden?".
+  check("de melding wijst naar het tabblad Inzendingen", /tabblad Inzendingen/.test(laatsteAlert), laatsteAlert.slice(0, 200));
+  laatsteAlert = "";
+  omgeving.toonWerkMap();
+  check("het menu noemt de map waarin geschreven wordt",
+    /Map: Boekhoudapp werkbestanden/.test(laatsteAlert) && /Gekozen via MAP_ID_GEDEELD/.test(laatsteAlert),
     laatsteAlert.slice(0, 200));
 
   console.log("\n2. Aanmelden");
@@ -941,6 +947,30 @@ function vinkIn(venster, naam) {
   laatsteAlert = "";
   omgeving.zetVersieTerug();
   check("werk terugzetten met NOOR ervoor zoekt het oefendossier", !/Onbekend|Geen bewaarde versies gevonden voor NOOR/.test(laatsteAlert), laatsteAlert.slice(0, 160));
+
+  console.log("\n20. Oefendossier tonen of niet (instelling in Beheer)");
+  const zetOefen = (w) => {
+    const b = sheets.Instellingen;
+    let rij = b.rijen.findIndex((r) => r[0] === "oefendossier");
+    if (rij === -1) { b.rijen.push(["oefendossier", "", ""]); rij = b.rijen.length - 1; }
+    b.zet(rij + 1, 2, w);
+    omgeving.vergeetInstellingen_();
+  };
+  check("de instelling oefendossier staat in het tabblad Instellingen (standaard ja)",
+    sheets.Instellingen.rijen.some((r) => r[0] === "oefendossier" && r[1] === "ja"), sheets.Instellingen.rijen.map((r) => r[0] + "=" + r[1]));
+  const knopNaarNoor = (w) => [...w.document.querySelectorAll(".dossier-knop")].some((a) => /noor\.html/.test(a.getAttribute("href")));
+  const linkNaarNoor = (w) => { const a = w.document.getElementById("dossier-wissel"); return !!a && !a.hidden; };
+  const domJa = await start(APP, "index.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("ja: knop en link naar Noor in MetWear", knopNaarNoor(domJa.window) && linkNaarNoor(domJa.window));
+  zetOefen("nee");
+  const domNee = await start(APP, "index.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("nee: geen knop en geen link naar Noor in MetWear", !knopNaarNoor(domNee.window) && !linkNaarNoor(domNee.window));
+  const domNeeN = await start(APP, "noor.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  check("nee: noor.html zegt dat het niet openstaat", /niet open/.test(domNeeN.window.document.getElementById("pagina-inhoud").textContent));
+  zetOefen("ja");
 
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);

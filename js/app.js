@@ -914,6 +914,15 @@
   function htmlDossierKnop() {
     var ander = DOSSIER_INFO.ander;
     if (!ander || !ander.url) return "";
+    if (!oefendossierOpen()) {
+      // In MetWear: geen knop. In het oefendossier zelf: zeggen dat het voor
+      // deze school niet openstaat, met de weg terug naar MetWear.
+      if (!DOSSIER_INFO.code) return "";
+      return '<div class="paneel dossier-keuze" style="border-color:var(--kleur-fout);background:#ffece9;">' +
+        "<p><strong>Het oefendossier staat voor jouw school (nog) niet open.</strong> Vraag je vakexpert wanneer je eraan mag beginnen.</p>" +
+        '<a class="btn-primair dossier-knop" href="' + escapeAttr(ander.url) + '">Naar ' + escapeAttr(ander.naam) + " →</a>" +
+        "</div>";
+    }
     return '<div class="paneel dossier-keuze">' +
       "<p>Je werkt nu in <strong>" + escapeAttr(DOSSIER_INFO.titel || "dit dossier") + "</strong>. " +
       "Je werk in het andere dossier blijft gewoon bewaard.</p>" +
@@ -2293,6 +2302,7 @@
     renderTpanel();
     renderVoortgang();
     updateOpslaanStatus();
+    zetDossierLink();
   }
 
   /* ========================================================================
@@ -2771,6 +2781,20 @@
   /* De naam van het dossier bovenaan, met een link naar het andere dossier.
      Beide dossiers delen de aanmelding: wie wisselt, hoeft zich niet
      opnieuw aan te melden. */
+  /* Mag het oefendossier getoond worden? Dat kiest de vakexpert per school in
+     het tabblad Beheer (instelling "oefendossier"). Zolang de instellingen er
+     niet zijn of niets zeggen: ja. Enkel "nee" verbergt het. */
+  function oefendossierOpen() {
+    var w = window.INSTELLINGEN && window.INSTELLINGEN.oefendossier;
+    return String(w || "").trim().toLowerCase() !== "nee";
+  }
+
+  // Het linkje in de titelbalk naar het oefendossier, aan of uit volgens de instelling.
+  function zetDossierLink() {
+    var a = document.getElementById("dossier-wissel");
+    if (a) a.hidden = !DOSSIER_INFO.code && !oefendossierOpen();
+  }
+
   function toonDossier() {
     var naamEl = document.getElementById("app-naam");
     if (!naamEl) return;

@@ -191,6 +191,8 @@ var INSTELLINGEN_UITLEG = [
     "Link naar de digitale cursus. Staat als knop Cursus bovenaan in de app, op elk tabblad."],
   ["handleidingUrl", "",
     "Link naar de handleiding voor de leerlingen. Staat als knop Handleiding bovenaan. Leeg = die knop verdwijnt."],
+  ["oefendossier", "ja",
+    "Oefendossier Fietsatelier Noor tonen (ja of nee). ja = in MetWear staat een knop naar het oefendossier. nee = die knop is weg, en wie noor.html toch opent, krijgt te zien dat het oefendossier voor deze school niet openstaat."],
 ];
 
 // Kolomnummers in Inzendingen (1-gebaseerd), zodat de rest leesbaar blijft.
@@ -1459,6 +1461,7 @@ function publiekeInstellingen_(inst) {
     mededeling: inst.mededeling || "",
     cursusUrl: inst.cursusUrl || "",
     handleidingUrl: inst.handleidingUrl || "",
+    oefendossier: inst.oefendossier || "",
   };
 }
 

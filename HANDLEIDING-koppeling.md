@@ -28,6 +28,11 @@ klaslijst en dezelfde codes als MetWear. Wat je moet doen:
    sleutel van Noor zit in het script zelf, dus het automatisch nakijken
    werkt meteen; wat je in het tabblad Sleutel zet, gaat voor.
 4. Werk terugzetten voor Noor: tik `NOOR` voor de naam (bv. `NOOR Lotte V.`).
+5. Wil je het oefendossier (nog) niet tonen aan de leerlingen van jouw school,
+   zet dan in het tabblad Beheer **Oefendossier tonen** op *nee* (of in de
+   Sheet, tabblad Instellingen, rij `oefendossier`). De knop in MetWear
+   verdwijnt dan, en wie `noor.html` toch opent, leest dat het oefendossier
+   niet openstaat. Standaard staat het op *ja*.
 
 De werkbestanden van Noor staan in dezelfde map: `werk_NOOR_LEU_lottev.json`.
 
