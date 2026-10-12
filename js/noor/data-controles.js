@@ -235,8 +235,8 @@ const HANDMATIGE_CONTROLES = [
     id: "noor-btw-tussentijds-leeg",
     categorie: "BTW-verwerking",
     type: "check",
-    vraag: "Zijn alle tussentijdse btw-rekeningen leeg, en is het tegoed van vorig kwartaal verrekend?",
-    toelichting: "Na de btw-aangifte hoort alle btw samen te staan op 411000 of 451000 — niet op allebei. Het tegoed van het 4e kwartaal 2027 (411000 op de beginbalans) verreken je mee.",
+    vraag: "Zijn alle tussentijdse btw-rekeningen leeg, en staat het saldo enkel op 451000?",
+    toelichting: "Na de btw-aangifte hoort alle btw van het kwartaal samen te staan op 451000 Te betalen btw-saldo. Het tegoed van het 4e kwartaal 2027 werd in maart terugbetaald (BANK04), dus 411000 staat op nul.",
     filterTip: "Filter in het T-paneel op btw.",
   },
 

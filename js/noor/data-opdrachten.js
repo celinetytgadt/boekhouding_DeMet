@@ -78,7 +78,7 @@ const OPDRACHTEN = [
   {"ref": "BANK05", "categorie": "Financiële verrichtingen", "titel": "Bankafschrift BANK05", "doc": "BANK05"},
 
   // BTW-verwerking
-  {"ref": "BTW", "categorie": "BTW-verwerking", "titel": "Btw-verwerking 1e kwartaal 2028", "geenDocument": true, "instructie": "Kijk in de T-rekeningen rechts naar het saldo van de tussentijdse btw-rekeningen (de 411- en 451-rekeningen die niet op 000 eindigen). Na de btw-aangifte van het 1e kwartaal wordt die btw gecentraliseerd op 411000 Terug te vorderen btw-saldo of 451000 Te betalen btw-saldo. Let op: op de beginbalans staat nog een btw-tegoed van het 4e kwartaal 2027 op 411000. Dat tegoed verreken je mee."},
+  {"ref": "BTW", "categorie": "BTW-verwerking", "titel": "Btw-verwerking 1e kwartaal 2028", "geenDocument": true, "instructie": "Kijk in de T-rekeningen rechts naar het saldo van de tussentijdse btw-rekeningen (de 411- en 451-rekeningen die niet op 000 eindigen). Na de btw-aangifte van het 1e kwartaal wordt die btw gecentraliseerd op 411000 Terug te vorderen btw-saldo of 451000 Te betalen btw-saldo. Het btw-tegoed van het 4e kwartaal 2027 (beginbalans) is in maart al terugbetaald: kijk na of 411000 op nul staat voor je begint."},
 
   // Eindejaarsverrichtingen
   {"ref": "AFSCHR", "categorie": "Eindejaarsverrichtingen", "titel": "Afschrijvingen 1e kwartaal 2028", "doc": "AFSCHR"},

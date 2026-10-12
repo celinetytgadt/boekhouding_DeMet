@@ -503,6 +503,8 @@ const U = [
     ["2028-02-29", lonen([L3, L4], "Nettolonen februari 2028 (loonstaten LW-LS-2028-0201 en -0202)")],
     ["2028-03-01", betaling([VK07, VK09])],
     ["2028-03-05", betaling([AK07, AK15])],
+    ["2028-03-06", { oms: "Terugbetaling btw-tegoed 4e kwartaal 2027 door FOD Financiën", bedrag: BB["411000"], docs: [],
+      regels: [{ rek: "550000", dc: "D", bedrag: BB["411000"] }, { rek: "411000", dc: "C", bedrag: BB["411000"] }] }],
     ["2028-03-09", betaling([VK10])],
     ["2028-03-10", betaling([AK19])],
   ] },
@@ -560,7 +562,9 @@ const saldi = () => {
 // ---- Btw-verwerking 1e kwartaal ----
 {
   const s = saldi();
-  const vorig = BB["411000"] || 0;   // tegoed uit het 4e kwartaal 2027
+  // Het tegoed uit het 4e kwartaal 2027 is in maart terugbetaald (BANK04);
+  // wat er nu nog op 411000 staat, wordt mee verrekend (normaal: niets).
+  const vorig = s["411000"] || 0;
   const saldo = r2(-(s["451100"] || 0) - (s["451200"] || 0) - (s["411100"] || 0) - (s["411200"] || 0) - vorig);
   const doc = { id: "J3BTW", ref: "BTW", categorie: C_BTW, soort: "MEMO", datum: "2028-03-31", geenDocument: true,
     boekOms: "Btw-verwerking 1e kwartaal 2028" };

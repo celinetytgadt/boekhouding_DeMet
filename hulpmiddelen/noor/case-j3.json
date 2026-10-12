@@ -2528,25 +2528,35 @@
     {
      "uittreksel": 4,
      "lijn": 4,
+     "datum": "2028-03-06",
+     "oms": "Terugbetaling btw-tegoed 4e kwartaal 2027 door FOD Financiën",
+     "bedrag": 1803,
+     "saldo": 16756,
+     "verwijst": "",
+     "relatie": ""
+    },
+    {
+     "uittreksel": 4,
+     "lijn": 5,
      "datum": "2028-03-09",
      "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011",
      "bedrag": 11858,
-     "saldo": 26811,
+     "saldo": 28614,
      "verwijst": "J3V10",
      "relatie": "Woonzorgcentrum Zonnehof vzw"
     },
     {
      "uittreksel": 4,
-     "lijn": 5,
+     "lijn": 6,
      "datum": "2028-03-10",
      "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0229",
      "bedrag": -2360,
-     "saldo": 24451,
+     "saldo": 26254,
      "verwijst": "J3S2",
      "relatie": "Loonwijs vzw"
     }
    ],
-   "nieuw": 24451
+   "nieuw": 26254
   },
   {
    "id": "J3U5",
@@ -2555,7 +2565,7 @@
    "soort": "BANK",
    "datum": "2028-03-31",
    "nr": 5,
-   "vorig": 24451,
+   "vorig": 26254,
    "boekOms": "Rekeninguittreksel 5",
    "lijnen": [
     {
@@ -2564,7 +2574,7 @@
      "datum": "2028-03-20",
      "oms": "Bancontact-ontvangsten 18/03/2028",
      "bedrag": 3000,
-     "saldo": 27451,
+     "saldo": 29254,
      "verwijst": "J3D1",
      "relatie": ""
     },
@@ -2574,7 +2584,7 @@
      "datum": "2028-03-22",
      "oms": "Storting contanten",
      "bedrag": 3500,
-     "saldo": 30951,
+     "saldo": 32754,
      "verwijst": "J3K2",
      "relatie": ""
     },
@@ -2584,7 +2594,7 @@
      "datum": "2028-03-25",
      "oms": "Overschrijving van Studio Kowalski bv, factuur 2028-013",
      "bedrag": 2399,
-     "saldo": 33350,
+     "saldo": 35153,
      "verwijst": "J3V11",
      "relatie": "Studio Kowalski bv"
     },
@@ -2594,12 +2604,12 @@
      "datum": "2028-03-31",
      "oms": "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)",
      "bedrag": -3280,
-     "saldo": 30070,
+     "saldo": 31873,
      "verwijst": "J3L5, J3L6",
      "relatie": ""
     }
    ],
-   "nieuw": 30070
+   "nieuw": 31873
   },
   {
    "id": "J3BTW",
@@ -2609,7 +2619,7 @@
    "datum": "2028-03-31",
    "geenDocument": true,
    "boekOms": "Btw-verwerking 1e kwartaal 2028",
-   "saldo": 2682
+   "saldo": 4485
   },
   {
    "id": "J3AFS",
@@ -2847,21 +2857,32 @@
    "datumUittreksel": "2028-03-10",
    "uittreksel": 4,
    "lijn": 4,
+   "datum": "2028-03-06",
+   "oms": "Terugbetaling btw-tegoed 4e kwartaal 2027 door FOD Financiën",
+   "bedrag": 1803,
+   "saldo": 16756,
+   "verwijst": "",
+   "relatie": ""
+  },
+  {
+   "datumUittreksel": "2028-03-10",
+   "uittreksel": 4,
+   "lijn": 5,
    "datum": "2028-03-09",
    "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011",
    "bedrag": 11858,
-   "saldo": 26811,
+   "saldo": 28614,
    "verwijst": "J3V10",
    "relatie": "Woonzorgcentrum Zonnehof vzw"
   },
   {
    "datumUittreksel": "2028-03-10",
    "uittreksel": 4,
-   "lijn": 5,
+   "lijn": 6,
    "datum": "2028-03-10",
    "oms": "Overschrijving naar Loonwijs vzw, factuur LW-2028-0229",
    "bedrag": -2360,
-   "saldo": 24451,
+   "saldo": 26254,
    "verwijst": "J3S2",
    "relatie": "Loonwijs vzw"
   },
@@ -2872,7 +2893,7 @@
    "datum": "2028-03-20",
    "oms": "Bancontact-ontvangsten 18/03/2028",
    "bedrag": 3000,
-   "saldo": 27451,
+   "saldo": 29254,
    "verwijst": "J3D1",
    "relatie": ""
   },
@@ -2883,7 +2904,7 @@
    "datum": "2028-03-22",
    "oms": "Storting contanten",
    "bedrag": 3500,
-   "saldo": 30951,
+   "saldo": 32754,
    "verwijst": "J3K2",
    "relatie": ""
   },
@@ -2894,7 +2915,7 @@
    "datum": "2028-03-25",
    "oms": "Overschrijving van Studio Kowalski bv, factuur 2028-013",
    "bedrag": 2399,
-   "saldo": 33350,
+   "saldo": 35153,
    "verwijst": "J3V11",
    "relatie": "Studio Kowalski bv"
   },
@@ -2905,7 +2926,7 @@
    "datum": "2028-03-31",
    "oms": "Nettolonen maart 2028 (loonstaten LW-LS-2028-0301 en -0302)",
    "bedrag": -3280,
-   "saldo": 30070,
+   "saldo": 31873,
    "verwijst": "J3L5, J3L6",
    "relatie": ""
   }
@@ -4893,6 +4914,26 @@
    "datum": "2028-03-10",
    "rekening": "550000",
    "naam": "Bankrekening",
+   "debet": 1803,
+   "credit": 0,
+   "oms": "Terugbetaling btw-tegoed 4e kwartaal 2027 door FOD Financiën"
+  },
+  {
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
+   "rekening": "411000",
+   "naam": "Terug te vorderen btw-saldo",
+   "debet": 0,
+   "credit": 1803,
+   "oms": "Terugbetaling btw-tegoed 4e kwartaal 2027 door FOD Financiën"
+  },
+  {
+   "doc": "J3U4",
+   "ref": "BANK04",
+   "datum": "2028-03-10",
+   "rekening": "550000",
+   "naam": "Bankrekening",
    "debet": 11858,
    "credit": 0,
    "oms": "Overschrijving van Woonzorgcentrum Zonnehof vzw, factuur 2028-011"
@@ -5075,20 +5116,10 @@
    "doc": "J3BTW",
    "ref": "BTW",
    "datum": "2028-03-31",
-   "rekening": "411000",
-   "naam": "Terug te vorderen btw-saldo",
-   "debet": 0,
-   "credit": 1803,
-   "oms": "Btw-tegoed van het 4e kwartaal 2027 verrekend"
-  },
-  {
-   "doc": "J3BTW",
-   "ref": "BTW",
-   "datum": "2028-03-31",
    "rekening": "451000",
    "naam": "Te betalen btw-saldo",
    "debet": 0,
-   "credit": 2682,
+   "credit": 4485,
    "oms": "Btw-verwerking 1e kwartaal 2028"
   },
   {
@@ -5445,7 +5476,7 @@
    "naam": "Te betalen btw-saldo",
    "apko": "P",
    "opening": 0,
-   "slot": -2682
+   "slot": -4485
   },
   {
    "rekening": "451100",
@@ -5508,7 +5539,7 @@
    "naam": "Bankrekening",
    "apko": "A",
    "opening": 44997,
-   "slot": 30070
+   "slot": 31873
   },
   {
    "rekening": "570000",
