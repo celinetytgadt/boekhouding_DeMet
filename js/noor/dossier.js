@@ -20,7 +20,7 @@ const DOSSIER = {
   documenten: "documenten/noor/",
   kort: "Oefendossier Noor",
   titel: "Oefendossier Fietsatelier Noor",
-  ander: { naam: "Eindopdracht MetWear", url: "index.html" },
+  ander: { naam: "Eindopdracht MetWear", url: "index.html", opslag: "boekhoudapp" },
   welkomst:
     "<p>Dit is het <strong>oefendossier</strong>: na elke les maak je de stukken van die les. Het menu links volgt de lessen. " +
     "Je werk hier staat helemaal los van de eindopdracht MetWear (link bovenaan).</p>",
