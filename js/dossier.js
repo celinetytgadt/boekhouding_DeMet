@@ -16,6 +16,8 @@
 //             refs AK01 …). Een ander dossier krijgt een code (zie
 //             js/noor/dossier.js).
 // documenten  de map met de afbeeldingen van de verantwoordingsstukken.
+// ander       het andere dossier: de link bovenaan, en zijn opslag, zodat
+//             wie afmeldt in het ene dossier ook in het andere afgemeld is.
 
 const DOSSIER = {
   code: "",
@@ -23,5 +25,5 @@ const DOSSIER = {
   documenten: "documenten/",
   kort: "Boekhoudapp Kern 8",
   titel: "Eindopdracht MetWear",
-  ander: { naam: "Oefendossier Fietsatelier Noor", url: "noor.html" },
+  ander: { naam: "Oefendossier Fietsatelier Noor", url: "noor.html", opslag: "kern8noor" },
 };

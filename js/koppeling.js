@@ -1225,7 +1225,32 @@
   // valt. Zonder deze haak zouden we elke twee minuten hetzelfde versturen.
   window.KOPPELING_HOOKS = {
     naWijziging: function () { teBewaren = true; },
+    // De knop Afmelden in app.js: eerst het laatste werk naar de Drive, dan
+    // vergeet deze browser wie er aangemeld is. Geeft false als de leerling
+    // liever aangemeld blijft omdat het bewaren niet lukte.
+    afmelden: function () {
+      var bewaren = (actief() && aanmelding) ? bewaarVoorAfmelden(20) : Promise.resolve(true);
+      return bewaren.then(function (ok) {
+        if (!ok && !window.confirm("Je werk kon niet op de server bewaard worden. " +
+            "Het blijft wel in deze browser staan.\n\nToch afmelden?")) return false;
+        aanmelding = null;
+        teBewaren = false;
+        try { localStorage.removeItem(AANMELD_KEY); } catch (e) { /* geblokkeerd */ }
+        return true;
+      });
+    },
   };
+
+  // Loopt er nog een bewaarronde, dan wachten we die af (hoogstens even).
+  function bewaarVoorAfmelden(pogingen) {
+    if (!teBewaren && !bezigMetBewaren) return Promise.resolve(true);
+    if (bezigMetBewaren) {
+      if (pogingen <= 0) return Promise.resolve(false);
+      return new Promise(function (r) { setTimeout(r, 500); })
+        .then(function () { return bewaarVoorAfmelden(pogingen - 1); });
+    }
+    return bewaarNaarServer(true);
+  }
 
   /* Het luikje voor js/beheer.js. Dat bestand bouwt het beheertabblad voor
      de vakexperten; het praat met dezelfde web-app, maar met de expertcode

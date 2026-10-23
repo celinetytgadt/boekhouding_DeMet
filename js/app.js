@@ -255,6 +255,8 @@
   }
 
   function updateOpslaanStatus() {
+    var knop = document.getElementById("btn-afmelden");
+    if (knop) knop.hidden = !state.student;
     var el = document.getElementById("opslaan-status");
     if (!el) return;
     if (!state.student) {
@@ -2334,8 +2336,34 @@
     renderAlles();
   }
 
+  /* Afmelden: koppeling.js bewaart eerst het laatste werk op de server en
+     vergeet de aanmelding; daarna begint de app opnieuw met een leeg
+     aanmeldscherm. Het werk zelf blijft in deze browser (en op de Drive)
+     staan: wie zich opnieuw aanmeldt, vindt alles terug. */
+  function afmelden() {
+    if (!state.student) return;
+    if (!window.confirm("Afmelden als " + state.student + "?\n\nJe werk blijft bewaard. " +
+        "Daarna kan iemand anders zich op deze computer aanmelden.")) return;
+    var hooks = window.KOPPELING_HOOKS;
+    var klaar = hooks && hooks.afmelden ? hooks.afmelden() : Promise.resolve(true);
+    klaar.then(function (ok) {
+      if (!ok) return;
+      try {
+        localStorage.removeItem(LAATSTE_LEERLING_KEY);
+      // Het andere dossier deelt de aanmelding: ook daar is de leerling
+      // nu afgemeld.
+      if (DOSSIER_INFO.ander && DOSSIER_INFO.ander.opslag) {
+        localStorage.removeItem(DOSSIER_INFO.ander.opslag + "_laatste_leerling");
+      }
+      } catch (e) { /* geblokkeerde opslag: dan valt er niets te vergeten */ }
+      window.location.reload();
+    });
+  }
+
   function initEvents() {
     var paginaEl = document.getElementById("pagina-inhoud");
+    var btnAfmelden = document.getElementById("btn-afmelden");
+    if (btnAfmelden) btnAfmelden.addEventListener("click", afmelden);
 
     paginaEl.addEventListener("input", function (e) {
       var t = e.target;

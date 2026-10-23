@@ -1043,6 +1043,34 @@ function vinkIn(venster, naam) {
   }
   serverHangt = false;
 
+  console.log("\n22. Afmelden");
+  const domA = await start(APP, "index.html", Object.assign({}, vooraf, { kern8noor_laatste_leerling: "Lotte V." }));
+  await new Promise((r) => setTimeout(r, 150));
+  const wa = domA.window;
+  const knopA = wa.document.getElementById("btn-afmelden");
+  check("afmeldknop zichtbaar voor wie aangemeld is", !!knopA && knopA.hidden === false && wa.APP.getState().student === "Lotte V.",
+    wa.APP.getState().student);
+  wa.APP.getState().boekingen.VK01 = { geboekt: true, rows: [{ bedrag: "4321", rekening: "700000", dc: "C" }] };
+  wa.APP.saveState();
+  wa.confirm = () => true;
+  knopA.click();
+  await new Promise((r) => setTimeout(r, 200));
+  check("aanmelding vergeten, ook in het oefendossier",
+    !wa.localStorage.getItem("boekhoudapp_aanmelding") && !wa.localStorage.getItem("boekhoudapp_laatste_leerling") &&
+      !wa.localStorage.getItem("kern8noor_laatste_leerling"), Object.keys(wa.localStorage));
+  check("laatste werk vóór het afmelden op de server bewaard",
+    /4321/.test((gedeeld.bestanden.find((b) => b.naam === "werk_LEU_lottev.json") || {}).inhoud || ""));
+  check("werk blijft in de browser staan", /4321/.test(wa.localStorage.getItem("boekhoudapp_data_leu_lotte-v") || ""));
+  const naAfmelden = {};
+  Object.keys(wa.localStorage).forEach((k) => { naAfmelden[k] = wa.localStorage.getItem(k); });
+  for (const pagina of ["index.html", "noor.html"]) {
+    const domB = await start(APP, pagina, naAfmelden);
+    await new Promise((r) => setTimeout(r, 100));
+    check(pagina + " na afmelden: niemand aangemeld, knop verborgen",
+      domB.window.APP.getState().student === "" && domB.window.document.getElementById("btn-afmelden").hidden === true,
+      domB.window.APP.getState().student);
+  }
+
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });
