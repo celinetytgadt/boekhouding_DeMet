@@ -660,6 +660,33 @@
       }).join("") + "</div>";
   }
 
+  /* De vaste namen uit data-relaties.js (js/noor/data-relaties.js voor het
+     oefendossier). Staat er voor klanten of leveranciers minstens één naam,
+     dan kiest de leerling uit die lijst in plaats van zelf te typen: geen
+     tikfouten meer, en dus geen twee aparte relaties voor dezelfde klant.
+     Een lege lijst = het vroegere vrije naamveld. */
+  function vasteRelaties(soort) {
+    return (typeof RELATIES !== "undefined" && RELATIES && RELATIES[soort]) || [];
+  }
+
+  // Staat er in oud werk een naam die niet (meer) in de lijst staat, dan
+  // blijft die zichtbaar als keuze, zodat er niets stilletjes verdwijnt. De
+  // leerling kan ze zelf vervangen door een naam uit de lijst.
+  function htmlRelatieSelect(ref, idx, row, soort, vasteNamen, actief) {
+    var namen = vasteNamen.slice();
+    if (row.relatie && namen.indexOf(row.relatie) === -1) namen.unshift(row.relatie);
+    return '<div class="relatie-wrap">' +
+      '<select class="relatie-select" ' +
+      'title="Bij welke ' + (soort === "klanten" ? "klant" : "leverancier") + ' hoort deze lijn? Zo kan je later zien welke facturen nog openstaan." ' +
+      'data-focus-id="' + focusId(ref, idx, "relatie") + '" data-scope="' + escapeAttr(ref) + '" data-row="' + idx + '" data-field="relatie" ' +
+      (actief ? "" : "disabled") + ">" +
+      '<option value="">— kies ' + (soort === "klanten" ? "de klant" : "de leverancier") + " —</option>" +
+      namen.map(function (n) {
+        return '<option value="' + escapeAttr(n) + '"' + (n === row.relatie ? " selected" : "") + ">" + escapeAttr(n) + "</option>";
+      }).join("") +
+      "</select></div>";
+  }
+
   // relatieBewerkbaar: de boeking is geboekt én in orde bevonden, maar de
   // naam van de klant of leverancier mag nog aangepast worden.
   function htmlRedeneerschemaRij(ref, row, idx, geboekt, relatieBewerkbaar) {
@@ -672,7 +699,10 @@
     var rijKlasse = (!geboekt && mist.length && !leeg) ? ' class="rij-onvolledig"' : "";
 
     var relatieHtml = "";
-    if (relatieSoort) {
+    var vasteNamen = relatieSoort ? vasteRelaties(relatieSoort) : [];
+    if (relatieSoort && vasteNamen.length) {
+      relatieHtml = htmlRelatieSelect(ref, idx, row, relatieSoort, vasteNamen, !(geboekt && !relatieBewerkbaar));
+    } else if (relatieSoort) {
       // Eigen keuzelijst in plaats van een <datalist>: die toont enkel namen
       // die passen bij wat er al getypt is, zodat een verkeerd gekozen naam
       // eerst helemaal gewist moest worden. Deze lijst toont altijd alle
@@ -759,7 +789,7 @@
       "<th>Bedrag</th>" +
       '<th title="Denkhulp — niet verplicht">Redenering</th>' +
       '<th title="Denkhulp — niet verplicht">A/P/K/O</th>' +
-      '<th title="Denkhulp — niet verplicht">Stijgt/daalt</th>' +
+      '<th title="Denkhulp — niet verplicht">Stijgt/<wbr>daalt</th>' +
       "<th>Rekeningnr.</th><th>Omschrijving</th><th>D/C</th><th></th>" +
       "</tr></thead><tbody>";
     boeking.rows.forEach(function (row, idx) { html += htmlRedeneerschemaRij(ref, row, idx, geboekt, inOrde); });
@@ -791,7 +821,13 @@
       html += '<button type="button" class="btn-heropenen" data-scope="' + escapeAttr(ref) + '" data-role="heropenen">Heropenen om te wijzigen</button>';
     } else {
       html += '<button type="button" class="btn-boeken" data-scope="' + escapeAttr(ref) + '" data-role="boeken" ' + (klaar ? "" : "disabled") + ">Boeken</button>";
-      if (!klaar) {
+      // Een schema waar nog niets in staat, krijgt nog geen lijst met wat er
+      // ontbreekt: die gele kaders vóór de leerling iets deed, zijn enkel
+      // ruis (op een pagina met veel schema's onder elkaar zelfs veel ruis).
+      var begonnen = boeking.rows.some(function (r) {
+        return r.auto ? !!String(r.relatie || "").trim() : !rijLeeg(r);
+      });
+      if (!klaar && begonnen) {
         // Concreet zeggen wát er nog ontbreekt, per lijn. Anders blijft de
         // knop grijs zonder dat de leerling weet waarom.
         var punten = [];
@@ -916,6 +952,10 @@
   function htmlDossierKnop() {
     var ander = DOSSIER_INFO.ander;
     if (!ander || !ander.url) return "";
+    // In MetWear komt de knop er pas als zeker is dat het oefendossier voor
+    // deze school openstaat: zolang er geen school gekozen is of de
+    // instellingen nog niet binnen zijn, verwijst niets naar Noor.
+    if (!DOSSIER_INFO.code && !oefendossierZekerOpen()) return "";
     if (!oefendossierOpen()) {
       // In MetWear: geen knop. In het oefendossier zelf: zeggen dat het voor
       // deze school niet openstaat, met de weg terug naar MetWear.
@@ -1087,6 +1127,35 @@
       "<tfoot><tr><td>Totaal nog open</td><td>" + formatBedrag(totaal) + "</td></tr></tfoot></table>";
   }
 
+  // Alle lijnen van één boeking (bv. BB) op een klanten- of
+  // leveranciersrekening, met de relatie die de leerling erbij koos. In het
+  // T-paneel zie je enkel bedragen, niet bij wie ze horen.
+  function htmlControleRelatiesInBoeking(ref) {
+    var boeking = state.boekingen[ref];
+    var lijnen = [];
+    ((boeking && boeking.rows) || []).forEach(function (row) {
+      var soort = relatieVeldVoorRekening(row.rekening);
+      if (!soort) return;
+      lijnen.push({ soort: soort, nr: String(marBij(row.rekening).nr), row: row });
+    });
+    if (!lijnen.length) {
+      return '<p class="controle-toelichting">Er staat nog geen lijn op 400000 of 440000 in je boeking ' + escapeAttr(ref) + ".</p>";
+    }
+    // Eerst de klanten, dan de leveranciers; binnen elk de volgorde van de boeking.
+    lijnen.sort(function (a, b) { return (a.soort === b.soort) ? 0 : (a.soort === "klanten" ? -1 : 1); });
+    var rijen = lijnen.map(function (l) {
+      var relatie = String(l.row.relatie || "").trim();
+      var bedrag = parseBedrag(l.row.bedrag);
+      return "<tr><td>" + escapeAttr(l.nr) + "</td>" +
+        "<td>" + (l.soort === "klanten" ? "klant" : "leverancier") + "</td>" +
+        "<td>" + (relatie ? escapeAttr(relatie) : "<em>— niets gekozen —</em>") + "</td>" +
+        "<td>" + (bedrag === null ? "" : formatBedrag(bedrag) + " " + escapeAttr(l.row.dc || "")) + "</td></tr>";
+    }).join("");
+    return '<table class="relatie-overzicht controle-relatie-tabel controle-relatie-lijnen"><thead><tr>' +
+      "<th>Rekening</th><th>Soort</th><th>Gekozen relatie</th><th>Bedrag</th></tr></thead>" +
+      "<tbody>" + rijen + "</tbody></table>";
+  }
+
   // Eén afvinkbare controle. Wordt zowel op de controlepagina van een
   // categorie als op de eindcontrole gebruikt.
   function htmlControleRij(c) {
@@ -1102,6 +1171,7 @@
     // 400000/440000 in het T-paneel kan leggen zonder van scherm te
     // wisselen. Deze cijfers komen uit hun eigen boekingen.
     if (c.relatieSoort) html += htmlControleRelatieTabel(c.relatieSoort);
+    if (c.relatiesVoorRef) html += htmlControleRelatiesInBoeking(c.relatiesVoorRef);
     html += "</div>";
     if (c.docs && c.docs.length) {
       html += '<div class="controle-docs">' + c.docs.map(function (d) {
@@ -2369,8 +2439,9 @@
       var t = e.target;
       if (t.dataset && t.dataset.scope !== undefined && t.dataset.row !== undefined && t.dataset.field) {
         opState(t.dataset.scope, parseInt(t.dataset.row, 10), t.dataset.field, t.value);
-        // Wie een naam typt, krijgt de keuzelijst er meteen bij.
-        if (t.dataset.field === "relatie") uiState.relatieOpen = t.dataset.focusId;
+        // Wie een naam typt, krijgt de keuzelijst er meteen bij (enkel bij
+        // het vrije naamveld; de vaste lijst is een gewone keuzelijst).
+        if (t.dataset.field === "relatie" && t.tagName === "INPUT") uiState.relatieOpen = t.dataset.focusId;
         saveState();
         renderAlles();
         return;
@@ -2399,7 +2470,7 @@
     });
     paginaEl.addEventListener("click", function (e) {
       var t = e.target;
-      if (t.dataset && t.dataset.field === "relatie" && !t.disabled && uiState.relatieOpen !== t.dataset.focusId) {
+      if (t.dataset && t.dataset.field === "relatie" && t.tagName === "INPUT" && !t.disabled && uiState.relatieOpen !== t.dataset.focusId) {
         uiState.relatieOpen = t.dataset.focusId;
         renderAlles();
       }
@@ -2770,6 +2841,17 @@
       document.getElementById("layout").classList.remove("tpanel-verborgen");
     });
 
+    // Het menu links inklappen. De keuze blijft bewaard in deze browser,
+    // zodat het menu bij een volgend bezoek niet opnieuw openspringt.
+    var MENU_KEY = APP_SLEUTEL + "_menu_ingeklapt";
+    function zetMenuIngeklapt(dicht) {
+      document.getElementById("layout").classList.toggle("sidebar-verborgen", dicht);
+      try { if (dicht) localStorage.setItem(MENU_KEY, "1"); else localStorage.removeItem(MENU_KEY); } catch (e) {}
+    }
+    try { if (localStorage.getItem(MENU_KEY) === "1") document.getElementById("layout").classList.add("sidebar-verborgen"); } catch (e) {}
+    document.getElementById("sidebar-collapse").addEventListener("click", function () { zetMenuIngeklapt(true); });
+    document.getElementById("sidebar-heropen").addEventListener("click", function () { zetMenuIngeklapt(false); });
+
     // Topbar: leerlingnaam
     var naamInput = document.getElementById("leerling-naam-input");
     naamInput.addEventListener("keydown", function (e) { if (e.key === "Enter") naamInput.blur(); });
@@ -2817,10 +2899,18 @@
     return String(w || "").trim().toLowerCase() !== "nee";
   }
 
+  // Strenger, voor de verwijzingen vanuit MetWear: enkel als de instellingen
+  // van de gekozen school binnen zijn en het oefendossier niet op "nee"
+  // staat. Zo flitst er geen knop naar Noor op bij een school die het
+  // uitgezet heeft.
+  function oefendossierZekerOpen() {
+    return !!window.INSTELLINGEN && oefendossierOpen();
+  }
+
   // Het linkje in de titelbalk naar het oefendossier, aan of uit volgens de instelling.
   function zetDossierLink() {
     var a = document.getElementById("dossier-wissel");
-    if (a) a.hidden = !DOSSIER_INFO.code && !oefendossierOpen();
+    if (a) a.hidden = !DOSSIER_INFO.code && !oefendossierZekerOpen();
   }
 
   function toonDossier() {
@@ -2836,6 +2926,7 @@
     a.href = ander.url;
     a.textContent = "→ " + ander.naam;
     a.title = "Naar het andere dossier. Je werk in dit dossier blijft gewoon staan.";
+    a.hidden = !DOSSIER_INFO.code && !oefendossierZekerOpen();
     naamEl.parentNode.appendChild(a);
   }
 
@@ -2886,6 +2977,12 @@
     slug: slug,
     opmaakTekst: opmaakTekst,
     huidigePagina: function () { return uiState.huidigePagina.type; },
+    // Voor het indienen: heeft elke rubriek met een saldo een plaats op de
+    // eindbalans? Zo niet, dan is die nog niet af en gaat ze niet mee.
+    eindbalansVolledig: function () {
+      var kaarten = balansKaarten();
+      return kaarten.length > 0 && kaarten.every(function (k) { return !!state.eindbalans[k.id]; });
+    },
   };
 
   document.addEventListener("DOMContentLoaded", init);

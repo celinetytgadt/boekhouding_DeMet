@@ -179,8 +179,9 @@ function schrijfRelaties() {
   klanten.push("Particulieren (winkel)");
   const js = `// data-relaties.js — oefendossier Fietsatelier Noor bv
 //
-// GEMAAKT DOOR hulpmiddelen/noor/maak-data.js. Een voorstel van namen voor
-// het relatieveld bij 400000 en 440000; de leerling mag ook zelf tikken.
+// GEMAAKT DOOR hulpmiddelen/noor/maak-data.js. De namen in de keuzelijst
+// bij 400000 en 440000: de leerling kiest de klant of leverancier uit deze
+// lijst (zie js/data-relaties.js voor de uitleg).
 
 const RELATIES = {
   klanten: ${JSON.stringify(klanten.sort(), null, 4).replace(/\n\]/, "\n  ]")},

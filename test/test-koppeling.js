@@ -6,7 +6,11 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
-const { JSDOM } = require("/tmp/node_modules/jsdom");
+// jsdom: gewoon geïnstalleerd (npm install jsdom), of in de map die JSDOM_PAD
+// aanwijst, of zoals vroeger in /tmp/node_modules.
+let JSDOM;
+try { ({ JSDOM } = require(process.env.JSDOM_PAD ? path.join(process.env.JSDOM_PAD, "jsdom") : "jsdom")); }
+catch (e) { ({ JSDOM } = require("/tmp/node_modules/jsdom")); }
 
 /* ===================== testkopieën van de app =====================
  * Het harnas maakt ze zelf, zodat er niets met de hand klaargezet moet
@@ -212,6 +216,7 @@ vm.runInContext(fs.readFileSync(path.join(APP, "apps-script/Code.gs"), "utf8"), 
 /* ===================== nagemaakte server ===================== */
 
 let serverHangt = false;   // nagebootst: Google laat de web-app wachten
+let werkVertraging = 0;    // ms: het werk komt traag terug van de server
 
 function server(url, opts) {
   const u = new URL(url);
@@ -230,7 +235,11 @@ function server(url, opts) {
   } else {
     r = omgeving.doPost({ postData: { contents: opts.body } });
   }
-  return Promise.resolve({ json: () => Promise.resolve(JSON.parse(r.tekst)) });
+  const antwoord = { json: () => Promise.resolve(JSON.parse(r.tekst)) };
+  if (werkVertraging && u.searchParams.get("actie") === "werk") {
+    return new Promise((klaar) => setTimeout(() => klaar(antwoord), werkVertraging));
+  }
+  return Promise.resolve(antwoord);
 }
 
 /* ===================== de app in jsdom ===================== */
@@ -257,7 +266,8 @@ async function start(map, pagina, vooraf) {
   // globale ruimte terecht, net zoals in een echte browser.
   const laad = (b) => {
     const s = dom.window.document.createElement("script");
-    s.textContent = fs.readFileSync(path.join(map, b), "utf8");
+    // Zonder het versienummer (?v=…) dat achter elk script staat.
+    s.textContent = fs.readFileSync(path.join(map, b.split("?")[0]), "utf8");
     dom.window.document.head.appendChild(s);
   };
   bronnen.filter((b) => !/koppeling\.js$/.test(b)).forEach(laad);
@@ -379,8 +389,9 @@ function vinkIn(venster, naam) {
   venster.querySelector('[data-role="modal-sluit"]').click();
 
   const inz = sheets.Inzendingen;
-  // 10 aankopen + kop; de controles gaan bewust niet meer mee
-  check("rijen toegevoegd in Inzendingen", inz.getLastRow() === 11, inz.getLastRow());
+  // Kop + AK01: enkel wat geboekt is, gaat mee. De controles gaan bewust
+  // ook niet mee.
+  check("rijen toegevoegd in Inzendingen", inz.getLastRow() === 2, inz.getLastRow());
   check("de controles komen niet in de Sheet terecht",
     !inz.rijen.some((r) => String(r[3]).indexOf("CONTROLE:") === 0),
     inz.rijen.map((r) => r[3]));
@@ -391,8 +402,8 @@ function vinkIn(venster, naam) {
     /^604000\s+100\s+D$/m.test(ak01[4]) && /^440000\s+121\s+C/m.test(ak01[4]), ak01 && ak01[4]);
   check("drie regels in de cel", String(ak01[4]).split("\n").length === 3, ak01 && ak01[4]);
   check("relatie mee achteraan de regel", /440000\s+121\s+C\s+\[Deleu bv\]/.test(ak01[4]), ak01 && ak01[4]);
-  const ak02 = inz.rijen.find((r) => r[3] === "AK02");
-  check("AK02 staat als onafgewerkt", ak02 && ak02[5] === "onafgewerkt", ak02 && ak02[5]);
+  check("niet afgerond (AK02 half ingevuld, AK03 leeg) gaat niet mee",
+    !inz.rijen.some((r) => r[3] === "AK02" || r[3] === "AK03"), inz.rijen.map((r) => r[3]));
   check("alles op is-laatste JA", inz.rijen.slice(1).every((r) => r[9] === "JA"));
   check("enkel de aangevinkte categorie is verzonden",
     inz.rijen.slice(1).every((r) => r[2] === "Aankopen"));
@@ -403,6 +414,13 @@ function vinkIn(venster, naam) {
   check("niets in een eigen map in de Drive",
     !root.mappen.some((m) => m.naam === "Boekhoudapp werkbestanden"),
     root.mappen.map((m) => m.naam));
+
+  // Een eerdere ronde van AK02, zoals een oudere versie van de app ze nog
+  // als "onafgewerkt" meestuurde. Zo heeft de historiek hieronder twee ronden.
+  await server("https://fake/exec", { method: "POST", body: JSON.stringify({
+    sleutel: "TEST", naam: "Lotte V.", code: codeLotte, actie: "indienen",
+    items: [{ ref: "AK02", categorie: "Aankopen", titel: "Aankoop AK02", status: "onafgewerkt", boeking: "?? 50 ?", lijnen: [] }],
+  }) }).then((r) => r.json());
 
   console.log("\n5. Tweede inzending overschrijft niets");
   const antwoord2 = await server("https://fake/exec", { method: "POST", body: JSON.stringify({
@@ -474,7 +492,7 @@ function vinkIn(venster, naam) {
   await new Promise((r) => setTimeout(r, 60));
   check("vergrendelde boeking gemeld", !!w.document.querySelector(".boeking-vergrendeld"));
   check("geen heropen-knop meer", !w.document.querySelector('[data-role="heropenen"]'));
-  const relatieVeld = w.document.querySelector(".relatie-input");
+  const relatieVeld = w.document.querySelector('.relatie-wrap [data-field="relatie"]');
   check("relatieveld blijft bewerkbaar", relatieVeld && relatieVeld.disabled === false);
   check("bedragveld blijft op slot", w.document.querySelector('[data-field="bedrag"]').disabled === true);
   check("bolletje AK01 is groen door de beoordeling",
@@ -493,6 +511,11 @@ function vinkIn(venster, naam) {
     aankopenRij.querySelector(".indien-inorde").textContent === "1/10",
     aankopenRij.textContent);
   const voorAantal = inz.getLastRow();
+  // AK03 intussen geboekt: die moet mee, AK01 (in orde) niet.
+  w.APP.getState().boekingen.AK03 = { geboekt: true, rows: [
+    { bedrag: "10", rekening: "604000", dc: "D", relatie: "", redenering: "", apko: "", stijgtDaalt: "" },
+    { bedrag: "10", rekening: "440000", dc: "C", relatie: "Textura nv", redenering: "", apko: "", stijgtDaalt: "" },
+  ] };
   vinkIn(v2, "Aankopen");
   v2.querySelector("#btn-indienen-bevestig").click();
   await new Promise((r) => setTimeout(r, 40));
@@ -501,7 +524,8 @@ function vinkIn(venster, naam) {
   const nieuweRijen = inz.rijen.slice(voorAantal);
   check("AK01 wordt niet opnieuw ingediend", !nieuweRijen.some((r) => r[3] === "AK01"),
     nieuweRijen.map((r) => r[3]));
-  check("de rest wel", nieuweRijen.some((r) => r[3] === "AK02"));
+  check("wat intussen geboekt is wel", nieuweRijen.some((r) => r[3] === "AK03"), nieuweRijen.map((r) => r[3]));
+  check("wat nog niet af is niet", !nieuweRijen.some((r) => r[3] === "AK02"), nieuweRijen.map((r) => r[3]));
   v2.querySelector('[data-role="modal-sluit"]').click();
 
   console.log("\n9. Hulpdocument blijft ingeklapt");
@@ -814,6 +838,11 @@ function vinkIn(venster, naam) {
   w5.document.getElementById("leerling-code").value = codeLotte;
   w5.document.getElementById("btn-aanmelden").click();
   await new Promise((r) => setTimeout(r, 120));
+  // Enkel wat geboekt is, kan ingediend worden.
+  w5.APP.getState().boekingen.VK01 = { geboekt: true, rows: [
+    { bedrag: "100", rekening: "400000", dc: "D", relatie: "", redenering: "", apko: "", stijgtDaalt: "" },
+    { bedrag: "100", rekening: "700000", dc: "C", relatie: "", redenering: "", apko: "", stijgtDaalt: "" },
+  ] };
   w5.document.getElementById("btn-indienen").click();
   await new Promise((r) => setTimeout(r, 40));
   const v5 = w5.document.querySelector(".koppeling-overlay");
@@ -920,13 +949,13 @@ function vinkIn(venster, naam) {
   vn.querySelector('[data-role="bevestig-ja"]').click();
   await new Promise((r) => setTimeout(r, 160));
   const noorRijen = inz.rijen.slice(voorN);
-  check("zes rijen voor les 'Aankopen 1'", noorRijen.length === 6, noorRijen.length);
-  check("refs met NOOR- ervoor", noorRijen.every((r) => /^NOOR-AK0[1-6]$/.test(r[3])), noorRijen.map((r) => r[3]));
+  check("enkel de twee geboekte stukken van les 'Aankopen 1'", noorRijen.length === 2, noorRijen.length);
+  check("refs met NOOR- ervoor", noorRijen.every((r) => /^NOOR-AK0[12]$/.test(r[3])), noorRijen.map((r) => r[3]));
   check("categorie met Noor · ervoor", noorRijen.every((r) => r[2] === "Noor · Aankopen 1 · kortingen"), noorRijen.map((r) => r[2]));
   const rijN = (ref) => noorRijen.find((r) => r[3] === ref);
   check("ingebouwde sleutel: AK01 automatisch In orde", rijN("NOOR-AK01")[6] === "In orde", rijN("NOOR-AK01").slice(6, 12));
   check("ingebouwde sleutel: AK02 met fout wordt Te remediëren", rijN("NOOR-AK02")[6] === "Te remediëren", rijN("NOOR-AK02")[11]);
-  check("niet begonnen blijft zonder beoordeling", rijN("NOOR-AK03")[6] === "", rijN("NOOR-AK03"));
+  check("niet begonnen gaat niet mee", !rijN("NOOR-AK03"), noorRijen.map((r) => r[3]));
   check("werkbestand werk_NOOR_LEU_lottev.json", gedeeld.bestanden.some((b) => b.naam === "werk_NOOR_LEU_lottev.json"),
     gedeeld.bestanden.map((b) => b.naam));
   check("het werkbestand van MetWear is niet overschreven",
@@ -1070,6 +1099,85 @@ function vinkIn(venster, naam) {
       domB.window.APP.getState().student === "" && domB.window.document.getElementById("btn-afmelden").hidden === true,
       domB.window.APP.getState().student);
   }
+
+  console.log("\n23. Typen terwijl het werk nog geladen wordt");
+  const zonderLokaalWerk = Object.assign({}, vooraf);
+  delete zonderLokaalWerk["boekhoudapp_data_leu_lotte-v"];
+  werkVertraging = 150;
+  const domR = await start(APP, "index.html", zonderLokaalWerk);
+  await new Promise((r) => setTimeout(r, 30));
+  // De leerling tikt al iets vóór het werk van de server binnen is.
+  domR.window.APP.getState().boekingen.AK05 = { geboekt: false, rows: [{ bedrag: "9", rekening: "", dc: "" }] };
+  domR.window.APP.saveState();
+  await new Promise((r) => setTimeout(r, 300));
+  werkVertraging = 0;
+  check("het werk van de server wint (de browser was leeg bij het aanmelden)",
+    !!domR.window.APP.getState().boekingen.VK01, Object.keys(domR.window.APP.getState().boekingen));
+  check("en het werk op de server is niet overschreven",
+    /4321/.test((gedeeld.bestanden.find((b) => b.naam === "werk_LEU_lottev.json") || {}).inhoud || ""));
+
+  console.log("\n24. Feedback met een tijdstip als tekst in de Sheet");
+  const d = omgeving.alsDatum_("17/10/2026 15:35:51");
+  check("tekst-tijdstip wordt gelezen", d && d.getTime() === new Date(2026, 9, 17, 15, 35, 51).getTime(), d);
+  check("onleesbaar tijdstip geeft null", omgeving.alsDatum_("gisteren") === null);
+  const rijAK02 = inz.rijen.map((r, i) => [r, i + 1]).filter(([r]) => r[3] === "AK02").pop()[1];
+  inz.zet(rijAK02, 1, "01/01/2030 10:00:00");
+  const fbT = await server("https://fake/exec?actie=feedback&sleutel=TEST&naam=" + encodeURIComponent("Lotte V.") + "&code=" + codeLotte).then((r) => r.json());
+  check("feedback ophalen lukt nog", fbT.ok === true, fbT);
+  const ak02fb = (fbT.feedback || []).filter((f) => f.ref === "AK02");
+  check("de ronde met het tekst-tijdstip telt als nieuwste", ak02fb.length && ak02fb[0].ingediend === "1/01/2030", ak02fb);
+
+  console.log("\n25. Klant of leverancier uit de vaste lijst");
+  const domK = await start(APP, "index.html", vooraf);
+  await new Promise((r) => setTimeout(r, 150));
+  const wk = domK.window;
+  const naarOpdracht = async (ref) => {
+    [...wk.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === ref).click();
+    await new Promise((r) => setTimeout(r, 30));
+  };
+  await naarOpdracht("VK03");
+  check("leeg schema: nog geen lijst met wat er ontbreekt", !wk.document.querySelector(".boeken-waarom"));
+  const rekVeld = wk.document.querySelector('[data-scope="VK03"][data-field="rekening"]');
+  rekVeld.value = "400000";
+  rekVeld.dispatchEvent(new wk.Event("input", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 20));
+  check("begonnen schema: wel de lijst met wat er ontbreekt", !!wk.document.querySelector(".boeken-waarom"));
+  const sel = wk.document.querySelector('select.relatie-select[data-scope="VK03"]');
+  check("bij 400000 een keuzelijst in plaats van een tekstveld", !!sel && !wk.document.querySelector('.relatie-input[data-scope="VK03"]'));
+  check("met de klanten uit data-relaties.js", !!sel && [...sel.options].some((o) => o.value === "Modehuis Vandeputte bv"));
+  sel.value = "Modehuis Vandeputte bv";
+  sel.dispatchEvent(new wk.Event("change", { bubbles: true }));
+  check("de keuze komt in het werk", wk.APP.getState().boekingen.VK03.rows[0].relatie === "Modehuis Vandeputte bv");
+  wk.APP.getState().boekingen.VK04 = { geboekt: false, rows: [{ bedrag: "500", rekening: "400000", dc: "C", relatie: "vandeputte" }] };
+  await naarOpdracht("VK04");
+  const oud = wk.document.querySelector('[data-scope="VK04"][data-field="relatie"]');
+  check("een oude, zelf getypte naam blijft zichtbaar", !!oud && oud.value === "vandeputte", oud && oud.value);
+
+  console.log("\n26. Controle beginbalans: de gekozen relaties");
+  wk.APP.getState().boekingen.BB = { geboekt: true, rows: [
+    { bedrag: "60.000", rekening: "400000", dc: "D", relatie: "Klanten 2025 (beginbalans)" },
+    { bedrag: "60.000", rekening: "100000", dc: "C", relatie: "" },
+  ] };
+  wk.APP.renderAlles();
+  [...wk.document.querySelectorAll('[data-page-type="controle"]')].find((n) => /Beginbalans/.test(n.dataset.pageCat || n.dataset.cat || n.outerHTML)).click();
+  await new Promise((r) => setTimeout(r, 30));
+  const tabel = wk.document.querySelector(".controle-relatie-lijnen");
+  check("tabel met de lijnen op 400000/440000 uit BB", !!tabel && /Klanten 2025 \(beginbalans\)/.test(tabel.textContent), tabel && tabel.textContent);
+
+  console.log("\n27. Menu links inklappen");
+  wk.document.getElementById("sidebar-collapse").click();
+  check("menu ingeklapt", wk.document.getElementById("layout").classList.contains("sidebar-verborgen"));
+  check("de keuze blijft bewaard", wk.localStorage.getItem("boekhoudapp_menu_ingeklapt") === "1");
+  wk.document.getElementById("sidebar-heropen").click();
+  check("menu weer open", !wk.document.getElementById("layout").classList.contains("sidebar-verborgen"));
+
+  console.log("\n28. Geen verwijzing naar Noor zolang de instelling niet gekend is");
+  serverHangt = true;
+  const domO = await start(APP, "index.html", {});
+  await new Promise((r) => setTimeout(r, 60));
+  check("nog geen school of instellingen: geen knop en geen link naar Noor",
+    !knopNaarNoor(domO.window) && !linkNaarNoor(domO.window));
+  serverHangt = false;
 
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);

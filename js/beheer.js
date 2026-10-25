@@ -374,7 +374,11 @@
         if (huidigeVestiging() !== voor) return;
         bezig = false;
         if (!r || !r.ok) {
-          zegFout(r && r.uitleg ? r.uitleg : "Bewaren lukte niet. Probeer het opnieuw.");
+          // De foutmelding van de server erbij: anders valt er niet te
+          // achterhalen wát er misliep (een ontbrekend tabblad, een
+          // verkeerde code …).
+          zegFout(r && r.uitleg ? r.uitleg
+            : "Bewaren lukte niet" + (r && r.fout ? " (melding van de server: " + r.fout + ")" : "") + ". Probeer het opnieuw.");
           herteken();
           return;
         }

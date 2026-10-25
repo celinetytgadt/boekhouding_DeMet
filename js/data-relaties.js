@@ -1,22 +1,41 @@
-// data-relaties.js
-// OPTIONEEL startlijstje van leveranciers en klanten voor het extra veld
-// bij boekingen op 400000 (Handelsdebiteuren) en 440000 (Leveranciers) —
-// een subadministratie zodat leerlingen kunnen nakijken welke facturen nog openstaan.
+// data-relaties.js — eindopdracht MetWear bv
 //
-// Dit hoeft NIET bijgehouden te worden: het relatieveld in de app is een
-// gewoon tekstveld. Zodra een leerling ergens een naam intikt, verschijnt
-// die vanzelf als suggestie bij de volgende boeking op dezelfde rekening
-// (400000/440000) — ook zonder dat dit bestand aangepast wordt.
+// De klanten en leveranciers in de keuzelijst bij boekingen op 400000
+// (Handelsdebiteuren) en 440000 (Leveranciers). De leerling kiest de naam
+// uit deze lijst in plaats van ze zelf te typen: zo zijn er geen tikfouten
+// meer en wordt één klant nooit twee aparte relaties op het tabblad
+// Klanten & leveranciers.
 //
-// Wil je toch een paar vaste namen als voorstel laten verschijnen (bv. om
-// tikfouten/dubbels te vermijden), typ ze dan hieronder. Leeg laten mag
-// gerust.
+// Een naam aanpassen of toevoegen? Gewoon hier in de lijst. Staat er in het
+// werk van een leerling een naam die niet (meer) in de lijst staat, dan
+// blijft die zichtbaar als keuze, zodat er niets verdwijnt; de leerling kan
+// ze zelf vervangen door een naam uit de lijst.
+//
+// Laat je een lijst helemaal leeg, dan krijgt de leerling voor die soort
+// opnieuw het vrije naamveld van vroeger.
+//
+// De beginbalans en de dagontvangsten hebben geen echte klant- of
+// leveranciersnaam op het document; daarvoor staan er drie verzamelnamen.
 
 const RELATIES = {
   klanten: [
-    // bv. "Klant A", "Bakkerij Janssens", ...
+    "Klanten 2025 (beginbalans)",
+    "Boetiek Lumen bv",
+    "Concept Store Nova bv",
+    "Kringwinkel De Draad vzw",
+    "Modehuis Vandeputte bv",
+    "Sportclub De Kern vzw",
+    "Winkel (dagontvangsten)",
   ],
   leveranciers: [
-    // bv. "Leverancier X", "Groothandel Peeters", ...
+    "Leveranciers 2025 (beginbalans)",
+    "Atelier Lino",
+    "Bio Cotton Belgium bv",
+    "Denim Depot nv",
+    "Garage Delvaux bv",
+    "Groene Draad bvba",
+    "NovaEnergy nv",
+    "SoLoon vzw",
+    "Textura nv",
   ],
 };

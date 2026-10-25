@@ -272,9 +272,10 @@ terugzetten*).
 Naast elke categorie staan twee tellers op dezelfde noemer: hoeveel
 verantwoordingsstukken er geboekt zijn, en hoeveel er al in orde bevonden zijn
 (bv. 7/9 en 6/9).
-Wat niet aangevinkt is, blijft privé. Verrichtingen die nog niet geboekt zijn,
-gaan wel mee met de vermelding *onafgewerkt*, zodat jij ziet waar iemand
-vastloopt.
+Wat niet aangevinkt is, blijft privé. Ook wat nog niet afgerond is (niet
+geboekt, half ingevuld), gaat niet mee: je krijgt enkel wat de leerling zelf
+af vond. Wie vastloopt, zie je dus niet meer in de Sheet maar in de app (of
+in het werkbestand op de Drive).
 
 **Feedback.** Met de knop *Feedback ophalen* komt binnen wat jij vrijgegeven
 hebt. Bij elke verrichting verschijnt een gekleurd kader met je oordeel en je
@@ -403,7 +404,7 @@ vergeleken, bij de eindbalans in welk vak elke rubriek ligt.
 |---|---|---|
 | klopt | In orde | ✓ klopt met de sleutel |
 | klopt niet | Te remediëren | ✗ welke rekeningen afwijken, bv. `604030: verwacht 400 D, geboekt niets` |
-| onafgewerkt, niet begonnen of geen sleutel | — (leeg) | — |
+| geen sleutel voor die verrichting | — (leeg) | — |
 
 Het vinkje **klaar** zet het script nooit aan: de leerling ziet pas iets als
 jij vrijgeeft. De kolom *automatische controle* is enkel voor jou, de leerling

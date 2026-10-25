@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20261025">
 </head>
 <body>
 
@@ -58,8 +58,15 @@
 
 <div id="layout">
   <nav id="sidebar">
+    <button id="sidebar-collapse" type="button" title="Menu inklappen" aria-label="Menu inklappen">«</button>
     <div id="nav-links"></div>
   </nav>
+
+  <!-- Verschijnt enkel als het menu ingeklapt is: zo krijgt het
+       redeneerschema meer plaats en blijft het menu terug te halen. -->
+  <button id="sidebar-heropen" type="button" title="Menu terug tonen">
+    <span>Menu</span> »
+  </button>
 
   <main id="main-content">
     <div id="pagina-inhoud"></div>
@@ -146,21 +153,24 @@
 <!-- Het oefendossier Fietsatelier Noor (1e kwartaal 2028). Zelfde app als
      index.html (MetWear), maar met de opdrachten, controles, relaties en
      documenten uit js/noor/ en documenten/noor/, en een eigen opslag. -->
-<script src="js/noor/dossier.js"></script>
-<script src="js/mar.js"></script>
-<script src="js/data-mar-indeling.js"></script>
-<script src="js/noor/data-opdrachten.js"></script>
-<script src="js/noor/data-relaties.js"></script>
-<script src="js/noor/data-controles.js"></script>
-<script src="js/data-balans.js"></script>
-<script src="js/data-info.js"></script>
-<script src="js/config-koppeling.js"></script>
-<script src="js/data-klas.js"></script>
-<script src="js/app.js"></script>
+<!-- Het getal achter ?v= is de versie. Verander het bij elke update (bv. de
+     datum): dan haalt elke browser meteen alle nieuwe bestanden op, in plaats
+     van even oude en nieuwe door elkaar te gebruiken. -->
+<script src="js/noor/dossier.js?v=20261025"></script>
+<script src="js/mar.js?v=20261025"></script>
+<script src="js/data-mar-indeling.js?v=20261025"></script>
+<script src="js/noor/data-opdrachten.js?v=20261025"></script>
+<script src="js/noor/data-relaties.js?v=20261025"></script>
+<script src="js/noor/data-controles.js?v=20261025"></script>
+<script src="js/data-balans.js?v=20261025"></script>
+<script src="js/data-info.js?v=20261025"></script>
+<script src="js/config-koppeling.js?v=20261025"></script>
+<script src="js/data-klas.js?v=20261025"></script>
+<script src="js/app.js?v=20261025"></script>
 <!-- Na app.js: koppeling.js gebruikt window.APP. -->
-<script src="js/koppeling.js"></script>
+<script src="js/koppeling.js?v=20261025"></script>
 <!-- Het beheertabblad voor de vakexperten. Laat je dit bestand weg, dan
      verdwijnt dat tabblad en verandert er verder niets. -->
-<script src="js/beheer.js"></script>
+<script src="js/beheer.js?v=20261025"></script>
 </body>
 </html>
