@@ -1981,3 +1981,15 @@ table.relatie-overzicht.controle-relatie-lijnen th:last-child, table.relatie-ove
   font-family: inherit;
   background: white;
 }
+
+/* Begonnen maar nog niet geboekt: een open oranje ringetje in het menu
+   (een vol oranje bolletje is "Te remediëren"). */
+#nav-links .status-bolletje.begonnen { background: #fff; box-shadow: inset 0 0 0 2px #f0b429; }
+
+/* De knop Boeken als alles klaar is: niet te missen. */
+.btn-boeken.btn-boeken-klaar { box-shadow: 0 0 0 3px #f0b42988; }
+.boeken-herinnering { display: inline-block; margin-left: 10px; font-size: 12.5px; color: #8a5a00; vertical-align: middle; }
+
+/* Indienvenster: stukken die begonnen zijn maar niet geboekt. */
+.bevestig-waarschuwing .link-knop { font-weight: 600; }
+.indien-rij .indien-nietgeboekt { display: block; font-size: 11.5px; color: #8a5a00; margin-left: 22px; }

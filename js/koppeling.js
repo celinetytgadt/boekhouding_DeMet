@@ -680,6 +680,10 @@
       geboekt: geboekt,
       inOrde: tel.filter(function (r) { return isInOrde(r); }).length,
       refs: teSturen,
+      // Begonnen maar niet geboekt: die gaan niet mee, maar de leerling
+      // krijgt ze te zien in de bevestigingsstap (als die categorie
+      // aangevinkt is).
+      begonnen: refs.filter(function (r) { return APP.isBegonnenNietGeboekt && APP.isBegonnenNietGeboekt(r); }),
       controles: stand,
     };
   }
@@ -767,7 +771,9 @@
       // onleesbaar; die vraag komt nu in de bevestigingsstap.
       '<div class="indien-kop"><span></span><span>geboekt</span><span>in orde</span></div>' +
       overzicht.map(function (c) {
-        var niets = c.refs.length === 0;
+        // Ook aan te vinken als er enkel stukken staan die begonnen maar niet
+        // geboekt zijn: dan zegt de bevestigingsstap welke dat zijn.
+        var niets = c.refs.length === 0 && c.begonnen.length === 0;
         return '<label class="indien-rij' + (niets ? " uit" : "") + '">' +
           '<span class="indien-naam">' +
           '<input type="checkbox" data-cat="' + esc(c.naam) + '"' + (niets ? " disabled" : "") + "> " +
@@ -830,6 +836,21 @@
         "nog eens na of alles nog klopt met je nieuwe boeking.</p></div>";
     }
 
+    // Stukken in de aangevinkte categorieën waar al iets in staat, maar
+    // waarbij de leerling nog niet op Boeken drukte. Enkel van wat
+    // aangevinkt is: de rest heeft hier niets mee te maken.
+    var nietGeboekt = [];
+    gekozen.forEach(function (c) { nietGeboekt = nietGeboekt.concat(c.begonnen || []); });
+    if (nietGeboekt.length) {
+      html += '<div class="bevestig-waarschuwing">';
+      html += "<p><strong>Nog niet geboekt — deze stukken gaan niet mee:</strong></p><ul>" +
+        nietGeboekt.map(function (ref) {
+          return '<li><button type="button" class="link-knop" data-role="naar-stuk" data-ref="' + esc(ref) + '">' + esc(ref) + "</button></li>";
+        }).join("") +
+        "</ul><p>Je vulde er al iets in, maar drukte nog niet op <strong>Boeken</strong>. Klik op een stuk om het na te kijken en te boeken, " +
+        "of dien nu in zonder deze stukken.</p></div>";
+    }
+
     if (open.length) {
       html += '<div class="bevestig-waarschuwing">';
       html += "<p><strong>Je hebt nog niet alles nagekeken.</strong></p><ul>";
@@ -848,7 +869,7 @@
     html += '<div class="modal-voet">' +
       '<button type="button" class="btn-secundair" data-role="bevestig-terug">Terug</button>' +
       '<button type="button" class="btn-primair" data-role="bevestig-ja">' +
-      (open.length || herbekijken.length ? "Toch indienen" : "Ja, indienen") + "</button></div>";
+      (open.length || herbekijken.length || nietGeboekt.length ? "Toch indienen" : "Ja, indienen") + "</button></div>";
 
     zetModalInhoud(venster, html);
     venster.querySelector('[data-role="bevestig-terug"]').addEventListener("click", function () {
@@ -861,6 +882,12 @@
       categorieen.forEach(function (naam) {
         var v = nieuw.querySelector('[data-cat="' + naam.replace(/"/g, '\\"') + '"]');
         if (v && !v.disabled) { v.checked = true; v.dispatchEvent(new Event("change")); }
+      });
+    });
+    Array.prototype.forEach.call(venster.querySelectorAll('[data-role="naar-stuk"]'), function (knop) {
+      knop.addEventListener("click", function () {
+        if (venster.parentNode) venster.parentNode.removeChild(venster);
+        if (APP.toonOpdracht) APP.toonOpdracht(knop.dataset.ref);
       });
     });
     venster.querySelector('[data-role="bevestig-ja"]').addEventListener("click", function () {

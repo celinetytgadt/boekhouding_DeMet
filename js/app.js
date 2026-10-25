@@ -820,7 +820,12 @@
       html += '<span class="status-geboekt">Geboekt ✓</span> ';
       html += '<button type="button" class="btn-heropenen" data-scope="' + escapeAttr(ref) + '" data-role="heropenen">Heropenen om te wijzigen</button>';
     } else {
-      html += '<button type="button" class="btn-boeken" data-scope="' + escapeAttr(ref) + '" data-role="boeken" ' + (klaar ? "" : "disabled") + ">Boeken</button>";
+      html += '<button type="button" class="btn-boeken' + (klaar ? " btn-boeken-klaar" : "") + '" data-scope="' + escapeAttr(ref) + '" data-role="boeken" ' + (klaar ? "" : "disabled") + ">Boeken</button>";
+      // Alles ingevuld en debet = credit: enkel nog op Boeken drukken. Dat
+      // vergeten leerlingen weleens, en dan telt de boeking nergens mee.
+      if (klaar) {
+        html += '<span class="boeken-herinnering">Klaar? Druk op <strong>Boeken</strong>: pas dan telt deze boeking mee in je T-rekeningen en kan je ze indienen.</span>';
+      }
       // Een schema waar nog niets in staat, krijgt nog geen lijst met wat er
       // ontbreekt: die gele kaders vóór de leerling iets deed, zijn enkel
       // ruis (op een pagina met veel schema's onder elkaar zelfs veel ruis).
@@ -2240,7 +2245,25 @@
      feedback is, betekent het gewoon "geboekt of niet". Zodra de vakexpert
      iets beoordeeld heeft, neemt die kleur het over — anders zou een
      verrichting groen blijven staan terwijl ze niet in orde is. */
+  /* Begonnen maar nog niet geboekt: er staat iets in het schema, maar de
+     leerling drukte (nog) niet op Boeken. Zo'n boeking telt niet mee in de
+     T-rekeningen en gaat niet mee bij het indienen — daarom tonen het menu
+     en het indienvenster ze apart. */
+  function isBegonnenNietGeboekt(ref) {
+    var b = state.boekingen[ref];
+    if (!b || b.geboekt || !b.rows) return false;
+    return b.rows.some(function (r) {
+      return r.auto ? !!String(r.relatie || "").trim() : !rijLeeg(r);
+    });
+  }
+
+  var BOLLETJE_BEGONNEN = '<span class="status-bolletje begonnen" title="Begonnen, maar nog niet geboekt"></span>';
+
   function htmlNavBolletje(ref, geboekt) {
+    // Eerst: moet de leerling hier nog op Boeken drukken? Dat is wat nu te
+    // doen is (bv. na het heropenen van een boeking met feedback); na het
+    // boeken komt de kleur van de feedback terug.
+    if (!geboekt && isBegonnenNietGeboekt(ref)) return BOLLETJE_BEGONNEN;
     var beoordeling = laatsteBeoordeling(ref);
     if (beoordeling) {
       return '<span class="status-bolletje oordeel-' + beoordelingKlasse(beoordeling) + '" title="' +
@@ -2979,6 +3002,17 @@
     huidigePagina: function () { return uiState.huidigePagina.type; },
     // Voor het indienen: heeft elke rubriek met een saldo een plaats op de
     // eindbalans? Zo niet, dan is die nog niet af en gaat ze niet mee.
+    isBegonnenNietGeboekt: isBegonnenNietGeboekt,
+    // Naar een verrichting springen (vanuit het indienvenster).
+    toonOpdracht: function (ref) {
+      var def = null;
+      OPDRACHTEN.forEach(function (o) { if (o.ref === ref) def = o; });
+      if (!def) return;
+      uiState.huidigePagina = def.categorie === "Resultaatverwerking" ? { type: "resultaat" } : { type: "opdracht", ref: ref };
+      renderAlles();
+      document.getElementById("main-content").scrollTop = 0;
+      if (window.scrollTo) window.scrollTo(0, 0);
+    },
     eindbalansVolledig: function () {
       var kaarten = balansKaarten();
       return kaarten.length > 0 && kaarten.every(function (k) { return !!state.eindbalans[k.id]; });

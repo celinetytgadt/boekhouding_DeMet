@@ -483,9 +483,16 @@ function vinkIn(venster, naam) {
     /Deze was nog niet af/.test(w.document.querySelector(".feedback-historiek").textContent),
     blok.textContent.slice(0, 120));
 
-  const bolletje = [...w.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === "AK02").querySelector(".status-bolletje");
+  const bolAK02 = () => [...w.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === "AK02").querySelector(".status-bolletje");
+  // AK02 is begonnen maar nog niet geboekt: eerst dat signaal (open ringetje).
+  check("niet geboekt: eerst het ringetje 'nog op Boeken drukken'", bolAK02().className.includes("begonnen"), bolAK02().className);
+  // Eens geboekt, kleurt het bolletje volgens de feedback.
+  w.APP.getState().boekingen.AK02.geboekt = true;
+  w.APP.renderAlles();
   check("bolletje kleurt oranje, niet groen",
-    bolletje.className.includes("oordeel-te-remedi-ren") && !bolletje.className.includes("geboekt"), bolletje.className);
+    bolAK02().className.includes("oordeel-te-remedi-ren") && !bolAK02().className.includes("geboekt"), bolAK02().className);
+  w.APP.getState().boekingen.AK02.geboekt = false;
+  w.APP.renderAlles();
 
   console.log("\n8. Wat in orde is, gaat op slot");
   [...w.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === "AK01").click();
@@ -1178,6 +1185,51 @@ function vinkIn(venster, naam) {
   check("nog geen school of instellingen: geen knop en geen link naar Noor",
     !knopNaarNoor(domO.window) && !linkNaarNoor(domO.window));
   serverHangt = false;
+
+  console.log("\n29. Vergeten op Boeken te drukken");
+  const opdr = (cat) => wk.eval("OPDRACHTEN").filter((o) => o.categorie === cat).map((o) => o.ref);
+  const stB = wk.APP.getState();
+  // Vertrekpunt: in Aankopen niets half af, één aankoop geboekt; in
+  // Verkopen VK03 begonnen maar niet geboekt.
+  opdr("Aankopen").forEach((ref) => { if (stB.boekingen[ref] && !stB.boekingen[ref].geboekt) delete stB.boekingen[ref]; });
+  stB.boekingen.AK05 = { geboekt: true, rows: [
+    { bedrag: "10", rekening: "604000", dc: "D", relatie: "" }, { bedrag: "10", rekening: "440000", dc: "C", relatie: "Atelier Lino" }] };
+  stB.boekingen.VK03 = { geboekt: false, rows: [{ bedrag: "5", rekening: "400000", dc: "D", relatie: "" }] };
+  stB.boekingen.VK05 = { geboekt: false, rows: [
+    { bedrag: "100", rekening: "400000", dc: "D", relatie: "" }, { bedrag: "100", rekening: "700000", dc: "C", relatie: "" }] };
+  wk.APP.saveState();
+  wk.APP.renderAlles();
+  const navBol = (ref) => [...wk.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === ref).querySelector(".status-bolletje").className;
+  check("menu: open oranje ringetje bij begonnen, niet geboekt", /begonnen/.test(navBol("VK03")), navBol("VK03"));
+  check("menu: geen ringetje bij een lege of geboekte boeking", !/begonnen/.test(navBol("VK01")) && !/begonnen/.test(navBol("AK05")));
+  await naarOpdracht("VK05");
+  check("klaar om te boeken: herinnering bij de knop",
+    !!wk.document.querySelector(".btn-boeken-klaar") && /Druk op/.test((wk.document.querySelector(".boeken-herinnering") || {}).textContent || ""));
+  await naarOpdracht("VK03");
+  check("nog niet klaar: geen herinnering", !wk.document.querySelector(".boeken-herinnering"));
+
+  const indienMet = async (cat) => {
+    wk.document.getElementById("btn-indienen").click();
+    await new Promise((r) => setTimeout(r, 30));
+    const v = wk.document.querySelector(".koppeling-overlay");
+    vinkIn(v, cat);
+    v.querySelector("#btn-indienen-bevestig").click();
+    await new Promise((r) => setTimeout(r, 30));
+    return v;
+  };
+  let vB = await indienMet("Aankopen");
+  check("Aankopen indienen: geen melding over de niet-geboekte VK03", !/Nog niet geboekt/.test(vB.textContent), vB.textContent.slice(0, 200));
+  vB.remove();
+  vB = await indienMet("Verkopen");
+  check("Verkopen indienen: melding met VK03 en VK05",
+    /Nog niet geboekt/.test(vB.textContent) && !!vB.querySelector('[data-role="naar-stuk"][data-ref="VK03"]') &&
+      !!vB.querySelector('[data-role="naar-stuk"][data-ref="VK05"]'), vB.textContent.slice(0, 300));
+  check("knop wordt Toch indienen", /Toch indienen/.test(vB.querySelector('[data-role="bevestig-ja"]').textContent));
+  vB.querySelector('[data-role="naar-stuk"][data-ref="VK05"]').click();
+  await new Promise((r) => setTimeout(r, 30));
+  check("klik op een stuk: venster dicht en het stuk staat open",
+    !wk.document.querySelector(".koppeling-overlay") && /VK05/.test(wk.document.querySelector(".pagina-titel").textContent),
+    wk.document.querySelector(".pagina-titel").textContent);
 
   console.log("\n" + (fouten ? fouten + " CONTROLE(S) MISLUKT" : "Alle controles geslaagd."));
   process.exit(fouten ? 1 : 0);
