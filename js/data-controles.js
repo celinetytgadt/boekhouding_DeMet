@@ -114,6 +114,9 @@ const CATEGORIE_CONTROLES = {
 //                (uit het tabblad Klanten & leveranciers), zodat de leerling
 //                dat naast het saldo van 400000/440000 in het T-paneel kan
 //                leggen zonder van scherm te wisselen
+//   relatiesVoorRef  ref van een boeking (bv. "BB") — toont onder de vraag
+//                elke lijn van die boeking op een klanten- of
+//                leveranciersrekening, met de gekozen relatie en het bedrag
 //
 // De app toont bewust GEEN saldi bij een controle: dan valt er niets meer na
 // te kijken. De leerling zoekt zelf in het T-paneel met de filtertip.
@@ -127,6 +130,14 @@ const HANDMATIGE_CONTROLES = [
     vraag: "Komt de balans die je hierboven gelegd hebt overeen met het document?",
     toelichting: "Vergelijk vak per vak met de beginbalans. Staat er een rubriek op een plaats waar ze niet hoort, of ontbreekt er een bedrag, ga dan terug naar je boeking van BB.",
     docConfig: "beginbalansRef",
+  },
+  {
+    id: "beginbalans-relaties",
+    categorie: "Beginbalans",
+    type: "check",
+    vraag: "Heb je bij de klanten en de leveranciers op de beginbalans de juiste relatie gekozen?",
+    toelichting: "De openstaande facturen van vorig jaar worden in januari betaald. Zonder relatie kan je ze later op het tabblad Klanten & leveranciers niet afpunten met die betaling.",
+    relatiesVoorRef: "BB",
   },
 
   /* ---------------- Aankopen ---------------- */

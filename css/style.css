@@ -169,6 +169,44 @@ button {
 
 #nav-links { padding: 8px 0 40px 0; }
 
+/* Het menu inklappen geeft het redeneerschema meer plaats. De
+   T-rekeningen blijven staan: die heeft de leerling nodig tijdens het
+   boeken. */
+#sidebar-collapse {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--kleur-tekst-zacht);
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 1;
+}
+#sidebar-collapse:hover { background: var(--kleur-achtergrond); color: var(--kleur-tekst); }
+#layout.sidebar-verborgen #sidebar { display: none; }
+
+#sidebar-heropen {
+  display: none;
+  position: sticky;
+  top: calc(var(--kop-hoogte) + 10px);
+  align-self: flex-start;
+  flex-shrink: 0;
+  border: 1px solid var(--kleur-rand);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  background: var(--kleur-paneel);
+  color: var(--kleur-primair);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 10px 4px;
+  writing-mode: vertical-rl;
+  z-index: 30;
+}
+#sidebar-heropen:hover { background: var(--kleur-achtergrond); }
+#layout.sidebar-verborgen #sidebar-heropen { display: block; }
+
 .nav-categorie {
   font-size: 11px;
   text-transform: uppercase;
@@ -1259,6 +1297,9 @@ table.relatie-detail tfoot td.totaal-fout { color: var(--kleur-fout); }
   #btn-nav-toggle, #btn-tpanel-toggle { display: inline-block; }
   #sidebar, #tpanel { position: fixed; z-index: 40; }
   #layout:not(.sidebar-open) #sidebar { display: none; }
+  /* Op een smal scherm opent en sluit de knop ☰ bovenaan het menu. */
+  #layout.sidebar-open #sidebar { display: block; }
+  #sidebar-collapse, #layout.sidebar-verborgen #sidebar-heropen { display: none; }
   #layout:not(.tpanel-open) #tpanel { display: none; }
   #sidebar { height: calc(100vh - var(--kop-hoogte)); }
   #main-content { padding: 14px; }
@@ -1366,6 +1407,9 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 
 /* Het compacte tabelletje bij de zelfcontrole van 400000/440000. */
 .controle-relatie-tabel { max-width: 420px; margin-top: 8px; }
+.controle-relatie-tabel.controle-relatie-lijnen { max-width: 600px; }
+table.relatie-overzicht.controle-relatie-lijnen th, table.relatie-overzicht.controle-relatie-lijnen td { text-align: left; }
+table.relatie-overzicht.controle-relatie-lijnen th:last-child, table.relatie-overzicht.controle-relatie-lijnen td:last-child { text-align: right; white-space: nowrap; }
 .controle-relatie-tabel tfoot td {
   border-top: 2px solid var(--kleur-rand);
   border-bottom: none;
@@ -1924,3 +1968,28 @@ table.relatie-detail.afpunt-actief tbody tr[data-role="afpunt-doel"]:hover { bac
 .dossier-keuze { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .dossier-keuze p { margin: 0; }
 .dossier-knop { display: inline-block; text-decoration: none; white-space: nowrap; }
+
+/* Klant of leverancier kiezen uit de vaste lijst (data-relaties.js). */
+.relatie-wrap .relatie-select {
+  flex: 1;
+  min-width: 0;
+  margin-top: 4px;
+  font-size: 12px;
+  padding: 4px 4px;
+  border: 1px solid var(--kleur-rand);
+  border-radius: 4px;
+  font-family: inherit;
+  background: white;
+}
+
+/* Begonnen maar nog niet geboekt: een open oranje ringetje in het menu
+   (een vol oranje bolletje is "Te remediëren"). */
+#nav-links .status-bolletje.begonnen { background: #fff; box-shadow: inset 0 0 0 2px #f0b429; }
+
+/* De knop Boeken als alles klaar is: niet te missen. */
+.btn-boeken.btn-boeken-klaar { box-shadow: 0 0 0 3px #f0b42988; }
+.boeken-herinnering { display: inline-block; margin-left: 10px; font-size: 12.5px; color: #8a5a00; vertical-align: middle; }
+
+/* Indienvenster: stukken die begonnen zijn maar niet geboekt. */
+.bevestig-waarschuwing .link-knop { font-weight: 600; }
+.indien-rij .indien-nietgeboekt { display: block; font-size: 11.5px; color: #8a5a00; margin-left: 22px; }

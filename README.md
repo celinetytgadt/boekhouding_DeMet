@@ -3,8 +3,8 @@
 Statische webapp (HTML/CSS/JS, geen build-stap, geen installatie) waarmee
 leerlingen van de 3e graad Economie (D) de basisverrichtingen
 inboeken op basis van verantwoordingsstukken, met permanent zichtbare
-T-rekeningen. Zie `Boekhoudapp - specificatie.md` voor de volledige
-opdracht waaruit deze app gebouwd is.
+T-rekeningen. Ze bewaart het werk op de Drive van de vakexpert, laat de
+leerling per categorie indienen en toont de feedback van de vakexpert.
 
 ## Twee dossiers
 
@@ -39,7 +39,7 @@ css/style.css             opmaak — kleuren staan bovenaan als variabelen
 js/mar.js                 de rekeningen van het MAR (wijzigt zelden)
 js/data-mar-indeling.js   klassen en rubrieken van het MAR — voedt de filters
 js/data-opdrachten.js     lijst van opdrachten (AK01, VK03, …) — per jaar aan te passen
-js/data-relaties.js       lijst klanten/leveranciers voor 400000/440000 — per jaar aan te passen
+js/data-relaties.js       de klanten/leveranciers in de keuzelijst bij 400000/440000 — per bundel aan te passen
 js/data-controles.js      controlevragen per categorie, laatste afschrift, afwijkende saldokanten
 js/data-balans.js         de vakken van de eindbalans en de resultatenrekening
 js/data-info.js           de teksten achter de i-icoontjes
@@ -79,6 +79,10 @@ voor de namen terug op `js/data-klas.js`.
 
 ### Waar pas je wat aan?
 
+- **Een klant of leverancier in de keuzelijst** → `js/data-relaties.js`
+  (MetWear) of `js/noor/data-relaties.js` (Noor). Een naam die al in het
+  werk van een leerling staat maar niet (meer) in de lijst, blijft zichtbaar
+  als keuze; de leerling kan ze zelf vervangen.
 - **Een controlevraag anders formuleren of toevoegen** → `js/data-controles.js`.
   Elke controle heeft een veld `categorie`: de app zet ze dan automatisch op
   de controlepagina van die categorie in het menu. Een controle hoort bij de
@@ -142,49 +146,63 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
 3. Na een paar minuten staat de app publiek op
    `https://celinetytgadt.github.io/boekhouding_DeMet/`.
 
-## Wat nog moet gebeuren
+## Hoe de app werkt
 
-- **Documentafbeeldingen** staan in `documenten/` (zie `documenten/README.md`);
-  bij een nieuwe bundel vervang je ze daar.
-- **Leveranciers/klanten** invullen in `js/data-relaties.js` zodra de
-  opdrachtenbundel van dit jaar vastligt (mag ook leeg blijven: de app
-  onthoudt de namen die leerlingen zelf intikken).
-- **De controle van de verrichtingen automatiseren** — de volgende grote stap.
-  Vandaag kijkt de app enkel na of debet en credit gelijk zijn en of een
-  rekening aan de juiste kant staat; de inhoudelijke beoordeling doet de
-  vakexpert.
-- **Nakijken door de vakexpert via Google Sheets (§10 van de
-  specificatie)** — gebouwd, zie `HANDLEIDING-koppeling.md`. In het kort:
-  een Apps Script-web-app die onder het account van de vakexpert draait.
-  Leerlingen melden zich aan met hun naam uit `js/data-klas.js` en een
-  persoonlijke code die enkel in de Sheet staat; hun werk gaat op de
-  achtergrond naar een map in de Drive van de vakexpert, zodat ze op
-  eender welke computer verder kunnen. Ze kiezen zelf per categorie wat ze
-  indienen, en zien de feedback pas als de vakexpert ze vrijgeeft.
-  Zolang `webAppUrl` in `js/config-koppeling.js` leeg blijft, werkt de app
-  volledig op zichzelf zoals voordien (autosave in de browser).
+- **Bewaren, indienen en nakijken via Google Sheets** — zie
+  `HANDLEIDING-koppeling.md`. Een Apps Script-web-app draait onder het
+  account van de vakexpert. De leerling meldt zich aan met de naam uit de
+  klaslijst (tabblad *Klas* van de Sheet) en een persoonlijke code. Het werk
+  gaat elke twee minuten op de achtergrond naar een map op de gedeelde
+  Drive, zodat de leerling op eender welke computer verder kan.
 
-  De vakexpert beoordeelt met *In orde*, *Te remediëren* of *Niet afgerond*.
-  Die kleur komt terug bij de verrichting én in het menu links. Wat *in orde*
-  is, gaat op slot en wordt niet meer meegestuurd bij een volgende inzending —
-  enkel het relatieveld blijft aanpasbaar, want dat kijkt de vakexpert niet na.
-  Eerdere feedbackronden staan er gewoon onder, zonder inklapknop.
+- **Na het aanmelden** legt de app het werk in de browser naast dat op de
+  Drive; de recentste versie wint. Daarbij telt hoe het werk in de browser
+  eruitzag *op het moment van aanmelden*: tikt de leerling al iets terwijl
+  Google nog antwoordt, dan overschrijft die (bijna lege) versie nooit het
+  volledige werk op de Drive.
+
+- **Indienen**: de leerling kiest zelf per categorie wat er naar de
+  vakexpert gaat. Enkel wat **afgerond** is, gaat mee: geboekte
+  verrichtingen, de twee open vragen bij Klanten & leveranciers (allebei
+  ingevuld), de vijf getallen van de resultaatverwerking (allemaal
+  ingevuld) en de eindbalans (elke rubriek geplaatst). Wat half af is of
+  nog niet begonnen, blijft bij de leerling. Wat *in orde* bevonden werd,
+  gaat ook niet meer mee.
+
+- **Automatisch nakijken**: staat er een sleutel in het tabblad *Sleutel*
+  (voor Noor: in het script zelf), dan legt het script elke ingediende
+  verrichting ernaast en vult het een voorstel van beoordeling in. De
+  vakexpert beslist en geeft vrij.
+
+- **Feedback**: *In orde*, *Te remediëren* of *Niet afgerond*. Die kleur
+  komt terug bij de verrichting én in het menu links. De nieuwste ronde
+  staat altijd bovenaan en bepaalt de kleur; de app sorteert daarvoor zelf
+  op het tijdstip van de inzending (ook als dat in de Sheet als tekst staat)
+  en daarna op de rij. Wat in orde is, gaat op slot — enkel de klant of
+  leverancier blijft aanpasbaar. Eerdere rondes staan eronder.
 
 - **Drie vestigingen (LEU, SKW, TW)** — één app, drie Sheets. Elke vestiging
   heeft een eigen Sheet met een eigen kopie van `Code.gs` (met `VESTIGING`
   ingevuld) en een eigen publicatie; de leerling kiest bovenaan eerst de
   school en dan de naam. De werkbestanden komen samen in één map op de
   gedeelde Drive, met de code van de vestiging in de bestandsnaam
-  (`werk_LEU_lottev.json`). Zie `HANDLEIDING-koppeling.md`.
+  (`werk_LEU_lottev.json`). **Een wijziging aan `Code.gs` moet dus in de
+  drie Sheets gebeuren**, telkens gevolgd door *Implementaties beheren →
+  nieuwe versie*.
+
+- **Oefendossier Noor tonen of niet** kiest de vakexpert per school in
+  Beheer. In MetWear verschijnen de knop en de link naar Noor pas als de
+  instellingen van de gekozen school binnen zijn en het oefendossier daar
+  niet op *nee* staat.
 
 - **Exporteren, importeren en Alles wissen** bestaan niet meer: overbodig nu
   alles centraal bewaard wordt. Moet een leerling opnieuw beginnen, dan
   verwijdert de vakexpert het bestand `werk_<naam>.json` uit de Drive-map.
-- **Openstaande facturen (400000/440000)**: de leerling tikt de naam van de
-  klant of leverancier zelf in bij de boeking. Omdat de namen handmatig
-  ingevoerd worden, leveren tikfouten twee aparte relaties op — het invulveld
-  stelt eerder gebruikte namen voor én waarschuwt als een naam enkel in
-  hoofdletters, spaties of leestekens verschilt van een bestaande.
+
+- **Klant of leverancier (400000/440000)**: de leerling kiest de naam uit
+  de keuzelijst (`js/data-relaties.js`). Is die lijst leeg, dan valt de app
+  terug op het vrije naamveld met suggesties en een waarschuwing bij een
+  bijna gelijke naam.
 
   De app deelt de boekingen in:
 
@@ -201,8 +219,6 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   rekeningen die de leerling koos. Boekt iemand een factuur rechtstreeks op de
   bank, of vergeet iemand de bankregel bij een afschrift, dan blijft het stuk
   staan waar het hoort en blijft de fout zichtbaar in plaats van weggemoffeld.
-  Komt er een nieuwe categorie betaalstukken bij, dan volstaat één regel in
-  `CATEGORIE_BETALINGEN`.
 
   Het **afpunten doet de leerling zelf** (bewust — dat is een leerdoel): in
   het detail van een relatie klikt de leerling een betaling of creditnota aan
@@ -214,38 +230,41 @@ zelf intikt of uit de documentafbeeldingen, die je zelf toevoegt.
   steunen heropend wordt. Onderaan staat enkel *Totaal nog open*; dat totaal
   hangt níét af van het afpunten en komt dus altijd overeen met wat die
   relatie bijdraagt aan het saldo van 400000/440000 — daarop steunt de
-  zelfcontrole op het tabblad Controles. Wordt er méér betaald of
-  gecrediteerd dan er gefactureerd is, dan zegt de app dat expliciet onder
-  de tabel.
+  zelfcontrole op het tabblad Controles.
+
+- **Controle beginbalans**: onder de vraag over de relaties op de
+  beginbalans toont de app elke lijn van BB op 400000/440000 met de gekozen
+  relatie (veld `relatiesVoorRef` in `js/data-controles.js`).
+
 - **Volgorde op een opdrachtpagina**: feedback, dan het redeneerschema, dan
   het verantwoordingsstuk en het hulpdocument in inklapbare panelen. Of zo'n
-  paneel open of dicht staat, wordt onthouden in `uiState.openDocumenten`,
-  zodat het niet terugspringt bij elke toetsaanslag.
+  paneel open of dicht staat, wordt onthouden in `uiState.openDocumenten`.
 - **Wat is verplicht in het redeneerschema?** Enkel het bedrag, het
   rekeningnummer en debet of credit. De kolommen *Redenering*, *A/P/K/O* en
   *Stijgt/daalt* staan er als denkhulp: de leerling mag ze invullen, maar de
-  app controleert ze niet en de knop *Boeken* wacht er niet op. De vroegere
-  controles daarop ("A die daalt kan geen debet zijn", "440000 is geen
-  A-rekening") zijn bewust verwijderd — die beoordeling gebeurt door de
-  vakexpert.
+  app controleert ze niet en de knop *Boeken* wacht er niet op. Wat er nog
+  ontbreekt, staat onder het schema — pas zodra de leerling eraan begonnen
+  is, zodat een leeg schema geen gele kaders toont.
 - De regel voor "juist soort saldo" (automatische controle) werkt op basis
   van A/P/K/O **van de rekening in het MAR** (niet van wat de leerling
   invulde), rekeningen die op **9** eindigen (geboekte afschrijvingen) en
-  de lijst `SALDO_UITZONDERINGEN` voor contrarekeningen. Andere uitzonderingen
-  worden niet herkend — de vakexpert kijkt dit sowieso nog na.
+  de lijst `SALDO_UITZONDERINGEN` voor contrarekeningen.
 - **De eindbalans is een sleepoefening**: de app telt op wat de leerling in
   een vak legt en toont of activa en passiva gelijk zijn, maar zegt niet of
-  een rekening in het juiste vak ligt. Dat blijft bewust nakijkwerk.
+  een rekening in het juiste vak ligt. Dat blijft nakijkwerk.
 - **Wijzigen = opnieuw controleren, maar zonder alles te wissen.** Heropent
   een leerling een boeking, dan blijven de controle-vinkjes staan. Wel wordt
   de categorie van die boeking gemarkeerd in `state.controlesHerbekijken`:
   bovenaan de controlepagina komt een oranje kader met een knop *Ik heb ze
   opnieuw nagekeken*, en bij het indienen wordt dezelfde vraag nog eens
   gesteld (blokkeert niets). Na een geslaagde inzending gaat de markering uit.
-  Afpuntingen die op die boeking steunen, vervallen wél. De geslaagde
-  slotcontrole-melding ("Hoera…") wordt bij elk bezoek aan het tabblad
-  Eindbalans herberekend: klopt er intussen iets niet meer, dan verdwijnt ze
-  vanzelf.
+- **Menu links inklappen**: met « bovenaan het menu; een smalle tab
+  *Menu »* haalt het terug. De keuze blijft bewaard in de browser.
+- **Afmelden** (titelbalk): eerst gaat het laatste werk naar de Drive,
+  daarna vergeet de browser wie er aangemeld is.
+- **Versienummer**: achter elk script in `index.html` en `noor.html` staat
+  `?v=…`. Verander dat getal bij elke update, dan halen de browsers meteen
+  alle nieuwe bestanden op.
 
 ## Leerling-identificatie
 

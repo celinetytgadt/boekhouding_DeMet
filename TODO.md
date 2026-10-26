@@ -3,6 +3,26 @@
 Ideeën en wijzigingen die nog moeten gebeuren. Voeg gerust zelf iets toe —
 één lijn per punt volstaat. Wat klaar is, mag weg (of vink het af met `[x]`).
 
+## Na de update van oktober 2026 (nu doen)
+
+- [ ] **`Code.gs` bijwerken in de drie Sheets** (LEU, SKW, TW): de nieuwe
+  versie plakken (let op: `VESTIGING` bovenaan per Sheet juist laten staan),
+  opslaan, en *Implementeren → Implementaties beheren → bewerken → nieuwe
+  versie*. Nodig voor de juiste volgorde van de feedbackrondes. Zonder deze
+  stap werkt de app gewoon verder; de app sorteert zelf ook al.
+- [ ] **Namen in `js/data-relaties.js` nakijken** (de keuzelijst bij
+  400000/440000). Voor de beginbalans en de dagontvangsten staan er
+  verzamelnamen: "Klanten 2025 (beginbalans)", "Leveranciers 2025
+  (beginbalans)" en "Winkel (dagontvangsten)".
+- [ ] **Bestaande namen bij de leerlingen**: een zelf getypte naam die niet in
+  de lijst staat, blijft zichtbaar als keuze. Laat de leerlingen ze (vooral
+  op de beginbalans) vervangen door de naam uit de lijst; daar helpt de
+  nieuwe controle bij de beginbalans bij.
+- [ ] **Tielt-Winge testen in een privévenster**: de web-app-URL van TW heeft
+  een andere vorm (`/a/macros/demetleuven.eu/`). Lukt aanmelden daar niet
+  zonder schoolaccount, dan de implementatie opnieuw maken met toegang
+  *Iedereen* en de nieuwe URL in `js/config-koppeling.js` zetten.
+
 ## Kern 8 — bundel MetWear Q1 2026
 
 - [ ] **Reserves:** in de resultaatverwerking moeten er wél nog reserves
@@ -19,17 +39,6 @@ Ideeën en wijzigingen die nog moeten gebeuren. Voeg gerust zelf iets toe —
 - [ ] **Jaar 4 — consolidatieopdracht Noor:** alle stukken door elkaar, als
   eindopdracht in de plaats van MetWear (volgend schooljaar). Kan verder
   bouwen op `hulpmiddelen/noor/` (bv. 2e kwartaal 2028).
-
-## Kern 6 — nieuwe app
-
-Pas beginnen als de app voor kern 8 helemaal af is. Zelfde opbouw als deze
-app, maar meer zoals echte boekhoudsoftware:
-
-- [ ] De lijn op klanten of leveranciers wordt automatisch ingevuld op basis
-  van de andere rijen.
-- [ ] Bij bank en kas wordt de lijn voor de wijziging in bank/kas automatisch
-  berekend uit de andere rijen. Ze staat altijd onderaan en de leerling kan
-  ze niet zelf wijzigen.
 
 ## Script (Code.gs) — voor volgend schooljaar
 

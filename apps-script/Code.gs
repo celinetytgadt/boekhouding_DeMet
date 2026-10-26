@@ -1007,19 +1007,35 @@ function haalFeedbackOp(naam) {
     var tekst = String(rechts[i][1] || "").trim();
     if (!beoordeling && !tekst) continue;
 
-    var tijdstip = links[i][K_TIJDSTIP - 1];
+    var tijdstip = alsDatum_(links[i][K_TIJDSTIP - 1]);
     uit.push({
       ref: String(links[i][K_REF - 1]),
       beoordeling: beoordeling,
       feedback: tekst,
-      ingediend: tijdstip ? Utilities.formatDate(new Date(tijdstip), Session.getScriptTimeZone(), "d/MM/yyyy") : "",
-      tijdstip: tijdstip ? new Date(tijdstip).getTime() : 0,
+      ingediend: tijdstip ? Utilities.formatDate(tijdstip, Session.getScriptTimeZone(), "d/MM/yyyy") : "",
+      tijdstip: tijdstip ? tijdstip.getTime() : 0,
+      rij: i + 2,
     });
   }
 
-  // Nieuwste eerst; de app groepeert ze per verrichting.
-  uit.sort(function (a, b) { return b.tijdstip - a.tijdstip; });
+  // Nieuwste eerst; de app groepeert ze per verrichting. Bij een gelijk of
+  // onleesbaar tijdstip beslist de rij: wat lager staat, kwam later binnen.
+  uit.sort(function (a, b) { return (b.tijdstip - a.tijdstip) || (b.rij - a.rij); });
   return uit;
+}
+
+/**
+ * Een tijdstip uit de Sheet als Date, of null. Meestal is het al een Date,
+ * maar een cel die als tekst opgemaakt of ingeplakt werd, geeft een tekst
+ * als "17/10/2026 15:35:51" terug — en new Date() leest die niet.
+ */
+function alsDatum_(w) {
+  if (w instanceof Date) return isNaN(w.getTime()) ? null : w;
+  if (typeof w === "number") return new Date(w);
+  var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(String(w || "").trim());
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+  var d = w ? new Date(w) : null;
+  return d && !isNaN(d.getTime()) ? d : null;
 }
 
 /* ==========================================================================

@@ -13,6 +13,8 @@ Je hebt Node.js nodig, en eenmalig:
 
     npm install jsdom
 
+Staat jsdom ergens anders, zet dan `JSDOM_PAD` op die map `node_modules`.
+
 Daarna, vanuit deze map:
 
     node test-koppeling.js
