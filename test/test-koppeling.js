@@ -99,6 +99,11 @@ class Range {
   setWrap() { return this; }
   setVerticalAlignment() { return this; }
   setFontWeight() { return this; }
+  setBackgrounds() { return this; }
+  setNotes(n) { this.sheet.notities = this.sheet.notities || {}; n.forEach((rij, i) => rij.forEach((t, j) => { this.sheet.notities[(this.r + i) + "," + (this.c + j)] = t; })); return this; }
+  getSheet() { return this.sheet; }
+  getColumn() { return this.c; }
+  getNumColumns() { return this.nc; }
   setBackground() { return this; }
   createFilter() { return this; }
   getRow() { return this.r; }
@@ -389,8 +394,9 @@ function vinkIn(venster, naam) {
   venster.querySelector('[data-role="modal-sluit"]').click();
 
   const inz = sheets.Inzendingen;
-  // Kop + AK01: enkel wat geboekt is, gaat mee. De controles gaan bewust
-  // ook niet mee.
+  // Kop + AK01: enkel wat geboekt is, gaat mee. De controles zelf worden
+  // geen rij; enkel of ze afgevinkt zijn, staat in de kolom "controles
+  // leerling".
   check("rijen toegevoegd in Inzendingen", inz.getLastRow() === 2, inz.getLastRow());
   check("de controles komen niet in de Sheet terecht",
     !inz.rijen.some((r) => String(r[3]).indexOf("CONTROLE:") === 0),
@@ -405,6 +411,13 @@ function vinkIn(venster, naam) {
   check("niet afgerond (AK02 half ingevuld, AK03 leeg) gaat niet mee",
     !inz.rijen.some((r) => r[3] === "AK02" || r[3] === "AK03"), inz.rijen.map((r) => r[3]));
   check("alles op is-laatste JA", inz.rijen.slice(1).every((r) => r[9] === "JA"));
+  check("controles leerling: kolom in Inzendingen", inz.cel(1, 13) === "controles leerling", inz.rijen[0]);
+  check("controles leerling: niet afgevinkt", /^nee: 0 van \d+ afgevinkt$/.test(ak01[12]), ak01[12]);
+  const klasKolom = (kop) => sheets.Klas.rijen[0].indexOf(kop) + 1;
+  const klasCel = (naam, kop) => { const r = sheets.Klas.rijen.findIndex((x) => x[0] === naam) + 1; return sheets.Klas.cel(r, klasKolom(kop)); };
+  check("Klas: kolommen per categorie na opmerking", sheets.Klas.cel(1, 4) === "BB" && klasKolom("AK") === 5 && klasKolom("EB") > 5, sheets.Klas.rijen[0]);
+  check("Klas: volle naam als notitie", sheets.Klas.notities && sheets.Klas.notities["1,5"] === "Aankopen", sheets.Klas.notities);
+  check("Lotte: AK nog niet OK", klasCel("Lotte V.", "AK") === "", sheets.Klas.rijen);
   check("enkel de aangevinkte categorie is verzonden",
     inz.rijen.slice(1).every((r) => r[2] === "Aankopen"));
 
@@ -969,6 +982,27 @@ function vinkIn(venster, naam) {
     (gedeeld.bestanden.find((b) => b.naam === "werk_LEU_lottev.json") || {}).inhoud === metwearVoor);
   check("taken van Noor in het tabblad Taken",
     sheets.Taken.rijen.some((r) => r[0] === "Noor · Lonen 1 · loonstaten"), sheets.Taken.rijen.map((r) => r[0]));
+
+  check("Klas: kolommen van Noor na die van MetWear", klasKolom("N AK1") > klasKolom("EB") && klasKolom("AK") === 5, sheets.Klas.rijen[0]);
+  check("Klas: notitie met de volle naam van de les", sheets.Klas.notities["1," + klasKolom("N AK1")] === "Noor · Aankopen 1 · kortingen");
+  check("Lotte: N AK1 nog niet OK", klasCel("Lotte V.", "N AK1") === "");
+  // De rest van de les alsof die al in orde bevonden was, en AK02 zet de
+  // vakexpert zelf op In orde.
+  wn.eval("OPDRACHTEN").filter((o) => o.categorie === "Aankopen 1 · kortingen" && !rijN("NOOR-" + o.ref)).forEach((o) => {
+    const r = inz.getLastRow() + 1;
+    [new Date(), "Lotte V.", "Noor · Aankopen 1 · kortingen", "NOOR-" + o.ref, "", "geboekt", "In orde", "", false, "JA", "x", "", ""]
+      .forEach((v, i) => inz.zet(r, i + 1, v));
+  });
+  const rijAk02N = inz.rijen.findIndex((r) => r[3] === "NOOR-AK02") + 1;
+  inz.zet(rijAk02N, 7, "In orde");
+  omgeving.onEdit({ range: inz.getRange(rijAk02N, 7) });
+  check("Lotte: OK bij N AK1", klasCel("Lotte V.", "N AK1") === "OK", sheets.Klas.rijen);
+  check("Lotte: MetWear AK blijft leeg", klasCel("Lotte V.", "AK") === "");
+  check("Youssef: geen OK", klasCel("Youssef B.", "N AK1") === "");
+  inz.zet(rijAk02N, 7, "Te remediëren");
+  omgeving.onEdit({ range: inz.getRange(rijAk02N, 6, 1, 3) });
+  check("terug Te remediëren: OK weg", klasCel("Lotte V.", "N AK1") === "");
+  check("controles-tekst", omgeving.controlesTekst_({ totaal: 2, af: 2 }) === "ja" && /heropend/.test(omgeving.controlesTekst_({ totaal: 1, af: 1, herbekijken: true })));
 
   // Feedback vrijgeven en terug ophalen: enkel in het juiste dossier.
   inz.rijen.forEach((r, i) => { if (r[3] === "NOOR-AK01") { inz.zet(i + 1, 8, "noor-feedback"); inz.zet(i + 1, 9, true); } });

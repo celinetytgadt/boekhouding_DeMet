@@ -685,6 +685,42 @@
       // aangevinkt is).
       begonnen: refs.filter(function (r) { return APP.isBegonnenNietGeboekt && APP.isBegonnenNietGeboekt(r); }),
       controles: stand,
+      // Alles wat bij deze categorie hoort, ook wat al in orde is: daarmee
+      // zet de Sheet OK in het klasoverzicht als alles in orde is.
+      alleRefs: refs.slice(),
+    };
+  }
+
+  // De kop van de kolom in het tabblad Klas (zie CATEGORIE_KORT).
+  function kortVoor(cat) {
+    return (typeof CATEGORIE_KORT !== "undefined" && CATEGORIE_KORT[cat]) || cat;
+  }
+
+  /* Wat er bij het indienen meegaat naast de verrichtingen zelf:
+       controles   per aangevinkte categorie: hoeveel controles er zijn,
+                   hoeveel de leerling afvinkte en of er daarna nog een
+                   boeking heropend werd. Komt in de kolom "controles
+                   leerling" van Inzendingen.
+       categorieen alle categorieën met hun verrichtingen, voor de kolommen
+                   OK per categorie in het tabblad Klas.
+                   Met het voorvoegsel van het dossier, net als de
+                   verrichtingen zelf. */
+  function extraBijIndienen(categorieen, overzicht) {
+    var controles = {};
+    categorieen.forEach(function (cat) {
+      var c = overzicht.filter(function (x) { return x.naam === cat; })[0];
+      if (!c) return;
+      controles[CAT_PREFIX + cat] = {
+        totaal: c.controles.totaal || 0,
+        af: c.controles.af || 0,
+        herbekijken: typeof window.controlesHerbekijkenVoor === "function" && window.controlesHerbekijkenVoor(cat),
+      };
+    });
+    return {
+      controles: controles,
+      categorieen: overzicht.map(function (c) {
+        return { categorie: CAT_PREFIX + c.naam, kort: kortVoor(c.naam), refs: c.alleRefs.map(function (r) { return REF_PREFIX + r; }) };
+      }),
     };
   }
 
@@ -721,8 +757,9 @@
         if (vragen.klanten && vragen.leveranciers) geboekt++;
       }
 
-      // De afvinkjes van de controles gaan bewust NIET mee: dat is
-      // zelfcontrole voor de leerling, geen nakijkwerk voor de vakexpert.
+      // Of de controles afgevinkt zijn, gaat mee bij het indienen (zie
+      // extraBijIndienen): de vakexpert ziet het in de kolom "controles
+      // leerling". De controles zelf blijven zelfcontrole.
 
       lijst.push(maakCategorie(cat, refs, geboekt, stukken));
     });
@@ -923,7 +960,8 @@
       it.categorie = CAT_PREFIX + it.categorie;
     });
 
-    stuur(metAanmelding({ actie: "indienen", items: items }))
+    var extra = extraBijIndienen(categorieen, overzicht);
+    stuur(metAanmelding({ actie: "indienen", items: items, controles: extra.controles, categorieen: extra.categorieen }))
       .then(function (r) {
         if (r && r.ok) {
           zetModalInhoud(venster, htmlMelding("ok", "Ingediend",
