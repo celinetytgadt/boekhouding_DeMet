@@ -1012,9 +1012,18 @@ function vinkIn(venster, naam) {
   zetOefen("ja");
 
   // In Beheer: bij nee verdwijnt alles van Noor, behalve de keuze zelf.
-  const ontgrendelBeheer = async (w) => {
+  // Beheer kiest zijn school zelf (los van de keuze bovenaan).
+  const kiesBeheerSchool = async (w, code) => {
+    const bs = w.document.querySelector('[data-role="beheer-school"]');
+    if (!bs) return;
+    bs.value = code || [...bs.options].map((o) => o.value).filter(Boolean)[0];
+    bs.dispatchEvent(new w.Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 20));
+  };
+  const ontgrendelBeheer = async (w, code) => {
     w.document.querySelector('[data-page-type="beheer"]').click();
     await new Promise((r) => setTimeout(r, 40));
+    await kiesBeheerSchool(w, code);
     const v = w.document.querySelector('[data-role="expertcode"]');
     v.value = "EXPERT1";
     v.dispatchEvent(new w.Event("input", { bubbles: true }));
@@ -1051,20 +1060,23 @@ function vinkIn(venster, naam) {
   const domW = await start("/tmp/t3");
   const wW = domW.window;
   const vsW = wW.document.getElementById("vestiging-select");
-  vsW.value = "LEU";
-  vsW.dispatchEvent(new wW.Event("change"));
+  wW.document.querySelector('[data-page-type="beheer"]').click();
   await new Promise((r) => setTimeout(r, 40));
-  await ontgrendelBeheer(wW);
+  check("beheer heeft een eigen schoolkeuze, nog leeg",
+    !!wW.document.querySelector('[data-role="beheer-school"]') && wW.document.querySelector('[data-role="beheer-school"]').value === "" &&
+    !wW.document.querySelector('[data-role="expertcode"]'));
+  await ontgrendelBeheer(wW, "LEU");
   check("Leuven: beheer open", !!wW.document.querySelector('[data-role="klas-naam"]'));
   vsW.value = "TW";
   vsW.dispatchEvent(new wW.Event("change"));
   await new Promise((r) => setTimeout(r, 40));
-  check("andere school: beheer weer dicht",
+  wW.APP.renderAlles();
+  check("schoolkeuze bovenaan laat beheer ongemoeid", !!wW.document.querySelector('[data-role="klas-naam"]'));
+  await kiesBeheerSchool(wW, "TW");
+  check("andere school in beheer: weer dicht",
     !wW.document.querySelector('[data-role="klas-naam"]') && !!wW.document.querySelector('[data-role="expertcode"]'));
   check("en de expertcode is leeg", wW.document.querySelector('[data-role="expertcode"]').value === "");
-  vsW.value = "LEU";
-  vsW.dispatchEvent(new wW.Event("change"));
-  await new Promise((r) => setTimeout(r, 40));
+  await kiesBeheerSchool(wW, "LEU");
   check("terug naar Leuven: ook dicht", !wW.document.querySelector('[data-role="klas-naam"]'));
 
   console.log("\n21. Namenlijst meteen zichtbaar, ook als Google traag is");
