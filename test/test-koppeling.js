@@ -261,6 +261,10 @@ async function start(map, pagina, vooraf) {
     runScripts: "dangerously",
     url: "https://test.local/",
     pretendToBeVisual: true,
+    // Onthouden of jsdom DOMContentLoaded al vuurde: readyState staat soms
+    // al op "interactive" vóór het event komt. Dan óók zelf dispatchen liet
+    // init() van app.js twee keer lopen (elke klik telde dubbel).
+    beforeParse(win) { win.document.addEventListener("DOMContentLoaded", () => { win.__dclGevuurd = true; }); },
   });
   dom.window.fetch = server;
   dom.window.navigator.sendBeacon = () => true;
@@ -281,7 +285,7 @@ async function start(map, pagina, vooraf) {
   // Staat het document nog te laden, dan vuurt jsdom DOMContentLoaded zelf.
   // Dan óók zelf dispatchen zou init() twee keer laten lopen, waardoor elke
   // klik dubbel geteld wordt — een val die niets met de app te maken heeft.
-  if (dom.window.document.readyState === "loading") {
+  if (!dom.window.__dclGevuurd) {
     await new Promise((res) => dom.window.document.addEventListener("DOMContentLoaded", res, { once: true }));
   } else {
     dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
