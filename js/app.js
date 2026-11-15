@@ -833,11 +833,11 @@
       html += '<span class="status-geboekt">Geboekt ✓</span> ';
       html += '<button type="button" class="btn-heropenen" data-scope="' + escapeAttr(ref) + '" data-role="heropenen">Heropenen om te wijzigen</button>';
     } else {
-      html += '<button type="button" class="btn-boeken' + (klaar ? " btn-boeken-klaar" : "") + '" data-scope="' + escapeAttr(ref) + '" data-role="boeken" ' + (klaar ? "" : "disabled") + ">Boeken</button>";
+      html += '<button type="button" class="btn-boeken' + (klaar ? " btn-boeken-klaar" : "") + '" data-scope="' + escapeAttr(ref) + '" data-role="boeken" ' + (klaar ? "" : "disabled") + ">Bewaren</button>";
       // Alles ingevuld en debet = credit: enkel nog op Boeken drukken. Dat
       // vergeten leerlingen weleens, en dan telt de boeking nergens mee.
       if (klaar) {
-        html += '<span class="boeken-herinnering">Klaar? Druk op <strong>Boeken</strong>: pas dan telt deze boeking mee in je T-rekeningen en kan je ze indienen.</span>';
+        html += '<span class="boeken-herinnering">Klaar? Druk op <strong>Bewaren</strong>: pas dan telt deze boeking mee in je T-rekeningen en kan je ze indienen.</span>';
       }
       // Een schema waar nog niets in staat, krijgt nog geen lijst met wat er
       // ontbreekt: die gele kaders vóór de leerling iets deed, zijn enkel
@@ -1001,7 +1001,7 @@
     "<p>Kies links een opdracht en vul het redeneerschema in. Verplicht zijn het bedrag, het rekeningnummer en debet of credit; " +
     "de kolommen redenering, A/P/K/O en stijgt/daalt zijn denkhulp en vul je in zoals het jou helpt. " +
     "De omschrijving bij het rekeningnummer vult de app zelf aan.</p>" +
-    "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Boeken kan pas als debet en credit gelijk zijn.</p>" +
+    "<p>Rechts staan altijd je T-rekeningen, zodat je die kan gebruiken terwijl je boekt. Bewaren kan pas als debet en credit gelijk zijn.</p>" +
     "<p>De app zegt nooit of iets inhoudelijk juist is — dat kijkt je vakexpert na. Ze controleert wel of debet en credit kloppen.</p>" +
     "<p>Bij elke categorie staat in het menu een <strong>Controle</strong>. Doe die vóór je indient: daar vind je zelf de meeste fouten terug.</p>" +
     "<p>Met <strong>Indienen</strong> bovenaan stuur je een categorie door naar je vakexpert. Dien daarna diezelfde taak ook in " +
@@ -2259,7 +2259,7 @@
      iets beoordeeld heeft, neemt die kleur het over — anders zou een
      verrichting groen blijven staan terwijl ze niet in orde is. */
   /* Begonnen maar nog niet geboekt: er staat iets in het schema, maar de
-     leerling drukte (nog) niet op Boeken. Zo'n boeking telt niet mee in de
+     leerling drukte (nog) niet op Bewaren. Zo'n boeking telt niet mee in de
      T-rekeningen en gaat niet mee bij het indienen — daarom tonen het menu
      en het indienvenster ze apart. */
   function isBegonnenNietGeboekt(ref) {
@@ -2270,7 +2270,7 @@
     });
   }
 
-  var BOLLETJE_BEGONNEN = '<span class="status-bolletje begonnen" title="Begonnen, maar nog niet geboekt"></span>';
+  var BOLLETJE_BEGONNEN = '<span class="status-bolletje begonnen" title="Begonnen, maar nog niet op Bewaren gedrukt"></span>';
 
   function htmlNavBolletje(ref, geboekt) {
     // Eerst: moet de leerling hier nog op Boeken drukken? Dat is wat nu te

@@ -921,7 +921,7 @@
         nietGeboekt.map(function (ref) {
           return '<li><button type="button" class="link-knop" data-role="naar-stuk" data-ref="' + esc(ref) + '">' + esc(ref) + "</button></li>";
         }).join("") +
-        "</ul><p>Je vulde er al iets in, maar drukte nog niet op <strong>Boeken</strong>. Klik op een stuk om het na te kijken en te boeken, " +
+        "</ul><p>Je vulde er al iets in, maar drukte nog niet op <strong>Bewaren</strong>. Klik op een stuk om het na te kijken en te bewaren, " +
         "of dien nu in zonder deze stukken.</p></div>";
     }
 

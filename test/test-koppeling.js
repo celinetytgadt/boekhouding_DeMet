@@ -501,7 +501,7 @@ function vinkIn(venster, naam) {
 
   const bolAK02 = () => [...w.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === "AK02").querySelector(".status-bolletje");
   // AK02 is begonnen maar nog niet geboekt: eerst dat signaal (open ringetje).
-  check("niet geboekt: eerst het ringetje 'nog op Boeken drukken'", bolAK02().className.includes("begonnen"), bolAK02().className);
+  check("niet geboekt: eerst het ringetje 'nog op Bewaren drukken'", bolAK02().className.includes("begonnen"), bolAK02().className);
   // Eens geboekt, kleurt het bolletje volgens de feedback.
   w.APP.getState().boekingen.AK02.geboekt = true;
   w.APP.renderAlles();
