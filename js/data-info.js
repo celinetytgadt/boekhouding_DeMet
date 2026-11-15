@@ -19,10 +19,10 @@ const INFO_TEKSTEN = {
       { stap: "Rekeningnr. — zoek de rekening in het MAR. Klik op het vergrootglas als je het nummer niet vanbuiten kent." },
       { stap: "D/C — beslis zelf of het debet of credit komt. De app zegt niet of je juist zit." },
       { kop: "Wat moet en wat mag" },
-      "Om te kunnen boeken heeft de app enkel het bedrag, het rekeningnummer en debet of credit nodig. De kolommen redenering, A/P/K/O en stijgt/daalt zijn denkstappen: ze helpen je om tot dat D of C te komen, maar je bent niet verplicht ze in te vullen.",
-      { kop: "Voor je op Boeken klikt" },
+      "Om te kunnen bewaren heeft de app enkel het bedrag, het rekeningnummer en debet of credit nodig. De kolommen redenering, A/P/K/O en stijgt/daalt zijn denkstappen: ze helpen je om tot dat D of C te komen, maar je bent niet verplicht ze in te vullen.",
+      { kop: "Voor je op Bewaren klikt" },
       "Totaal debet en totaal credit moeten gelijk zijn, en elke lijn moet een bedrag, een rekening en een kant hebben. Ontbreekt er iets, dan kleurt die lijn en zie je onderaan wat er nog moet.",
-      "Na het boeken verschijnen je bedragen rechts in de T-rekeningen. Wil je nog iets wijzigen, klik dan op Heropenen.",
+      "Na het bewaren verschijnen je bedragen rechts in de T-rekeningen. Wil je nog iets wijzigen, klik dan op Heropenen.",
     ],
   },
 
