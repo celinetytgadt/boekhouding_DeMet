@@ -260,7 +260,7 @@
     var el = document.getElementById("opslaan-status");
     if (!el) return;
     if (!state.student) {
-      el.textContent = "niet bewaard — vul je naam in";
+      el.textContent = "niet bewaard — kies eerst je naam";
     } else if (laatstBewaardOm) {
       var u = laatstBewaardOm;
       var pad = function (n) { return (n < 10 ? "0" : "") + n; };

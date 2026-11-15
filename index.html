@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap">
-<link rel="stylesheet" href="css/style.css?v=20261115a">
+<link rel="stylesheet" href="css/style.css?v=20261115b">
 </head>
 <body>
 
@@ -21,16 +21,15 @@
          staat; elke vestiging heeft een eigen Sheet en een eigen
          klaslijst. -->
     <select id="vestiging-select" aria-label="School" hidden></select>
-    <label for="leerling-naam-input">Naam:</label>
-    <!-- Twee manieren om je aan te melden. Staat er een klaslijst in
-         js/data-klas.js, dan toont koppeling.js de keuzelijst met het
-         codeveld en verbergt ze het vrije tekstveld. Is die lijst leeg
-         (bv. tijdens het testen met collega's), dan blijft het vrije veld
-         staan en werkt de app zoals vroeger. -->
-    <input type="text" id="leerling-naam-input" placeholder="bv. Julie D.">
-    <select id="leerling-select" hidden></select>
-    <input type="text" id="leerling-code" hidden inputmode="numeric" maxlength="6" placeholder="code" autocomplete="off">
-    <button id="btn-aanmelden" type="button" hidden title="Aanmelden en je werk ophalen">Aanmelden</button>
+    <label for="leerling-select">Naam:</label>
+    <!-- De leerling kiest haar naam uit de klaslijst van haar school en
+         geeft haar code. Tot die lijst geladen is, blijft alles grijs
+         (koppeling.js zet het open). Het vrije tekstveld verschijnt enkel
+         als er in js/config-koppeling.js geen koppeling ingesteld is. -->
+    <input type="text" id="leerling-naam-input" placeholder="bv. Julie D." hidden>
+    <select id="leerling-select" disabled><option value="">Namen worden geladen…</option></select>
+    <input type="text" id="leerling-code" disabled inputmode="numeric" maxlength="6" placeholder="code" autocomplete="off">
+    <button id="btn-aanmelden" type="button" disabled title="Aanmelden en je werk ophalen">Aanmelden</button>
     <span id="opslaan-status"></span>
     <span id="koppeling-status" class="koppeling-status"></span>
     <!-- De cursus en de handleiding. De vakexpert vult de adressen in bij
@@ -154,21 +153,21 @@
 <!-- Het getal achter ?v= is de versie. Verander het bij elke update (bv. de
      datum): dan haalt elke browser meteen alle nieuwe bestanden op, in plaats
      van even oude en nieuwe door elkaar te gebruiken. -->
-<script src="js/dossier.js?v=20261115a"></script>
-<script src="js/mar.js?v=20261115a"></script>
-<script src="js/data-mar-indeling.js?v=20261115a"></script>
-<script src="js/data-opdrachten.js?v=20261115a"></script>
-<script src="js/data-relaties.js?v=20261115a"></script>
-<script src="js/data-controles.js?v=20261115a"></script>
-<script src="js/data-balans.js?v=20261115a"></script>
-<script src="js/data-info.js?v=20261115a"></script>
-<script src="js/config-koppeling.js?v=20261115a"></script>
-<script src="js/data-klas.js?v=20261115a"></script>
-<script src="js/app.js?v=20261115a"></script>
+<script src="js/dossier.js?v=20261115b"></script>
+<script src="js/mar.js?v=20261115b"></script>
+<script src="js/data-mar-indeling.js?v=20261115b"></script>
+<script src="js/data-opdrachten.js?v=20261115b"></script>
+<script src="js/data-relaties.js?v=20261115b"></script>
+<script src="js/data-controles.js?v=20261115b"></script>
+<script src="js/data-balans.js?v=20261115b"></script>
+<script src="js/data-info.js?v=20261115b"></script>
+<script src="js/config-koppeling.js?v=20261115b"></script>
+<script src="js/data-klas.js?v=20261115b"></script>
+<script src="js/app.js?v=20261115b"></script>
 <!-- Na app.js: koppeling.js gebruikt window.APP. -->
-<script src="js/koppeling.js?v=20261115a"></script>
+<script src="js/koppeling.js?v=20261115b"></script>
 <!-- Het beheertabblad voor de vakexperten. Laat je dit bestand weg, dan
      verdwijnt dat tabblad en verandert er verder niets. -->
-<script src="js/beheer.js?v=20261115a"></script>
+<script src="js/beheer.js?v=20261115b"></script>
 </body>
 </html>

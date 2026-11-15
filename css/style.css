@@ -1993,3 +1993,11 @@ table.relatie-overzicht.controle-relatie-lijnen th:last-child, table.relatie-ove
 /* Indienvenster: stukken die begonnen zijn maar niet geboekt. */
 .bevestig-waarschuwing .link-knop { font-weight: 600; }
 .indien-rij .indien-nietgeboekt { display: block; font-size: 11.5px; color: #8a5a00; margin-left: 22px; }
+
+/* Aanmelden: grijs zolang de namenlijst nog niet geladen is. */
+#leerling-select:disabled,
+#leerling-code:disabled,
+#btn-aanmelden:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
