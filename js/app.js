@@ -254,9 +254,22 @@
     state = normaliseerState(opgeslagen || maakLegeState(naam), naam);
   }
 
+  /* Afmelden staat er enkel als er echt iemand aangemeld is (en Aanmelden
+     dan net niet: dat regelt koppeling.js). Zolang koppeling.js nog niet
+     geladen is, weten we het niet en blijft de knop weg. */
+  function isAangemeld() {
+    var h = window.KOPPELING_HOOKS;
+    if (h && h.aangemeld) return h.aangemeld();
+    var vest = typeof VESTIGINGEN !== "undefined" && Array.isArray(VESTIGINGEN) ? VESTIGINGEN : [];
+    var metKoppeling = vest.some(function (v) { return v && v.webAppUrl; }) ||
+      (typeof KOPPELING !== "undefined" && KOPPELING && !!KOPPELING.webAppUrl) ||
+      (typeof WEB_APP_URL !== "undefined" && !!WEB_APP_URL);
+    return metKoppeling ? false : !!state.student;
+  }
+
   function updateOpslaanStatus() {
     var knop = document.getElementById("btn-afmelden");
-    if (knop) knop.hidden = !state.student;
+    if (knop) knop.hidden = !isAangemeld();
     var el = document.getElementById("opslaan-status");
     if (!el) return;
     if (!state.student) {

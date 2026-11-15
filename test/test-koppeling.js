@@ -343,6 +343,8 @@ function vinkIn(venster, naam) {
 
   const select = w.document.getElementById("leerling-select");
   const code = w.document.getElementById("leerling-code");
+  check("niet aangemeld: Aanmelden zichtbaar, Afmelden verborgen",
+    w.document.getElementById("btn-aanmelden").hidden === false && w.document.getElementById("btn-afmelden").hidden === true);
   select.value = "Lotte V.";
   code.value = "0000";
   w.document.getElementById("btn-aanmelden").click();
@@ -355,6 +357,10 @@ function vinkIn(venster, naam) {
   w.document.getElementById("btn-aanmelden").click();
   await new Promise((r) => setTimeout(r, 100));
   check("juiste code wordt aanvaard", w.APP.getState().student === "Lotte V.", w.APP.getState().student);
+  check("aangemeld: Afmelden zichtbaar, Aanmelden en codeveld weg, naam vast",
+    w.document.getElementById("btn-afmelden").hidden === false && w.document.getElementById("btn-aanmelden").hidden === true &&
+    w.document.getElementById("leerling-code").hidden === true && w.document.getElementById("leerling-select").disabled === true,
+    [w.document.getElementById("btn-afmelden").hidden, w.document.getElementById("btn-aanmelden").hidden]);
 
   console.log("\n3. Werk maken en bewaren op de server");
   const st = w.APP.getState();

@@ -2001,3 +2001,13 @@ table.relatie-overzicht.controle-relatie-lijnen th:last-child, table.relatie-ove
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Aangemeld: school en naam staan vast tot Afmelden, maar zien er gewoon
+   uit (niet grijs), zodat het niet lijkt alsof er nog iets laadt. */
+#leerling-select.aangemeld:disabled,
+#vestiging-select.aangemeld:disabled {
+  opacity: 1;
+  color: #1f1f1f;
+  -webkit-text-fill-color: #1f1f1f;
+  cursor: default;
+}
