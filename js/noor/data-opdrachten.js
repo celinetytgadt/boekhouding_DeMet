@@ -105,6 +105,25 @@ const CATEGORIE_VOLGORDE = [
   "Eindejaarsverrichtingen"
 ];
 
+// De korte naam van elke categorie: de kop van haar kolom in het tabblad
+// Klas van de Sheet. Daar komt OK te staan zodra alles van die categorie
+// "In orde" is. Met N ervoor, zodat ze niet samenvallen met die van MetWear.
+const CATEGORIE_KORT = {
+  "Beginbalans": "N BB",
+  "Aankopen 1 · kortingen": "N AK1",
+  "Aankopen 2 · kosten, verpakking en investeringen": "N AK2",
+  "Aankopen 3 · creditnota's en over te dragen kosten": "N AK3",
+  "Verkopen 1 · handelskorting en kosten": "N VK1",
+  "Verkopen 2 · verpakking, creditnota's, financiële korting": "N VK2",
+  "Lonen 1 · loonstaten": "N LON1",
+  "Lonen 2 · RSZ, voorheffing en personeelskosten": "N LON2",
+  "Financiële verrichtingen": "N FIN",
+  "BTW-verwerking": "N BTW",
+  "Eindejaarsverrichtingen": "N EJ",
+  "Resultaatverwerking": "N RES",
+  "Eindbalans": "N EB",
+};
+
 // De pagina Klanten & leveranciers staat bij de financiële verrichtingen:
 // pas daar valt er af te punten.
 const CATEGORIE_RELATIES = "Financiële verrichtingen";

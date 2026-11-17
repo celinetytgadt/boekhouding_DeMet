@@ -360,6 +360,24 @@ Dat is je werklijst. Zonder die filter kijk je ook naar oude inzendingen.
 > doet de leerling zelf via de vragen op het tabblad Klanten &
 > leveranciers.
 
+### Controles en klasoverzicht
+
+In de kolom *controles leerling* van **Inzendingen** zie je of de leerling de
+controles van die categorie had afgevinkt bij het indienen: *ja*, *nee: 1 van
+3 afgevinkt*, of *ja, maar daarna een boeking heropend*. Leeg = die categorie
+heeft geen controles.
+
+In het tabblad **Klas** zet het script rechts van *opmerking* een kolom per
+categorie: eerst die van MetWear (*BB*, *AK*, *VK*, *LON*, *FIN*, *BTW*, *EJ*,
+*RES*, *EB*), daarna die van het oefendossier Noor (*N BB*, *N AK1* …). Daar
+staat **OK** zodra alle verrichtingen van die categorie bij die leerling op
+*In orde* staan (de nieuwste rij telt, vrijgegeven of niet). De volle naam
+staat als notitie op de kop. Het volgt vanzelf bij elk indienen, bij het
+automatisch nakijken en telkens je een beoordeling aanpast; anders
+**Boekhoudapp → Klasoverzicht (OK per categorie) bijwerken**. De kolommen
+verschijnen na het eerste indienen met deze versie. Tik zelf niets in die
+kolommen: ze worden telkens overschreven.
+
 ### Vrijgeven
 
 De leerling ziet nog niets zolang het vinkje **klaar** uit staat. Je kan dus

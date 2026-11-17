@@ -114,6 +114,21 @@ const CATEGORIE_VOLGORDE = [
   "Eindejaarsverrichtingen",
 ];
 
+// De korte naam van elke categorie: de kop van haar kolom in het tabblad
+// Klas van de Sheet. Daar komt OK te staan zodra alles van die categorie
+// "In orde" is. Een categorie die hier niet staat, krijgt haar volle naam.
+const CATEGORIE_KORT = {
+  "Beginbalans": "BB",
+  "Aankopen": "AK",
+  "Verkopen": "VK",
+  "Loonverwerking": "LON",
+  "Financiële verrichtingen": "FIN",
+  "BTW-verwerking": "BTW",
+  "Eindejaarsverrichtingen": "EJ",
+  "Resultaatverwerking": "RES",
+  "Eindbalans": "EB",
+};
+
 // Onder welke categorie staat de pagina "Klanten & leveranciers" in het
 // menu? Ze hoort na de betaalstukken: pas dan valt er af te punten, en de
 // controles erover staan in dezelfde categorie.

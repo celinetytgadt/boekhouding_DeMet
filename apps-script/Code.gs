@@ -12,14 +12,19 @@
  * ---------------------------------------------------------------------------
  * DE TABBLADEN
  *
- *   Klas          naam | code | opmerking
+ *   Klas          naam | code | opmerking | BB | AK | VK | …
  *                 De namen die in de app in de keuzelijst staan, met hun
  *                 persoonlijke code. Alleen hier staan de codes — nooit in
  *                 de app-code, want die is publiek leesbaar.
+ *                 Rechts van opmerking zet het script zelf een kolom per
+ *                 categorie, met OK zodra alle verrichtingen van die
+ *                 categorie "In orde" zijn (zie Klasoverzicht hieronder).
  *
  *   Inzendingen   één rij per verrichting per inzending. Hier kijk je na.
  *                 Er wordt NOOIT een rij overschreven of verwijderd, zodat
  *                 je de evolutie van elke leerling kan volgen.
+ *                 De kolom "controles leerling" zegt of de leerling de
+ *                 controles van die categorie afgevinkt had bij het indienen.
  *
  *   Detail        één rij per boekingslijn, voor als je wil uitpluizen wat
  *                 er precies geboekt is.
@@ -122,7 +127,7 @@ var VERSIE_INTERVAL_MIN = 60;
 var KOP_INZENDINGEN = [
   "tijdstip", "leerling", "categorie", "ref", "boeking", "status leerling",
   "beoordeling", "feedback", "klaar", "is laatste", "inzending",
-  "automatische controle",
+  "automatische controle", "controles leerling",
 ];
 var KOP_DETAIL = [
   "tijdstip", "leerling", "inzending", "ref", "lijn", "bedrag", "rekening",
@@ -198,7 +203,7 @@ var INSTELLINGEN_UITLEG = [
 // Kolomnummers in Inzendingen (1-gebaseerd), zodat de rest leesbaar blijft.
 var K_TIJDSTIP = 1, K_LEERLING = 2, K_CATEGORIE = 3, K_REF = 4, K_BOEKING = 5,
     K_STATUS_LEERLING = 6, K_BEOORDELING = 7, K_FEEDBACK = 8, K_KLAAR = 9,
-    K_IS_LAATSTE = 10, K_INZENDING = 11, K_AUTOMATISCH = 12;
+    K_IS_LAATSTE = 10, K_INZENDING = 11, K_AUTOMATISCH = 12, K_CONTROLES = 13;
 
 // De drie beoordelingen, gelijk aan de afspraken met de collega's in
 // Classroom. "In orde" heeft een bijzondere betekenis in de app: zo'n
@@ -545,10 +550,15 @@ function verwerkInzending(data) {
   var blad = blad_(BLAD_INZENDINGEN);
   var eersteNieuweRij = blad.getLastRow() + 1;
 
+  // Had de leerling de controles van die categorie afgevinkt? De app stuurt
+  // de stand per categorie mee; elke rij van die categorie krijgt ze.
+  var controles = data.controles || {};
+  zorgVoorKop_(blad, K_CONTROLES);
   var rijen = items.map(function (it) {
     return [
       nu, leerling, it.categorie || "", it.ref || "", it.boeking || "",
       it.status || "", "", "", false, "JA", inzendingId, "",
+      controlesTekst_(controles[it.categorie]),
     ];
   });
   blad.getRange(eersteNieuweRij, 1, rijen.length, KOP_INZENDINGEN.length).setValues(rijen);
@@ -565,6 +575,15 @@ function verwerkInzending(data) {
     nakijkenEnSchrijven_(blad, eersteNieuweRij, items);
   } catch (err) {
     console.error("Automatisch nakijken mislukt: " + err);
+  }
+
+  // Het klasoverzicht bijwerken. Ook hier: lukt dat niet, dan is de
+  // inzending zelf toch binnen.
+  try {
+    bewaarKlasKolommen_(data.categorieen, dossierUit_(data.dossier));
+    werkKlasoverzichtBij_();
+  } catch (err2) {
+    console.error("Klasoverzicht bijwerken mislukt: " + err2);
   }
 
   return { ok: true, aantal: rijen.length, inzending: inzendingId };
@@ -827,10 +846,12 @@ function nakijkenEnSchrijven_(blad, eersteRij, items) {
 }
 
 // Sheets die al bestonden vóór deze versie hebben de kolom nog niet.
-function zorgVoorKopAutomatisch_(blad) {
-  var kop = blad.getRange(1, K_AUTOMATISCH);
+function zorgVoorKopAutomatisch_(blad) { zorgVoorKop_(blad, K_AUTOMATISCH); }
+
+function zorgVoorKop_(blad, kolom) {
+  var kop = blad.getRange(1, kolom);
   if (!kop.getValue()) {
-    kop.setValue(KOP_INZENDINGEN[K_AUTOMATISCH - 1]).setFontWeight("bold").setBackground("#e9eaf7");
+    kop.setValue(KOP_INZENDINGEN[kolom - 1]).setFontWeight("bold").setBackground("#e9eaf7");
   }
 }
 
@@ -968,8 +989,177 @@ function nakijkenOpenInzendingen() {
   }
   beoordelingBereik.setValues(beoordelingen);
   autoBereik.setValues(notities);
+  werkKlasoverzichtBij_();
   ui.alert("Klaar: " + inOrde + " keer '" + BEOORDELINGEN[0] + "' en " + teRemedieren + " keer '" +
     BEOORDELINGEN[1] + "' ingevuld.\n\nNiets is vrijgegeven: zet zelf het vinkje 'klaar' aan.");
+}
+
+/* ==========================================================================
+   Klasoverzicht: OK per categorie in het tabblad Klas
+
+   Rechts van de kolom opmerking staat in Klas een kolom per categorie
+   (BB, AK, VK …). Daarin komt OK zodra ALLE verrichtingen van die
+   categorie bij de leerling op "In orde" staan — telkens de beoordeling van
+   de nieuwste rij van die verrichting in Inzendingen,
+   vrijgegeven of niet. Zolang er nog iets ontbreekt of te remediëren is,
+   blijft het vakje leeg.
+
+   MetWear en het oefendossier Noor krijgen elk hun eigen kolommen: eerst
+   die van MetWear (AK, VK …), daarna die van Noor (N AK1, N VK1 …).
+
+   Welke categorieën er zijn en welke verrichtingen erbij horen, weet de
+   app: die stuurt het mee bij elk indienen, en het script onthoudt het in
+   de scripteigenschappen. Zo hoeft er hier niets bijgehouden te worden als
+   de bundel verandert.
+
+   Het overzicht wordt vanzelf bijgewerkt bij elk indienen, bij het
+   automatisch nakijken, bij het bewaren van de klaslijst in de app en
+   telkens jij een beoordeling aanpast (onEdit). Voor de zekerheid staat er
+   ook een menu-item: Boekhoudapp → Klasoverzicht bijwerken.
+
+   Die kolommen zijn van het script: wat je er zelf intikt, wordt bij de
+   volgende keer overschreven. Eigen kolommen zet je best in een ander
+   tabblad.
+   ========================================================================== */
+
+var EIGENSCHAP_KLASKOLOMMEN = "klasKolommen";
+var KLEUR_KLAS_OK = "#d9ead3";
+
+// De tekst in de kolom "controles leerling" van Inzendingen.
+function controlesTekst_(c) {
+  if (!c || !Number(c.totaal)) return "";
+  var totaal = Number(c.totaal);
+  var af = Math.min(Number(c.af) || 0, totaal);
+  if (af < totaal) return "nee: " + af + " van " + totaal + " afgevinkt";
+  return c.herbekijken ? "ja, maar daarna een boeking heropend" : "ja";
+}
+
+// Wat de app meestuurt: [{ categorie, kort, refs: [...] }, …], per dossier
+// (MetWear = "", Noor = "NOOR"). Enkel als het verandert, wordt het opnieuw
+// weggeschreven. De app is publiek: alles wordt ingekort tot redelijke maten.
+function bewaarKlasKolommen_(lijst, dossier) {
+  if (!Array.isArray(lijst) || !lijst.length) return;
+  var schoon = lijst.slice(0, 40).map(function (c) {
+    var cat = String((c && c.categorie) || "").slice(0, 120);
+    return {
+      categorie: cat,
+      kort: String((c && c.kort) || cat).slice(0, 20),
+      refs: ((c && c.refs) || []).slice(0, 200).map(function (r) { return String(r).slice(0, 60); }),
+    };
+  }).filter(function (c) { return c.categorie && c.refs.length; });
+  if (!schoon.length) return;
+  var props = PropertiesService.getScriptProperties();
+  var sleutel = EIGENSCHAP_KLASKOLOMMEN + (dossier ? " " + dossier : "");
+  var json = JSON.stringify(schoon);
+  if (props.getProperty(sleutel) !== json) props.setProperty(sleutel, json);
+}
+
+// Eerst MetWear, dan de oefendossiers.
+function klasKolommen_() {
+  var props = PropertiesService.getScriptProperties();
+  var uit = [];
+  [""].concat(DOSSIERS).forEach(function (d) {
+    try {
+      var json = props.getProperty(EIGENSCHAP_KLASKOLOMMEN + (d ? " " + d : ""));
+      if (json) uit = uit.concat(JSON.parse(json));
+    } catch (e) { /* onleesbaar: overslaan */ }
+  });
+  return uit;
+}
+
+// Per leerling (genormaliseerde naam) en per ref: de beoordeling van de
+// nieuwste rij in Inzendingen.
+function laatsteBeoordelingen_() {
+  var uit = {};
+  var blad = bladOfNiets_(BLAD_INZENDINGEN);
+  if (!blad || blad.getLastRow() < 2) return uit;
+  var n = blad.getLastRow() - 1;
+  var links = blad.getRange(2, K_LEERLING, n, K_REF - K_LEERLING + 1).getValues();  // leerling, categorie, ref
+  var beoordeling = blad.getRange(2, K_BEOORDELING, n, 1).getValues();
+  for (var i = 0; i < n; i++) {
+    var naam = normaliseerNaam_(links[i][0]);
+    var ref = String(links[i][K_REF - K_LEERLING] || "");
+    if (!naam || !ref) continue;
+    if (!uit[naam]) uit[naam] = {};
+    uit[naam][ref] = String(beoordeling[i][0] || "").trim();   // lager = nieuwer
+  }
+  return uit;
+}
+
+// Klas: naam | …
+function klasSleutels_(klas, rijen) {
+  if (rijen < 2) return [];
+  return klas.getRange(2, 1, rijen - 1, 1).getValues().map(function (r) { return normaliseerNaam_(r[0]); });
+}
+
+// Schrijft de kolommen per categorie in het tabblad Klas.
+function werkKlasoverzichtBij_() {
+  var kolommen = klasKolommen_();
+  var klas = bladOfNiets_(BLAD_KLAS);
+  if (!klas || !kolommen.length) return;
+
+  var eerste = KOP_KLAS.length + 1;
+  var props = PropertiesService.getScriptProperties();
+  var sleutelAantal = EIGENSCHAP_KLASKOLOMMEN + "Aantal";
+  var vorigAantal = Number(props.getProperty(sleutelAantal)) || 0;
+  var breedte = Math.max(kolommen.length, vorigAantal);
+  var rijen = Math.max(klas.getLastRow(), 1);
+
+  var beoordelingen = laatsteBeoordelingen_();
+  var sleutels = klasSleutels_(klas, rijen);
+
+  var kop = [], notities = [];
+  for (var k = 0; k < breedte; k++) {
+    var c = kolommen[k];
+    kop.push(c ? c.kort : "");
+    notities.push(c ? c.categorie : "");
+  }
+  var waarden = [kop], kleuren = [kop.map(function (t) { return t ? "#e9eaf7" : null; })];
+  sleutels.forEach(function (sl) {
+    var mijn = (sl && beoordelingen[sl]) || {};
+    var rij = [], kleur = [];
+    for (var j = 0; j < breedte; j++) {
+      var col = kolommen[j];
+      var ok = !!(sl && col && col.refs.every(function (ref) { return mijn[ref] === BEOORDELINGEN[0]; }));
+      rij.push(ok ? "OK" : "");
+      kleur.push(ok ? KLEUR_KLAS_OK : null);
+    }
+    waarden.push(rij);
+    kleuren.push(kleur);
+  });
+
+  var bereik = klas.getRange(1, eerste, waarden.length, breedte);
+  bereik.setValues(waarden);
+  bereik.setBackgrounds(kleuren);
+  klas.getRange(1, eerste, 1, breedte).setNotes([notities]).setFontWeight("bold");
+  if (vorigAantal !== kolommen.length) props.setProperty(sleutelAantal, String(kolommen.length));
+}
+
+// Menu: het klasoverzicht opnieuw opbouwen.
+function klasoverzichtBijwerken() {
+  var ui = SpreadsheetApp.getUi();
+  if (!klasKolommen_().length) {
+    ui.alert("Er is nog niets ingediend met deze versie van de app. Het klasoverzicht verschijnt na het eerste indienen.");
+    return;
+  }
+  werkKlasoverzichtBij_();
+  ui.alert("Het klasoverzicht in het tabblad Klas is bijgewerkt.");
+}
+
+/**
+ * Pas jij in Inzendingen een beoordeling aan, dan volgt het klasoverzicht
+ * meteen. Een eenvoudige trigger: er hoeft niets voor ingesteld te worden.
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    if (e.range.getSheet().getName() !== BLAD_INZENDINGEN) return;
+    var c1 = e.range.getColumn(), c2 = c1 + e.range.getNumColumns() - 1;
+    if (K_BEOORDELING < c1 || K_BEOORDELING > c2) return;
+    werkKlasoverzichtBij_();
+  } catch (err) {
+    console.error("Klasoverzicht bijwerken mislukt: " + err);
+  }
 }
 
 /* ==========================================================================
@@ -1050,6 +1240,7 @@ function onOpen() {
     .addSeparator()
     .addItem("Sleutel overnemen uit een inzending…", "sleutelOvernemen")
     .addItem("Open inzendingen automatisch nakijken", "nakijkenOpenInzendingen")
+    .addItem("Klasoverzicht (OK per categorie) bijwerken", "klasoverzichtBijwerken")
     .addSeparator()
     .addItem("Codes genereren voor lege vakjes", "genereerCodes")
     .addItem("Expertcode instellen…", "zetExpertcode")
@@ -1633,6 +1824,9 @@ function bewaarBeheer_(data) {
       bk.getRange(2, 1, rijenK.length, 3).setValues(rijenK);
     }
     gedaan.push("klaslijst (" + echteRijen + ")");
+    // De volgorde van de namen kan veranderd zijn: de OK's per categorie
+    // moeten mee naar de juiste rij.
+    try { werkKlasoverzichtBij_(); } catch (errK) { console.error("Klasoverzicht: " + errK); }
   }
 
   // Zeker weten dat alles in de Sheet staat vóór we ja zeggen.
