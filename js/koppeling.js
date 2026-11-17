@@ -92,6 +92,9 @@
   var vulNamenFn = null;        // bouwAanmeldUI zet die hier klaar
   var laatsteFeedbackTijd = 0;
   var instellingenBezig = false;   // er loopt al een ophaalronde
+  var eersteRondeKlaar = false;    // de eerste ophaalronde van de namen is voorbij
+  var meldingNamen = false;        // er staat een melding dat de namen ontbreken
+  var namenBezig = false;          // (enkel apps met een aparte namenronde)
 
   /* ======================================================================
      Kleine hulpjes
@@ -106,6 +109,12 @@
   function actief() { return !!webAppUrl(); }
   function ingesteld() {
     return vestigingen.some(function (v) { return !!v.webAppUrl; });
+  }
+
+  /* Is er op deze computer iemand aangemeld bij de gekozen school? Bepaalt
+     welke knop er staat: Aanmelden of Afmelden, nooit allebei. */
+  function isAangemeld() {
+    return !!(aanmelding && aanmelding.naam && vestiging && aanmelding.vestiging === vestiging.code);
   }
 
   function vestigingMet(code) {
@@ -328,30 +337,90 @@
     vulNamen();
 
     /* De namenlijst hangt af van de gekozen vestiging, dus ze wordt telkens
-       opnieuw opgebouwd. Zonder klaslijst blijft het vrije naamveld van
-       app.js in dienst — handig zolang er met collega's getest wordt. */
+       opnieuw opgebouwd. Een leerling kiest haar naam altijd uit de lijst:
+       met een vrij naamveld typten leerlingen zelf hun naam als de lijst
+       traag binnenkwam, en dan liep het aanmelden mis. Tot de namen er zijn,
+       blijven de keuzelijst, het codeveld en de knop grijs. Enkel als er
+       helemaal geen koppeling ingesteld is, blijft het vrije naamveld van
+       app.js in dienst (de app werkt dan volledig lokaal). */
     function vulNamen() {
-      var lijst = vestiging ? klaslijstVoor(vestiging.code) : [];
-      var metLijst = lijst.length > 0;
-
-      select.hidden = !metLijst;
-      codeVeld.hidden = !metLijst;
-      knop.hidden = !metLijst;
-      naamInput.hidden = metLijst;
       var label = document.querySelector('label[for="leerling-naam-input"], label[for="leerling-select"]');
-      if (label) label.setAttribute("for", metLijst ? "leerling-select" : "leerling-naam-input");
-      if (!metLijst) { select.innerHTML = ""; return; }
+      if (!ingesteld()) {
+        select.hidden = true;
+        codeVeld.hidden = true;
+        knop.hidden = true;
+        naamInput.hidden = false;
+        if (label) label.setAttribute("for", "leerling-naam-input");
+        return;
+      }
+      naamInput.hidden = true;
+      select.hidden = false;
+      if (label) label.setAttribute("for", "leerling-select");
 
+      // Aangemeld: de naam blijft staan, maar codeveld en Aanmelden zijn weg.
+      // Wisselen van leerling of school kan pas na Afmelden.
+      var aangemeld = isAangemeld();
+      codeVeld.hidden = aangemeld;
+      knop.hidden = aangemeld;
+      if (vestSelect) { vestSelect.disabled = aangemeld; vestSelect.classList.toggle("aangemeld", aangemeld); }
+      select.classList.toggle("aangemeld", aangemeld);
+      if (aangemeld) {
+        var namen = klaslijstVoor(vestiging.code);
+        if (namen.indexOf(aanmelding.naam) === -1) namen = [aanmelding.naam];
+        select.innerHTML = namen.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+        select.value = aanmelding.naam;
+        select.disabled = true;
+        select.setAttribute("data-vestiging", vestiging.code);
+        if (meldingNamen) { status(""); meldingNamen = false; }
+        return;
+      }
+
+      var lijst = vestiging ? klaslijstVoor(vestiging.code) : [];
+      if (!lijst.length) {
+        var tekst, melding = "";
+        if (!vestiging) {
+          tekst = "— kies eerst je school —";
+        } else if (!actief()) {
+          tekst = "Geen namen gevonden";
+          melding = "Voor " + vestigingLabel(vestiging) + " is de koppeling nog niet ingesteld — verwittig je vakexpert.";
+        } else if (!eersteRondeKlaar || namenBezig || instellingenBezig) {
+          tekst = "Namen worden geladen…";
+        } else {
+          tekst = "Geen namen gevonden";
+          melding = "De namenlijst kon niet geladen worden. Herlaad de pagina; lukt het dan nog niet, verwittig je vakexpert.";
+        }
+        zetGrijs(true);
+        select.innerHTML = '<option value="">' + esc(tekst) + "</option>";
+        select.removeAttribute("data-vestiging");
+        if (melding) { status(melding, "fout"); meldingNamen = true; }
+        return;
+      }
+      if (meldingNamen) { status(""); meldingNamen = false; }
+
+      // Komt de verse lijst binnen terwijl de leerling al een naam koos (uit
+      // de bewaarde lijst), dan blijven die naam en de code gewoon staan.
+      var gekozen = select.disabled ? "" : select.value;
+      var zelfdeSchool = select.getAttribute("data-vestiging") === (vestiging ? vestiging.code : "");
+      zetGrijs(false);
       select.innerHTML = '<option value="">— kies je naam —</option>' +
         lijst.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("");
+      select.setAttribute("data-vestiging", vestiging ? vestiging.code : "");
 
-      if (aanmelding && vestiging && aanmelding.vestiging === vestiging.code) {
+      if (gekozen && zelfdeSchool && lijst.indexOf(gekozen) !== -1) {
+        select.value = gekozen;
+      } else if (aanmelding && vestiging && aanmelding.vestiging === vestiging.code) {
         select.value = aanmelding.naam;
         codeVeld.value = aanmelding.code;
       } else {
         select.value = "";
         codeVeld.value = "";
       }
+    }
+
+    function zetGrijs(grijs) {
+      select.disabled = grijs;
+      codeVeld.disabled = grijs;
+      knop.disabled = grijs;
     }
   }
 
@@ -372,6 +441,7 @@
         aanmelding = { vestiging: vestiging.code, naam: r.leerling || naam, code: code };
         schrijf(AANMELD_KEY, JSON.stringify(aanmelding));
         status("Aangemeld.", "ok");
+        if (vulNamenFn) vulNamenFn();
         naAanmelding();
       })
       .catch(function (err) {
@@ -527,6 +597,7 @@
     // twee keer dezelfde vraag en de app moet twee keer wachten.
     if (instellingenBezig) { if (daarna) daarna(); return; }
     instellingenBezig = true;
+    if (vulNamenFn) vulNamenFn();
     var voorVestiging = vestiging.code;
     /* Google laat een web-app soms seconden wachten voor ze antwoordt. De
        versie van de vorige keer staat al in de browser: die verschijnt
@@ -542,18 +613,21 @@
     haal({ actie: "instellingen", sleutel: sleutelwoord() })
       .then(function (r) {
         instellingenBezig = false;
+        eersteRondeKlaar = true;
         // Intussen een andere school gekozen? Dan is dit antwoord verouderd.
         if (!vestiging || vestiging.code !== voorVestiging) return;
-        if (!r || !r.ok) { if (daarna) daarna(); return; }
+        if (!r || !r.ok) { if (vulNamenFn) vulNamenFn(); if (daarna) daarna(); return; }
         if (DOSSIER_CODE) dossierOk = Array.isArray(r.dossiers) && r.dossiers.indexOf(DOSSIER_CODE) !== -1;
         zetInstellingen(voorVestiging, r.instellingen, r.taken, r.klas);
         if (daarna) daarna();
       })
       .catch(function (err) {
         instellingenBezig = false;
+        eersteRondeKlaar = true;
         // Onbereikbaar? Dan valt de app terug op js/data-klas.js en op de
         // standaardteksten. Geen foutmelding: de leerling kan hier niets aan
         // doen en de app werkt gewoon verder.
+        if (vulNamenFn) vulNamenFn();
         console.error(err);
         if (daarna) daarna();
       });
@@ -884,7 +958,7 @@
         nietGeboekt.map(function (ref) {
           return '<li><button type="button" class="link-knop" data-role="naar-stuk" data-ref="' + esc(ref) + '">' + esc(ref) + "</button></li>";
         }).join("") +
-        "</ul><p>Je vulde er al iets in, maar drukte nog niet op <strong>Boeken</strong>. Klik op een stuk om het na te kijken en te boeken, " +
+        "</ul><p>Je vulde er al iets in, maar drukte nog niet op <strong>Bewaren</strong>. Klik op een stuk om het na te kijken en te bewaren, " +
         "of dien nu in zonder deze stukken.</p></div>";
     }
 
@@ -1335,6 +1409,9 @@
   // valt. Zonder deze haak zouden we elke twee minuten hetzelfde versturen.
   window.KOPPELING_HOOKS = {
     naWijziging: function () { teBewaren = true; },
+    // Voor de knop Afmelden in app.js: enkel zichtbaar als er iemand
+    // aangemeld is. Zonder koppeling volstaat een ingevulde naam.
+    aangemeld: function () { return ingesteld() ? isAangemeld() : !!APP.getState().student; },
     // De knop Afmelden in app.js: eerst het laatste werk naar de Drive, dan
     // vergeet deze browser wie er aangemeld is. Geeft false als de leerling
     // liever aangemeld blijft omdat het bewaren niet lukte.
@@ -1378,11 +1455,47 @@
     categoriePrefix: CAT_PREFIX,
     // Het beheertabblad heeft net bewaard en kreeg alles terug: de app
     // meteen bijwerken, zonder er nóg een verzoek voor te doen.
-    neemBeheerOver: function (r) {
+    // Enkel als het over de school gaat die bovenaan gekozen is: het
+    // beheertabblad kiest zijn school apart (zie hieronder).
+    neemBeheerOver: function (r, code) {
       if (!r || !vestiging) return;
+      if (code && code !== vestiging.code) return;
       zetInstellingen(vestiging.code, r.instellingen, r.taken, r.klas);
     },
+
+    /* Het beheertabblad kiest zijn eigen school, los van de keuze bovenaan
+       (die is voor de leerlingen). Daarom praat het met een vestiging die
+       het zelf meegeeft, en niet met de "gekozen" vestiging. */
+    vestigingen: function () {
+      return vestigingen.map(function (v) { return { code: v.code, naam: vestigingLabel(v) }; });
+    },
+    labelVan: function (code) { return vestigingLabel(vestigingMet(code)); },
+    actiefVoor: function (code) { return !!urlVoor(code); },
+    sleutelVoor: function (code) {
+      var v = vestigingMet(code);
+      return (v && v.sleutel) || "";
+    },
+    haalVoor: function (code, params) {
+      params.vestiging = code;
+      var url = urlVoor(code) + "?" + Object.keys(params).map(function (k) {
+        return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+      }).join("&");
+      return verzoek(url, { method: "GET" });
+    },
+    stuurVoor: function (code, data) {
+      data.vestiging = code;
+      return verzoek(urlVoor(code), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(data),
+      });
+    },
   };
+
+  function urlVoor(code) {
+    var v = vestigingMet(code);
+    return (v && v.webAppUrl) || "";
+  }
 
   function init() {
     try {
@@ -1428,10 +1541,6 @@
     });
 
     if (aanmelding && aanmelding.naam && actief()) {
-      naAanmelding();
-    } else if (vestiging && !klaslijstVoor(vestiging.code).length && APP.getState().student) {
-      // Testopstelling zonder klaslijst: de naam uit het vrije veld volstaat.
-      aanmelding = { naam: APP.getState().student, code: "" };
       naAanmelding();
     }
   }

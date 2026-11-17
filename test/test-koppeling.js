@@ -62,6 +62,12 @@ kopieerApp("/tmp/t2", {
   "js/data-klas.js": klas({ LEU: [] }),
   "apps-script/Code.gs": CODE_GS,
 });
+// Een gekoppelde app zonder reservelijst in js/data-klas.js (zoals in het echt).
+kopieerApp("/tmp/t4", {
+  "js/config-koppeling.js": config([VEST_LEU]),
+  "js/data-klas.js": klas({ LEU: [] }),
+  "apps-script/Code.gs": CODE_GS,
+});
 kopieerApp("/tmp/t3", {
   "js/config-koppeling.js": config([VEST_LEU, VEST_TW]),
   "js/data-klas.js": klas({ LEU: ["Lotte V.", "Youssef B."], TW: ["Amal T."] }),
@@ -260,6 +266,10 @@ async function start(map, pagina, vooraf) {
     runScripts: "dangerously",
     url: "https://test.local/",
     pretendToBeVisual: true,
+    // Onthouden of jsdom DOMContentLoaded al vuurde: readyState staat soms
+    // al op "interactive" vóór het event komt. Dan óók zelf dispatchen liet
+    // init() van app.js twee keer lopen (elke klik telde dubbel).
+    beforeParse(win) { win.document.addEventListener("DOMContentLoaded", () => { win.__dclGevuurd = true; }); },
   });
   dom.window.fetch = server;
   dom.window.navigator.sendBeacon = () => true;
@@ -280,7 +290,7 @@ async function start(map, pagina, vooraf) {
   // Staat het document nog te laden, dan vuurt jsdom DOMContentLoaded zelf.
   // Dan óók zelf dispatchen zou init() twee keer laten lopen, waardoor elke
   // klik dubbel geteld wordt — een val die niets met de app te maken heeft.
-  if (dom.window.document.readyState === "loading") {
+  if (!dom.window.__dclGevuurd) {
     await new Promise((res) => dom.window.document.addEventListener("DOMContentLoaded", res, { once: true }));
   } else {
     dom.window.document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
@@ -338,6 +348,8 @@ function vinkIn(venster, naam) {
 
   const select = w.document.getElementById("leerling-select");
   const code = w.document.getElementById("leerling-code");
+  check("niet aangemeld: Aanmelden zichtbaar, Afmelden verborgen",
+    w.document.getElementById("btn-aanmelden").hidden === false && w.document.getElementById("btn-afmelden").hidden === true);
   select.value = "Lotte V.";
   code.value = "0000";
   w.document.getElementById("btn-aanmelden").click();
@@ -350,6 +362,10 @@ function vinkIn(venster, naam) {
   w.document.getElementById("btn-aanmelden").click();
   await new Promise((r) => setTimeout(r, 100));
   check("juiste code wordt aanvaard", w.APP.getState().student === "Lotte V.", w.APP.getState().student);
+  check("aangemeld: Afmelden zichtbaar, Aanmelden en codeveld weg, naam vast",
+    w.document.getElementById("btn-afmelden").hidden === false && w.document.getElementById("btn-aanmelden").hidden === true &&
+    w.document.getElementById("leerling-code").hidden === true && w.document.getElementById("leerling-select").disabled === true,
+    [w.document.getElementById("btn-afmelden").hidden, w.document.getElementById("btn-aanmelden").hidden]);
 
   console.log("\n3. Werk maken en bewaren op de server");
   const st = w.APP.getState();
@@ -498,7 +514,7 @@ function vinkIn(venster, naam) {
 
   const bolAK02 = () => [...w.document.querySelectorAll(".nav-link")].find((n) => n.dataset.pageRef === "AK02").querySelector(".status-bolletje");
   // AK02 is begonnen maar nog niet geboekt: eerst dat signaal (open ringetje).
-  check("niet geboekt: eerst het ringetje 'nog op Boeken drukken'", bolAK02().className.includes("begonnen"), bolAK02().className);
+  check("niet geboekt: eerst het ringetje 'nog op Bewaren drukken'", bolAK02().className.includes("begonnen"), bolAK02().className);
   // Eens geboekt, kleurt het bolletje volgens de feedback.
   w.APP.getState().boekingen.AK02.geboekt = true;
   w.APP.renderAlles();
@@ -722,8 +738,11 @@ function vinkIn(venster, naam) {
   check("vestigingskeuze zichtbaar", !!vs && vs.hidden === false);
   check("één regel per vestiging, met een lege beginkeuze", vs.options.length === 3,
     [...vs.options].map((o) => o.value));
-  check("nog geen namenlijst vóór de keuze",
-    w3.document.getElementById("leerling-select").hidden === true);
+  const sel3 = w3.document.getElementById("leerling-select");
+  check("vóór de schoolkeuze: grijze keuzelijst, geen vrij naamveld",
+    sel3.hidden === false && sel3.disabled === true && /kies eerst je school/.test(sel3.textContent) &&
+    w3.document.getElementById("leerling-naam-input").hidden === true &&
+    w3.document.getElementById("btn-aanmelden").disabled === true, sel3.outerHTML);
 
   vs.value = "TW";
   vs.dispatchEvent(new w3.Event("change"));
@@ -888,7 +907,7 @@ function vinkIn(venster, naam) {
   });
   const dom2 = await start("/tmp/t2");
   check("app zonder koppeling start nog steeds", !!dom2.window.APP);
-  check("vrij naamveld zichtbaar zonder klaslijst",
+  check("vrij naamveld enkel als er helemaal geen koppeling is",
     dom2.window.document.getElementById("leerling-naam-input").hidden === false);
   check("indienknop verborgen zonder koppeling",
     dom2.window.document.getElementById("btn-indienen").hidden === true);
@@ -1046,9 +1065,18 @@ function vinkIn(venster, naam) {
   zetOefen("ja");
 
   // In Beheer: bij nee verdwijnt alles van Noor, behalve de keuze zelf.
-  const ontgrendelBeheer = async (w) => {
+  // Beheer kiest zijn school zelf (los van de keuze bovenaan).
+  const kiesBeheerSchool = async (w, code) => {
+    const bs = w.document.querySelector('[data-role="beheer-school"]');
+    if (!bs) return;
+    bs.value = code || [...bs.options].map((o) => o.value).filter(Boolean)[0];
+    bs.dispatchEvent(new w.Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 20));
+  };
+  const ontgrendelBeheer = async (w, code) => {
     w.document.querySelector('[data-page-type="beheer"]').click();
     await new Promise((r) => setTimeout(r, 40));
+    await kiesBeheerSchool(w, code);
     const v = w.document.querySelector('[data-role="expertcode"]');
     v.value = "EXPERT1";
     v.dispatchEvent(new w.Event("input", { bubbles: true }));
@@ -1085,20 +1113,23 @@ function vinkIn(venster, naam) {
   const domW = await start("/tmp/t3");
   const wW = domW.window;
   const vsW = wW.document.getElementById("vestiging-select");
-  vsW.value = "LEU";
-  vsW.dispatchEvent(new wW.Event("change"));
+  wW.document.querySelector('[data-page-type="beheer"]').click();
   await new Promise((r) => setTimeout(r, 40));
-  await ontgrendelBeheer(wW);
+  check("beheer heeft een eigen schoolkeuze, nog leeg",
+    !!wW.document.querySelector('[data-role="beheer-school"]') && wW.document.querySelector('[data-role="beheer-school"]').value === "" &&
+    !wW.document.querySelector('[data-role="expertcode"]'));
+  await ontgrendelBeheer(wW, "LEU");
   check("Leuven: beheer open", !!wW.document.querySelector('[data-role="klas-naam"]'));
   vsW.value = "TW";
   vsW.dispatchEvent(new wW.Event("change"));
   await new Promise((r) => setTimeout(r, 40));
-  check("andere school: beheer weer dicht",
+  wW.APP.renderAlles();
+  check("schoolkeuze bovenaan laat beheer ongemoeid", !!wW.document.querySelector('[data-role="klas-naam"]'));
+  await kiesBeheerSchool(wW, "TW");
+  check("andere school in beheer: weer dicht",
     !wW.document.querySelector('[data-role="klas-naam"]') && !!wW.document.querySelector('[data-role="expertcode"]'));
   check("en de expertcode is leeg", wW.document.querySelector('[data-role="expertcode"]').value === "");
-  vsW.value = "LEU";
-  vsW.dispatchEvent(new wW.Event("change"));
-  await new Promise((r) => setTimeout(r, 40));
+  await kiesBeheerSchool(wW, "LEU");
   check("terug naar Leuven: ook dicht", !wW.document.querySelector('[data-role="klas-naam"]'));
 
   console.log("\n21. Namenlijst meteen zichtbaar, ook als Google traag is");
@@ -1110,6 +1141,14 @@ function vinkIn(venster, naam) {
     const domTraag = await start(APP, pagina, Object.assign({}, vooraf, { boekhoudapp_instellingen_LEU: kopie }));
     const opties = [...domTraag.window.document.getElementById("leerling-select").options].map((o) => o.value).filter(Boolean);
     check(pagina + ": namen staan er al vóór de server antwoordt", opties.length === JSON.parse(kopie).klas.length, opties);
+  }
+  // Zonder kopie in de browser: wachten, en intussen kan je niets typen.
+  for (const pagina of ["index.html", "noor.html"]) {
+    const domLeeg = await start("/tmp/t4", pagina, {});
+    const dl = domLeeg.window.document, sl = dl.getElementById("leerling-select");
+    check(pagina + ": zonder kopie 'Namen worden geladen…' en alles grijs, geen vrij naamveld",
+      !sl.hidden && sl.disabled && /Namen worden geladen/.test(sl.textContent) && dl.getElementById("leerling-naam-input").hidden &&
+      dl.getElementById("leerling-code").disabled && dl.getElementById("btn-aanmelden").disabled, sl.outerHTML);
   }
   serverHangt = false;
 

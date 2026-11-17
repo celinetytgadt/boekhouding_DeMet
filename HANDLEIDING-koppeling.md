@@ -49,6 +49,10 @@ heeft daarnaast:
 De leerling kiest bovenaan de app eerst de school en dan de eigen naam. Alles
 wat daarna vertrekt, gaat naar de Sheet van díé vestiging.
 
+Het tabblad Beheer heeft een eigen schoolkeuze, los van die bovenaan (die is
+voor de leerlingen). Kies daar je school en geef de expertcode van die
+vestiging in. Een andere school kiezen in Beheer zet het weer op slot.
+
 De werkbestanden komen wél **samen in één map op de gedeelde Drive**. Ze zijn
 uit elkaar te houden aan de naam: `werk_LEU_lottev.json`,
 `werk_TW_amalt.json`. Twee dingen moeten daarvoor kloppen in elke Code.gs:
